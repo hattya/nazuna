@@ -1,0 +1,162 @@
+//
+// nazuna :: cli.go
+//
+//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//
+//   Permission is hereby granted, free of charge, to any person
+//   obtaining a copy of this software and associated documentation files
+//   (the "Software"), to deal in the Software without restriction,
+//   including without limitation the rights to use, copy, modify, merge,
+//   publish, distribute, sublicense, and/or sell copies of the Software,
+//   and to permit persons to whom the Software is furnished to do so,
+//   subject to the following conditions:
+//
+//   The above copyright notice and this permission notice shall be
+//   included in all copies or substantial portions of the Software.
+//
+//   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+//   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+//   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+//   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+//   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+//   ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//   SOFTWARE.
+//
+
+package nazuna
+
+import (
+	"flag"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+)
+
+type CLI struct {
+	Flag flag.FlagSet
+
+	args []string
+	in   io.Reader
+	out  io.Writer
+	err  io.Writer
+	vars struct {
+		help    bool
+		version bool
+	}
+}
+
+func NewCLI(args []string) *CLI {
+	c := &CLI{
+		args: args,
+		in:   os.Stdin,
+		out:  os.Stdout,
+		err:  os.Stderr,
+	}
+	c.Flag.Init(c.args[0], flag.ContinueOnError)
+	c.Flag.SetOutput(ioutil.Discard)
+	c.Flag.BoolVar(&c.vars.help, "h", false, "")
+	c.Flag.BoolVar(&c.vars.help, "help", false, "")
+	c.Flag.BoolVar(&c.vars.version, "version", false, "")
+	return c
+}
+
+func (c *CLI) Args() []string {
+	return c.args
+}
+
+func (c *CLI) SetIn(in io.Reader) {
+	c.in = in
+}
+
+func (c *CLI) SetOut(out io.Writer) {
+	c.out = out
+}
+
+func (c *CLI) SetErr(err io.Writer) {
+	c.err = err
+}
+
+func (c *CLI) Print(a ...interface{}) (int, error) {
+	return fmt.Fprint(c.out, a...)
+}
+
+func (c *CLI) Printf(format string, a ...interface{}) (int, error) {
+	return fmt.Fprintf(c.out, format, a...)
+}
+
+func (c *CLI) Println(a ...interface{}) (int, error) {
+	return fmt.Fprintln(c.out, a...)
+}
+
+func (c *CLI) Error(a ...interface{}) (int, error) {
+	return fmt.Fprint(c.err, a...)
+}
+
+func (c *CLI) Errorf(format string, a ...interface{}) (int, error) {
+	return fmt.Fprintf(c.err, format, a...)
+}
+
+func (c *CLI) Errorln(a ...interface{}) (int, error) {
+	return fmt.Fprintln(c.err, a...)
+}
+
+func (c *CLI) Run() int {
+	if err := c.Flag.Parse(c.args[1:]); err != nil {
+		return c.usage(2, nil, err)
+	}
+	var args []string
+	switch {
+	case c.vars.help:
+		args = append(args, "help")
+	case c.vars.version:
+		args = append(args, "version")
+	default:
+		args = c.Flag.Args()
+		if len(args) == 0 {
+			return c.usage(1, nil, nil)
+		}
+	}
+
+	cmd, err := FindCommand(Commands, args[0])
+	if err != nil {
+		return c.usage(1, nil, err)
+	}
+	cmd.Flag.Init(c.args[0], flag.ContinueOnError)
+	cmd.Flag.SetOutput(ioutil.Discard)
+	if err := cmd.Flag.Parse(args[1:]); err != nil {
+		rc := 2
+		if err == flag.ErrHelp {
+			rc, err = 0, nil
+		}
+		return c.usage(rc, cmd, err)
+	}
+	if err := cmd.Run(c, cmd.Flag.Args()); err != nil {
+		rc := 1
+		switch err.(type) {
+		case *CommandError:
+			cmd = nil
+		case FlagError:
+			rc = 2
+		}
+		return c.usage(rc, cmd, err)
+	}
+	return 0
+}
+
+func (c *CLI) usage(rc int, cmd *Command, err error) int {
+	if err != nil {
+		if cmd != nil {
+			c.Errorf("%s %s: %s\n", c.args[0], cmd.Name(), err)
+		} else {
+			c.Errorf("%s: %s\n", c.args[0], err)
+		}
+	}
+	var args []string
+	if cmd != nil {
+		args = append(args, cmd.Name())
+	}
+	cmdHelp.Run(c, args)
+	return rc
+}
