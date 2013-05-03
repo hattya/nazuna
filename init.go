@@ -1,5 +1,5 @@
 //
-// nazuna :: nazuna.go
+// nazuna :: init.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -27,18 +27,48 @@
 package nazuna
 
 import (
-	"os/exec"
+	"fmt"
+	"path/filepath"
 )
 
-var Version = "0.0+"
+var cmdInit = &Command{
+	Names: []string{"init"},
+	Usage: "init --vcs=<type> [<path>]",
+	Help: `
+  create a new repository in the specified directory
 
-type UI interface {
-	Args() []string
-	Print(...interface{}) (int, error)
-	Printf(string, ...interface{}) (int, error)
-	Println(...interface{}) (int, error)
-	Error(...interface{}) (int, error)
-	Errorf(string, ...interface{}) (int, error)
-	Errorln(...interface{}) (int, error)
-	Exec(*exec.Cmd) error
+options:
+
+      --vcs=<type>    vcs type
+`,
+}
+
+var initVCS string
+
+func init() {
+	cmdInit.Run = runInit
+	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
+}
+
+func runInit(ui UI, args []string) error {
+	rootdir := "."
+	if 0 < len(args) {
+		rootdir = args[0]
+	}
+	nzndir := filepath.Join(rootdir, ".nzn")
+	if !isEmptyDir(nzndir) {
+		return fmt.Errorf("repository '%s' already exists!", rootdir)
+	}
+
+	if initVCS == "" {
+		return FlagError("flag --vcs is required")
+	}
+	vcs, err := FindVCS(initVCS)
+	if err != nil {
+		return err
+	}
+	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "repo"))); err != nil {
+		return err
+	}
+	return nil
 }

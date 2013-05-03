@@ -28,8 +28,12 @@ package nazuna_test
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
+	"os"
+	"os/exec"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -73,6 +77,20 @@ Errorln()
 `
 	if err := equal(expected, err.String()); err != nil {
 		t.Error(err)
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestProcess", "0")
+	if err := c.Exec(cmd); err != nil {
+		t.Error(err)
+	}
+
+	cmd = exec.Command(os.Args[0], "-test.run=TestProcess", "7")
+	re := regexp.MustCompile("nazuna.test: exit status.* 7")
+	switch err := c.Exec(cmd); {
+	case err == nil:
+		t.Error("error expected")
+	case !re.MatchString(err.Error()):
+		t.Errorf("expected %q, got %q", re, err)
 	}
 }
 
@@ -157,7 +175,21 @@ func TestRunCLI(t *testing.T) {
 	}
 }
 
+func TestProcess(*testing.T) {
+	if len(os.Args) != 3 || os.Args[1] != "-test.run=TestProcess" {
+		return
+	}
+	n, _ := strconv.Atoi(os.Args[2])
+	os.Exit(n)
+}
+
 func runCLI(args ...string) (int, string, string) {
+	for _, c := range nazuna.Commands {
+		c.Flag.Visit(func(f *flag.Flag) {
+			c.Flag.Set(f.Name, f.DefValue)
+		})
+	}
+
 	out := new(bytes.Buffer)
 	err := new(bytes.Buffer)
 	c := nazuna.NewCLI(args)

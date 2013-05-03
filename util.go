@@ -1,5 +1,5 @@
 //
-// nazuna :: nazuna.go
+// nazuna :: util.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -27,18 +27,16 @@
 package nazuna
 
 import (
-	"os/exec"
+	"io"
+	"os"
 )
 
-var Version = "0.0+"
-
-type UI interface {
-	Args() []string
-	Print(...interface{}) (int, error)
-	Printf(string, ...interface{}) (int, error)
-	Println(...interface{}) (int, error)
-	Error(...interface{}) (int, error)
-	Errorf(string, ...interface{}) (int, error)
-	Errorln(...interface{}) (int, error)
-	Exec(*exec.Cmd) error
+func isEmptyDir(path string) bool {
+	f, err := os.Open(path)
+	if os.IsNotExist(err) {
+		return true
+	}
+	defer f.Close()
+	_, err = f.Readdir(1)
+	return err == io.EOF
 }

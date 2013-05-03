@@ -32,6 +32,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 )
 
 type CLI struct {
@@ -139,6 +140,9 @@ func (c *CLI) Run() int {
 			cmd = nil
 		case FlagError:
 			rc = 2
+		default:
+			c.Errorf("%s: %s\n", c.args[0], err)
+			return 1
 		}
 		return c.usage(rc, cmd, err)
 	}
@@ -159,4 +163,14 @@ func (c *CLI) usage(rc int, cmd *Command, err error) int {
 	}
 	cmdHelp.Run(c, args)
 	return rc
+}
+
+func (c *CLI) Exec(cmd *exec.Cmd) error {
+	cmd.Stdin = c.in
+	cmd.Stdout = c.out
+	cmd.Stderr = c.err
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s: %s", cmd.Args[0], err)
+	}
+	return nil
 }

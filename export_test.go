@@ -30,9 +30,14 @@ import (
 	"bytes"
 )
 
-var HelpOut string
-var HelpUsage = "usage: nazuna.test " + cmdHelp.Usage + "\n" + cmdHelp.Help + "\n"
+var HelpUsage = usage(cmdHelp)
+var InitUsage = usage(cmdInit)
 
+func usage(c *Command) string {
+	return "usage: nazuna.test " + c.Usage + "\n" + c.Help + "\n"
+}
+
+var HelpOut string
 var VersionOut string
 
 func init() {

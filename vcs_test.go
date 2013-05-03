@@ -1,5 +1,5 @@
 //
-// nazuna :: nazuna.go
+// nazuna :: vcs_test.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,21 +24,47 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package nazuna_test
 
 import (
-	"os/exec"
+	"strings"
+	"testing"
+
+	"github.com/hattya/nazuna"
 )
 
-var Version = "0.0+"
+func TestFindVCS(t *testing.T) {
+	vcses := nazuna.VCSes
+	defer func() {
+		nazuna.VCSes = vcses
+	}()
 
-type UI interface {
-	Args() []string
-	Print(...interface{}) (int, error)
-	Printf(string, ...interface{}) (int, error)
-	Println(...interface{}) (int, error)
-	Error(...interface{}) (int, error)
-	Errorf(string, ...interface{}) (int, error)
-	Errorln(...interface{}) (int, error)
-	Exec(*exec.Cmd) error
+	nazuna.VCSes = []*nazuna.VCS{
+		{
+			Name: "Subversion",
+			Cmd:  "svn",
+		},
+		{
+			Name: "SVK",
+			Cmd:  "svk",
+		},
+	}
+
+	if _, err := nazuna.FindVCS("cvs"); err == nil || !strings.HasPrefix(err.Error(), "unknown vcs 'cvs'") {
+		t.Error("error expected")
+	}
+	if _, err := nazuna.FindVCS("sv"); err == nil || !strings.HasPrefix(err.Error(), "vcs 'sv' is ambiguous:") {
+		t.Error("error expected")
+	}
+
+	vcs, err := nazuna.FindVCS("svn")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vcs.Cmd != "svn" {
+		t.Errorf(`expected "svn", got %q`, vcs.Cmd)
+	}
+	if vcs.String() != "Subversion" {
+		t.Errorf(`expected "Subversion", got %q`, vcs)
+	}
 }

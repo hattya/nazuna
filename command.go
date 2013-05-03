@@ -68,6 +68,7 @@ func (c *Command) Name() string {
 
 var Commands = []*Command{
 	cmdHelp,
+	cmdInit,
 	cmdVersion,
 }
 
