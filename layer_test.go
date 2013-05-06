@@ -1,5 +1,5 @@
 //
-// nazuna :: init_test.go
+// nazuna :: layer_test.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -27,24 +27,29 @@
 package nazuna_test
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/hattya/nazuna"
 )
 
-func TestInit(t *testing.T) {
+func TestLayer(t *testing.T) {
 	dir, err := ioutil.TempDir("", "nazuna.test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
 
-	rc, bout, berr := runCLI("nazuna.test", "init", "--vcs=git", dir)
+	rc, _, berr := runCLI("nazuna.test", "init", "--vcs=git")
+	if rc != 0 {
+		t.Logf("stderr:\n%s", berr)
+		t.Fatalf("expected 0, got %d", rc)
+	}
+
+	rc, bout, berr := runCLI("nazuna.test", "layer")
 	if rc != 0 {
 		t.Errorf("expected 0, got %d", rc)
 	}
@@ -55,78 +60,85 @@ func TestInit(t *testing.T) {
 		t.Errorf(`expected "", got %q`, berr)
 	}
 
-	path := filepath.Join(".nzn", "repo", ".git")
-	fi, err := os.Stat(filepath.Join(dir, path))
-	switch {
-	case err != nil:
-		t.Error(err)
-	case !fi.Mode().IsDir():
-		t.Errorf("%q is not a directory", path)
+	rc, bout, berr = runCLI("nazuna.test", "layer", "-c", "a")
+	if rc != 0 {
+		t.Errorf("expected 0, got %d", rc)
+	}
+	if bout != "" {
+		t.Errorf(`expected "", got %q`, bout)
+	}
+	if berr != "" {
+		t.Errorf(`expected "", got %q`, berr)
 	}
 
-	path = filepath.Join(".nzn", "repo", "nazuna.json")
-	fi, err = os.Stat(filepath.Join(dir, path))
-	switch {
-	case err != nil:
-		t.Fatal(err)
-	case !fi.Mode().IsRegular():
-		t.Fatalf("%q is not a file", path)
+	rc, bout, berr = runCLI("nazuna.test", "layer", "-c", "b")
+	if rc != 0 {
+		t.Errorf("expected 0, got %d", rc)
+	}
+	if bout != "" {
+		t.Errorf(`expected "", got %q`, bout)
+	}
+	if berr != "" {
+		t.Errorf(`expected "", got %q`, berr)
 	}
 
-	var layers []*nazuna.Layer
-	data, err := ioutil.ReadFile(filepath.Join(dir, path))
-	if err != nil {
-		t.Fatal(err)
+	rc, bout, berr = runCLI("nazuna.test", "layer")
+	if rc != 0 {
+		t.Errorf("expected 0, got %d", rc)
 	}
-	err = json.Unmarshal(data, &layers)
-	switch {
-	case err != nil:
+	if err := equal("b\na\n", bout); err != nil {
 		t.Error(err)
-	case len(layers) != 0:
-		t.Errorf("expected 0, got %d", len(layers))
+	}
+	if berr != "" {
+		t.Errorf(`expected "", got %q`, berr)
+	}
+
+	rc, bout, berr = runCLI("nazuna.test", "layer", "-c", "a")
+	if rc != 1 {
+		t.Errorf("expected 1, got %d", rc)
+	}
+	if bout != "" {
+		t.Errorf(`expected "", got %q`, bout)
+	}
+	if !strings.Contains(berr, ": layer 'a' already exists!") {
+		t.Error("error expected")
 	}
 }
 
-func TestInitError(t *testing.T) {
+func TestLayerError(t *testing.T) {
 	dir, err := ioutil.TempDir("", "nazuna.test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
-
-	rc, bout, berr := runCLI("nazuna.test", "init", "--vcs=cvs", dir)
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": unknown vcs 'cvs'") {
-		t.Errorf("error expected")
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "init", dir)
-	if rc != 2 {
-		t.Errorf("expected 2, got %d", rc)
-	}
-	if err := equal(nazuna.InitUsage, bout); err != nil {
-		t.Error(err)
-	}
-	if !strings.Contains(berr, ": flag --vcs is required") {
-		t.Errorf("error expected")
-	}
-
-	if err := os.MkdirAll(filepath.Join(dir, ".nzn", "repo"), 0777); err != nil {
+	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
 	}
-	rc, bout, berr = runCLI("nazuna.test", "init", "--vcs=git", dir)
+
+	rc, bout, berr := runCLI("nazuna.test", "layer")
 	if rc != 1 {
 		t.Errorf("expected 1, got %d", rc)
 	}
 	if bout != "" {
 		t.Errorf(`expected "", got %q`, bout)
 	}
-	if !strings.Contains(berr, " already exists!") {
-		t.Errorf("error expected")
+	if !strings.Contains(berr, ": no repository found ") {
+		t.Error("error expected")
+	}
+
+	rc, _, berr = runCLI("nazuna.test", "init", "--vcs=git")
+	if rc != 0 {
+		t.Logf("stderr:\n%s", berr)
+		t.Fatalf("expected 0, got %d", rc)
+	}
+	rc, bout, berr = runCLI("nazuna.test", "layer", "-c")
+	if rc != 1 {
+		t.Errorf("expected 1, got %d", rc)
+	}
+	if bout != "" {
+		t.Errorf(`expected "", got %q`, bout)
+	}
+	if !strings.Contains(berr, ": invalid arguments") {
+		t.Error("error expected")
 	}
 }

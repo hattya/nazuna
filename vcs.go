@@ -29,14 +29,17 @@ package nazuna
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
 type VCS struct {
 	Name string
 	Cmd  string
+	Dir  string
 
 	InitCmd string
+	AddCmd  string
 }
 
 func (v *VCS) String() string {
@@ -46,6 +49,11 @@ func (v *VCS) String() string {
 func (v *VCS) Init(path string) *exec.Cmd {
 	args := v.expand(v.InitCmd, "path", path)
 	return exec.Command(v.Cmd, args...)
+}
+
+func (v *VCS) Add(paths ...string) *exec.Cmd {
+	args := v.expand(v.AddCmd)
+	return exec.Command(v.Cmd, append(args, paths...)...)
 }
 
 func (v *VCS) expand(cmdline string, kv ...string) []string {
@@ -73,15 +81,19 @@ var VCSes = []*VCS{
 var vcsGit = &VCS{
 	Name: "Git",
 	Cmd:  "git",
+	Dir:  ".git",
 
 	InitCmd: "init -q {path}",
+	AddCmd:  "add",
 }
 
 var vcsHg = &VCS{
 	Name: "Mercurial",
 	Cmd:  "hg",
+	Dir:  ".hg",
 
 	InitCmd: "init {path}",
+	AddCmd:  "add",
 }
 
 type VCSError struct {
@@ -121,4 +133,13 @@ func FindVCS(cmd string) (vcs *VCS, err error) {
 		err = &VCSError{cmd, list}
 	}
 	return
+}
+
+func VCSFor(path string) (*VCS, error) {
+	for _, vcs := range VCSes {
+		if isDir(filepath.Join(path, vcs.Dir)) {
+			return vcs, nil
+		}
+	}
+	return nil, fmt.Errorf("unknown vcs for directory '%s'", path)
 }

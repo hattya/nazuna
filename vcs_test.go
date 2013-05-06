@@ -27,6 +27,9 @@
 package nazuna_test
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -66,5 +69,32 @@ func TestFindVCS(t *testing.T) {
 	}
 	if vcs.String() != "Subversion" {
 		t.Errorf(`expected "Subversion", got %q`, vcs)
+	}
+}
+
+func TestVCSFor(t *testing.T) {
+	dir, err := ioutil.TempDir("", "nazuna.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	_, err = nazuna.VCSFor(dir)
+	if err == nil {
+		t.Error("error expected")
+	}
+
+	if err := os.Mkdir(filepath.Join(dir, ".git"), 0777); err != nil {
+		t.Fatal(err)
+	}
+	vcs, err := nazuna.VCSFor(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if vcs.Cmd != "git" {
+		t.Errorf(`expected "git", got %q`, vcs.Cmd)
+	}
+	if vcs.String() != "Git" {
+		t.Errorf(`expected "Git", got %q`, vcs)
 	}
 }

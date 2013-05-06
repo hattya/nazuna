@@ -1,5 +1,5 @@
 //
-// nazuna :: init.go
+// nazuna :: layer.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -27,57 +27,54 @@
 package nazuna
 
 import (
-	"fmt"
-	"path/filepath"
+	"errors"
+	"os"
 )
 
-var cmdInit = &Command{
-	Names: []string{"init"},
-	Usage: "init --vcs=<type> [<path>]",
+var cmdLayer = &Command{
+	Names: []string{"layer"},
+	Usage: "layer [-c] [<name>]",
 	Help: `
-  create a new repository in the specified directory
+  manage repository layers
 
 options:
 
-      --vcs=<type>    vcs type
+  -c, --create    create a new layer
 `,
 }
 
-var initVCS string
+var layerCreate bool
+
+var errArg = errors.New("invalid arguments")
 
 func init() {
-	cmdInit.Run = runInit
-	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
+	cmdLayer.Run = runLayer
+	cmdLayer.Flag.BoolVar(&layerCreate, "c", false, "")
+	cmdLayer.Flag.BoolVar(&layerCreate, "create", false, "")
 }
 
-func runInit(ui UI, args []string) error {
-	rootdir := "."
-	if 0 < len(args) {
-		rootdir = args[0]
-	}
-	nzndir := filepath.Join(rootdir, ".nzn")
-	if !isEmptyDir(nzndir) {
-		return fmt.Errorf("repository '%s' already exists!", rootdir)
-	}
-
-	if initVCS == "" {
-		return FlagError("flag --vcs is required")
-	}
-	vcs, err := FindVCS(initVCS)
+func runLayer(ui UI, args []string) error {
+	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "repo"))); err != nil {
+	repo, err := OpenRepository(ui, wd)
+	if err != nil {
 		return err
 	}
 
-	repo, err := OpenRepository(ui, rootdir)
-	if err != nil {
-		return err
+	switch {
+	case layerCreate:
+		if len(args) != 1 {
+			return errArg
+		}
+		if _, err := repo.NewLayer(args[0]); err != nil {
+			return err
+		}
+	default:
+		for _, l := range repo.Layers {
+			ui.Println(l.Name)
+		}
 	}
-	err = repo.Flush()
-	if err != nil {
-		return err
-	}
-	return repo.Add(".")
+	return nil
 }

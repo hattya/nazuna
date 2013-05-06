@@ -32,6 +32,10 @@ import (
 
 var Version = "0.0+"
 
+type Layer struct {
+	Name string `json:"name"`
+}
+
 type UI interface {
 	Args() []string
 	Print(...interface{}) (int, error)

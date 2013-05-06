@@ -27,9 +27,16 @@
 package nazuna
 
 import (
+	"encoding/json"
 	"io"
+	"io/ioutil"
 	"os"
 )
+
+func isDir(path string) bool {
+	fi, err := os.Stat(path)
+	return err == nil && fi.IsDir()
+}
 
 func isEmptyDir(path string) bool {
 	f, err := os.Open(path)
@@ -39,4 +46,21 @@ func isEmptyDir(path string) bool {
 	defer f.Close()
 	_, err = f.Readdir(1)
 	return err == io.EOF
+}
+
+func marshal(path string, v interface{}) error {
+	data, err := json.MarshalIndent(v, "", "    ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	return ioutil.WriteFile(path, data, 0666)
+}
+
+func unmarshal(path string, v interface{}) error {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
 }

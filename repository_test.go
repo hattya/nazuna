@@ -1,5 +1,5 @@
 //
-// nazuna :: init.go
+// nazuna :: repository_test.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,60 +24,35 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package nazuna_test
 
 import (
-	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/hattya/nazuna"
 )
 
-var cmdInit = &Command{
-	Names: []string{"init"},
-	Usage: "init --vcs=<type> [<path>]",
-	Help: `
-  create a new repository in the specified directory
-
-options:
-
-      --vcs=<type>    vcs type
-`,
-}
-
-var initVCS string
-
-func init() {
-	cmdInit.Run = runInit
-	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
-}
-
-func runInit(ui UI, args []string) error {
-	rootdir := "."
-	if 0 < len(args) {
-		rootdir = args[0]
-	}
-	nzndir := filepath.Join(rootdir, ".nzn")
-	if !isEmptyDir(nzndir) {
-		return fmt.Errorf("repository '%s' already exists!", rootdir)
-	}
-
-	if initVCS == "" {
-		return FlagError("flag --vcs is required")
-	}
-	vcs, err := FindVCS(initVCS)
+func TestRepository(t *testing.T) {
+	dir, err := ioutil.TempDir("", "nazuna.test")
 	if err != nil {
-		return err
+		t.Fatal(err)
 	}
-	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "repo"))); err != nil {
-		return err
+	defer os.RemoveAll(dir)
+
+	_, err = nazuna.OpenRepository(nil, dir)
+	if !strings.HasPrefix(err.Error(), "no repository found ") {
+		t.Error("error expected")
 	}
 
-	repo, err := OpenRepository(ui, rootdir)
-	if err != nil {
-		return err
+	if err := os.MkdirAll(filepath.Join(dir, ".nzn", "repo"), 0777); err != nil {
+		t.Fatal(err)
 	}
-	err = repo.Flush()
-	if err != nil {
-		return err
+	_, err = nazuna.OpenRepository(nil, dir)
+	if !strings.HasPrefix(err.Error(), "unknown vcs for directory ") {
+		t.Error(err)
 	}
-	return repo.Add(".")
 }
