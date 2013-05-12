@@ -52,11 +52,12 @@ func (e FlagError) Error() string {
 }
 
 type Command struct {
-	Names []string
-	Usage string
-	Help  string
-	Flag  flag.FlagSet
-	Run   func(UI, []string) error
+	Names       []string
+	Usage       string
+	Help        string
+	Flag        flag.FlagSet
+	CustomFlags bool
+	Run         func(UI, []string) error
 }
 
 func (c *Command) Name() string {
@@ -70,6 +71,7 @@ var Commands = []*Command{
 	cmdHelp,
 	cmdInit,
 	cmdLayer,
+	cmdVCS,
 	cmdVersion,
 }
 

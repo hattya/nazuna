@@ -101,3 +101,9 @@ func (r *Repository) Add(paths ...string) error {
 	cmd.Dir = r.repodir
 	return r.ui.Exec(cmd)
 }
+
+func (r *Repository) Command(args ...string) error {
+	cmd := r.vcs.Command(args...)
+	cmd.Dir = r.repodir
+	return r.ui.Exec(cmd)
+}

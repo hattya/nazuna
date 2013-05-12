@@ -36,6 +36,57 @@ import (
 	"github.com/hattya/nazuna"
 )
 
+func TestVCS(t *testing.T) {
+	dir, err := ioutil.TempDir("", "nazuna.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	rc, _, berr := runCLI("nazuna.test", "init", "--vcs=git", dir)
+	if rc != 0 {
+		t.Logf("stderr:\n%s", berr)
+		t.Fatalf("expected 0, got %d", rc)
+	}
+
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	rc, bout, berr := runCLI("nazuna.test", "vcs", "--version")
+	if rc != 0 {
+		t.Errorf("expected 0, got %d", rc)
+	}
+	if !strings.HasPrefix(bout, "git version ") {
+		t.Errorf(`expected "git version .*", got %q`, bout)
+	}
+	if berr != "" {
+		t.Errorf(`expected "", got %q`, berr)
+	}
+}
+
+func TestVCSError(t *testing.T) {
+	dir, err := ioutil.TempDir("", "nazuna.test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	rc, bout, berr := runCLI("nazuna.test", "vcs", "--version")
+	if rc != 1 {
+		t.Errorf("expected 1, got %d", rc)
+	}
+	if bout != "" {
+		t.Errorf(`expected "", got %q`, bout)
+	}
+	if !strings.Contains(berr, ": no repository found ") {
+		t.Errorf("error expected")
+	}
+}
+
 func TestFindVCS(t *testing.T) {
 	vcses := nazuna.VCSes
 	defer func() {

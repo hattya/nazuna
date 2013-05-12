@@ -28,10 +28,36 @@ package nazuna
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+var cmdVCS = &Command{
+	Names: []string{"vcs"},
+	Usage: "vcs [args]",
+	Help: `
+  run the vcs command inside the repository
+`,
+	CustomFlags: true,
+}
+
+func init() {
+	cmdVCS.Run = runVCS
+}
+
+func runVCS(ui UI, args []string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	repo, err := OpenRepository(ui, wd)
+	if err != nil {
+		return err
+	}
+	return repo.Command(args...)
+}
 
 type VCS struct {
 	Name string
@@ -71,6 +97,10 @@ func (v *VCS) expand(cmdline string, kv ...string) []string {
 		args[i] = a
 	}
 	return args
+}
+
+func (v *VCS) Command(args ...string) *exec.Cmd {
+	return exec.Command(v.Cmd, args...)
 }
 
 var VCSes = []*VCS{
