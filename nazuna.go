@@ -27,6 +27,7 @@
 package nazuna
 
 import (
+	"errors"
 	"os/exec"
 )
 
@@ -46,3 +47,5 @@ type UI interface {
 	Errorln(...interface{}) (int, error)
 	Exec(*exec.Cmd) error
 }
+
+var errArg = errors.New("invalid arguments")

@@ -32,6 +32,7 @@ import (
 
 var HelpUsage = usage(cmdHelp)
 var InitUsage = usage(cmdInit)
+var CloneUsage = usage(cmdClone)
 
 func usage(c *Command) string {
 	return "usage: nazuna.test " + c.Usage + "\n" + c.Help + "\n"

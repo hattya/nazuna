@@ -68,6 +68,7 @@ func (c *Command) Name() string {
 }
 
 var Commands = []*Command{
+	cmdClone,
 	cmdHelp,
 	cmdInit,
 	cmdLayer,

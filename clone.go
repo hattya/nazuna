@@ -1,5 +1,5 @@
 //
-// nazuna :: layer.go
+// nazuna :: clone.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -27,51 +27,54 @@
 package nazuna
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 )
 
-var cmdLayer = &Command{
-	Names: []string{"layer"},
-	Usage: "layer [-c] [<name>]",
+var cmdClone = &Command{
+	Names: []string{"clone"},
+	Usage: "clone --vcs=<type> <repository> [<path>]",
 	Help: `
-  manage repository layers
+  make a copy of an existing repository
 
 options:
 
-  -c, --create    create a new layer
+      --vcs=<type>    vcs type
 `,
 }
 
-var layerCreate bool
+var cloneVCS string
 
 func init() {
-	cmdLayer.Run = runLayer
-	cmdLayer.Flag.BoolVar(&layerCreate, "c", false, "")
-	cmdLayer.Flag.BoolVar(&layerCreate, "create", false, "")
+	cmdClone.Run = runClone
+	cmdClone.Flag.StringVar(&cloneVCS, "vcs", "", "")
 }
 
-func runLayer(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
+func runClone(ui UI, args []string) error {
+	if len(args) == 0 {
+		return errArg
 	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
+	src := args[0]
+
+	rootdir := "."
+	if 1 < len(args) {
+		rootdir = args[1]
+	}
+	nzndir := filepath.Join(rootdir, ".nzn")
+	if !isEmptyDir(nzndir) {
+		return fmt.Errorf("repository '%s' already exists!", rootdir)
 	}
 
-	switch {
-	case layerCreate:
-		if len(args) != 1 {
-			return errArg
-		}
-		if _, err := repo.NewLayer(args[0]); err != nil {
-			return err
-		}
-	default:
-		for _, l := range repo.Layers {
-			ui.Println(l.Name)
-		}
+	if cloneVCS == "" {
+		return FlagError("flag --vcs is required")
 	}
-	return nil
+	vcs, err := FindVCS(cloneVCS)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(nzndir, 0777); err != nil {
+		return err
+	}
+	return ui.Exec(vcs.Clone(src, filepath.Join(nzndir, "repo")))
 }
