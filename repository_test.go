@@ -43,16 +43,46 @@ func TestRepository(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	_, err = nazuna.OpenRepository(nil, dir)
-	if !strings.HasPrefix(err.Error(), "no repository found ") {
+	if _, err := nazuna.OpenRepository(nil, dir); !strings.HasPrefix(err.Error(), "no repository found ") {
 		t.Error("error expected")
 	}
 
 	if err := os.MkdirAll(filepath.Join(dir, ".nzn", "repo"), 0777); err != nil {
 		t.Fatal(err)
 	}
-	_, err = nazuna.OpenRepository(nil, dir)
-	if !strings.HasPrefix(err.Error(), "unknown vcs for directory ") {
+	if _, err = nazuna.OpenRepository(nil, dir); !strings.HasPrefix(err.Error(), "unknown vcs for directory ") {
+		t.Error(err)
+	}
+
+	if err := os.Mkdir(filepath.Join(dir, ".nzn", "repo", ".git"), 0777); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, ".nzn", "repo", "nazuna.json")
+
+	if err := os.Mkdir(path, 0777); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = nazuna.OpenRepository(nil, dir); err == nil {
+		t.Error("error expected")
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+
+	repo, err := nazuna.OpenRepository(nil, dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Flush(); err != nil {
+		t.Error(err)
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := `[]
+`
+	if err := equal(expected, string(data)); err != nil {
 		t.Error(err)
 	}
 }

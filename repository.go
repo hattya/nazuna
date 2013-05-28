@@ -28,6 +28,7 @@ package nazuna
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -66,7 +67,12 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 		repodir: repodir,
 	}
 
-	if unmarshal(filepath.Join(r.repodir, "nazuna.json"), &r.Layers) != nil {
+	path = filepath.Join(r.repodir, "nazuna.json")
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		if err := unmarshal(path, &r.Layers); err != nil {
+			return nil, err
+		}
+	} else {
 		r.Layers = []*Layer{}
 	}
 	return r, nil
