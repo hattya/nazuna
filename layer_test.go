@@ -27,14 +27,13 @@
 package nazuna_test
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 )
 
 func TestLayer(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +105,7 @@ func TestLayer(t *testing.T) {
 }
 
 func TestLayerError(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}

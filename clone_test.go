@@ -28,7 +28,6 @@ package nazuna_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,7 +38,7 @@ import (
 )
 
 func TestClone(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +71,7 @@ func TestClone(t *testing.T) {
 }
 
 func TestCloneError(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}

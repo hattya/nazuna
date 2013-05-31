@@ -38,7 +38,7 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestInitError(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestInitError(t *testing.T) {
 		t.Errorf("error expected")
 	}
 
-	if err := os.MkdirAll(filepath.Join(dir, ".nzn", "repo"), 0777); err != nil {
+	if err := mkdir(dir, ".nzn", "repo"); err != nil {
 		t.Fatal(err)
 	}
 	rc, bout, berr = runCLI("nazuna.test", "init", "--vcs=git", dir)

@@ -27,9 +27,7 @@
 package nazuna_test
 
 import (
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -37,7 +35,7 @@ import (
 )
 
 func TestVCS(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +64,7 @@ func TestVCS(t *testing.T) {
 }
 
 func TestVCSError(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +122,7 @@ func TestFindVCS(t *testing.T) {
 }
 
 func TestVCSFor(t *testing.T) {
-	dir, err := ioutil.TempDir("", "nazuna.test")
+	dir, err := mkdtemp()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +133,7 @@ func TestVCSFor(t *testing.T) {
 		t.Error("error expected")
 	}
 
-	if err := os.Mkdir(filepath.Join(dir, ".git"), 0777); err != nil {
+	if err := mkdir(dir, ".git"); err != nil {
 		t.Fatal(err)
 	}
 	vcs, err := nazuna.VCSFor(dir)
