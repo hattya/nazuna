@@ -80,9 +80,7 @@ func TestRepository(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := `[]
-`
-	if err := equal(expected, string(data)); err != nil {
-		t.Error(err)
+	if string(data) != "[]\n" {
+		t.Errorf(`expected "[]\n", got %q`, data)
 	}
 }

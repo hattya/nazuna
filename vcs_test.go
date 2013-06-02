@@ -35,53 +35,44 @@ import (
 )
 
 func TestVCS(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"cd", "$tempdir"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=git"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "--version"},
+			out: `git version \d.* (re)
+`,
+		},
 	}
-	defer os.RemoveAll(dir)
-
-	rc, _, berr := runCLI("nazuna.test", "init", "--vcs=git", dir)
-	if rc != 0 {
-		t.Logf("stderr:\n%s", berr)
-		t.Fatalf("expected 0, got %d", rc)
-	}
-
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-
-	rc, bout, berr := runCLI("nazuna.test", "vcs", "--version")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if !strings.HasPrefix(bout, "git version ") {
-		t.Errorf(`expected "git version .*", got %q`, bout)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
+	if err := ts.run(); err != nil {
+		t.Error(err)
 	}
 }
 
 func TestVCSError(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"cd", "$tempdir"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "--version"},
+			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+[1]
+`,
+		},
 	}
-	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-
-	rc, bout, berr := runCLI("nazuna.test", "vcs", "--version")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": no repository found ") {
-		t.Errorf("error expected")
+	if err := ts.run(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -128,8 +119,7 @@ func TestVCSFor(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	_, err = nazuna.VCSFor(dir)
-	if err == nil {
+	if _, err = nazuna.VCSFor(dir); err == nil {
 		t.Error("error expected")
 	}
 

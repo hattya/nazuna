@@ -27,57 +27,52 @@
 package nazuna_test
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/hattya/nazuna"
 )
 
+var helpUsage = `usage: nzn help [options] [--] [command]
+
+  display help information about nazuna
+
+`
+var helpOut = `nazuna - A layered dotfiles management
+
+list of commands:
+
+  clone      make a copy of an existing repository
+  help       display help information about nazuna
+  init       create a new repository in the specified directory
+  layer      manage repository layers
+  vcs        run the vcs command inside the repository
+  version    output version and copyright information
+
+`
+
 func TestHelp(t *testing.T) {
-	rc, bout, berr := runCLI("nazuna.test", "help")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
+	ts := testScript{
+		{
+			cmd: []string{"nzn", "help"},
+			out: helpOut,
+		},
+		{
+			cmd: []string{"nzn", "help", "help"},
+			out: helpUsage,
+		},
 	}
-	if err := equal(nazuna.HelpOut, bout); err != nil {
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "--help")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if err := equal(nazuna.HelpOut, bout); err != nil {
-		t.Error(err)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
 	}
 }
 
-func TestHelpUnknownCommand(t *testing.T) {
-	rc, bout, berr := runCLI("nazuna.test", "help", "nazuna")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
+func TestHelpError(t *testing.T) {
+	ts := testScript{
+		{
+			cmd: []string{"nzn", "help", "nazuna"},
+			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%s[1]\n", helpOut),
+		},
 	}
-	if err := equal(nazuna.HelpOut, bout); err != nil {
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	}
-	if berr != "nazuna.test: unknown command 'nazuna'\n" {
-		t.Errorf(`expected "nazuna.test: unknown command 'nazuna'\n", got %q`, berr)
-	}
-}
-
-func TestHelpHelp(t *testing.T) {
-	rc, bout, berr := runCLI("nazuna.test", "help", "help")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if err := equal(nazuna.HelpUsage, bout); err != nil {
-		t.Error(err)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
 	}
 }

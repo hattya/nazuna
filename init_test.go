@@ -27,106 +27,75 @@
 package nazuna_test
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
-
-	"github.com/hattya/nazuna"
 )
 
 func TestInit(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=git", "$tempdir"},
+		},
+		{
+			cmd: []string{"ls", "$tempdir/.nzn"},
+			out: `repo/
+`,
+		},
+		{
+			cmd: []string{"ls", "$tempdir/.nzn/repo"},
+			out: `.git/
+nazuna.json
+`,
+		},
+		{
+			cmd: []string{"cat", "$tempdir/.nzn/repo/nazuna.json"},
+			out: `[]
+`,
+		},
 	}
-	defer os.RemoveAll(dir)
-
-	rc, bout, berr := runCLI("nazuna.test", "init", "--vcs=git", dir)
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
-
-	path := filepath.Join(".nzn", "repo", ".git")
-	fi, err := os.Stat(filepath.Join(dir, path))
-	switch {
-	case err != nil:
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	case !fi.Mode().IsDir():
-		t.Errorf("%q is not a directory", path)
-	}
-
-	path = filepath.Join(".nzn", "repo", "nazuna.json")
-	fi, err = os.Stat(filepath.Join(dir, path))
-	switch {
-	case err != nil:
-		t.Fatal(err)
-	case !fi.Mode().IsRegular():
-		t.Fatalf("%q is not a file", path)
-	}
-
-	var layers []*nazuna.Layer
-	data, err := ioutil.ReadFile(filepath.Join(dir, path))
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = json.Unmarshal(data, &layers)
-	switch {
-	case err != nil:
-		t.Error(err)
-	case len(layers) != 0:
-		t.Errorf("expected 0, got %d", len(layers))
 	}
 }
 
 func TestInitError(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=cvs", "$tempdir"},
+			out: `nzn: unknown vcs 'cvs'
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "init", "$tempdir"},
+			out: `nzn init: flag --vcs is required
+usage: nzn init --vcs=<type> [<path>]
 
-	rc, bout, berr := runCLI("nazuna.test", "init", "--vcs=cvs", dir)
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": unknown vcs 'cvs'") {
-		t.Errorf("error expected")
-	}
+  create a new repository in the specified directory
 
-	rc, bout, berr = runCLI("nazuna.test", "init", dir)
-	if rc != 2 {
-		t.Errorf("expected 2, got %d", rc)
+options:
+
+      --vcs=<type>    vcs type
+
+[2]
+`,
+		},
+		{
+			cmd: []string{"mkdir", "$tempdir/.nzn/repo"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=git", "$tempdir"},
+			out: `nzn: repository '.*' already exists! (re)
+[1]
+`,
+		},
 	}
-	if err := equal(nazuna.InitUsage, bout); err != nil {
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	}
-	if !strings.Contains(berr, ": flag --vcs is required") {
-		t.Errorf("error expected")
-	}
-
-	if err := mkdir(dir, ".nzn", "repo"); err != nil {
-		t.Fatal(err)
-	}
-	rc, bout, berr = runCLI("nazuna.test", "init", "--vcs=git", dir)
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, " already exists!") {
-		t.Errorf("error expected")
 	}
 }

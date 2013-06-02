@@ -59,16 +59,13 @@ func TestFindCommand(t *testing.T) {
 		t.Error("error expected")
 	}
 
-	cmd, err := nazuna.FindCommand(list, "st")
-	switch {
+	switch cmd, err := nazuna.FindCommand(list, "st"); {
 	case err != nil:
 		t.Error(err)
 	case cmd.Name() != "status":
 		t.Errorf(`expected "status", got %q`, cmd.Name())
 	}
-
-	cmd, err = nazuna.FindCommand(list, "stash")
-	switch {
+	switch cmd, err := nazuna.FindCommand(list, "stash"); {
 	case err != nil:
 		t.Error(err)
 	case cmd.Name() != "stash":

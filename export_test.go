@@ -26,35 +26,6 @@
 
 package nazuna
 
-import (
-	"bytes"
-)
-
-var HelpUsage = usage(cmdHelp)
-var InitUsage = usage(cmdInit)
-var CloneUsage = usage(cmdClone)
-
-func usage(c *Command) string {
-	return "usage: nazuna.test " + c.Usage + "\n" + c.Help + "\n"
-}
-
-var HelpOut string
-var VersionOut string
-
-func init() {
-	out := new(bytes.Buffer)
-	cli := NewCLI([]string{"nazuna.test", "help"})
-	cli.SetOut(out)
-	cli.Run()
-	HelpOut = out.String()
-
-	out.Reset()
-	cli = NewCLI([]string{"nazuna.test", "version"})
-	cli.SetOut(out)
-	cli.Run()
-	VersionOut = out.String()
-}
-
 func SortedCommands(commands []*Command) []*Command {
 	return sortedCommands(commands)
 }

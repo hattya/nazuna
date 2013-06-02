@@ -27,117 +27,77 @@
 package nazuna_test
 
 import (
-	"os"
-	"strings"
 	"testing"
 )
 
 func TestLayer(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"cd", "$tempdir"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=git"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "a"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `a
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "b"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `b
+a
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "a"},
+			out: `nzn: layer 'a' already exists!
+[1]
+`,
+		},
 	}
-	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-
-	rc, _, berr := runCLI("nazuna.test", "init", "--vcs=git")
-	if rc != 0 {
-		t.Logf("stderr:\n%s", berr)
-		t.Fatalf("expected 0, got %d", rc)
-	}
-
-	rc, bout, berr := runCLI("nazuna.test", "layer")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "layer", "-c", "a")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "layer", "-c", "b")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "layer")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if err := equal("b\na\n", bout); err != nil {
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "layer", "-c", "a")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": layer 'a' already exists!") {
-		t.Error("error expected")
 	}
 }
 
 func TestLayerError(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"cd", "$tempdir"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=git"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c"},
+			out: `nzn: invalid arguments
+[1]
+`,
+		},
 	}
-	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-
-	rc, bout, berr := runCLI("nazuna.test", "layer")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": no repository found ") {
-		t.Error("error expected")
-	}
-
-	rc, _, berr = runCLI("nazuna.test", "init", "--vcs=git")
-	if rc != 0 {
-		t.Logf("stderr:\n%s", berr)
-		t.Fatalf("expected 0, got %d", rc)
-	}
-	rc, bout, berr = runCLI("nazuna.test", "layer", "-c")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": invalid arguments") {
-		t.Error("error expected")
+	if err := ts.run(); err != nil {
+		t.Error(err)
 	}
 }

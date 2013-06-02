@@ -28,30 +28,21 @@ package nazuna_test
 
 import (
 	"testing"
-
-	"github.com/hattya/nazuna"
 )
 
-func TestVersion(t *testing.T) {
-	rc, bout, berr := runCLI("nazuna.test", "--version")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
-	}
-	if err := equal(nazuna.VersionOut, bout); err != nil {
-		t.Error(err)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
-	}
+var versionOut = `nazuna, version 0.0+
 
-	rc, bout, berr = runCLI("nazuna.test", "version")
-	if rc != 0 {
-		t.Errorf("expected 0, got %d", rc)
+Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+`
+
+func TestVersion(t *testing.T) {
+	ts := testScript{
+		{
+			cmd: []string{"nzn", "version"},
+			out: versionOut,
+		},
 	}
-	if err := equal(nazuna.VersionOut, bout); err != nil {
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	}
-	if berr != "" {
-		t.Errorf(`expected "", got %q`, berr)
 	}
 }

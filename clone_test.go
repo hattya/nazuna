@@ -27,111 +27,91 @@
 package nazuna_test
 
 import (
-	"bytes"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 	"testing"
-
-	"github.com/hattya/nazuna"
 )
 
 func TestClone(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"cd", "$tempdir"},
+		},
+		{
+			cmd: []string{"git", "init", "-q", "src"},
+		},
+		{
+			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dest"},
+			out: `Cloning into 'dest/.nzn/repo'...
+warning: .* (re)
+done.
+`,
+		},
+		{
+			cmd: []string{"ls", "dest/.nzn"},
+			out: `repo/
+`,
+		},
+		{
+			cmd: []string{"ls", "dest/.nzn/repo"},
+			out: `.git/
+`,
+		},
 	}
-	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := exec.Command("git", "init", "-q", "src")
-	cmd.Stderr = new(bytes.Buffer)
-	if err := cmd.Run(); err != nil {
-		t.Logf("stderr:\n%s", cmd.Stderr)
-		t.Fatal(err)
-	}
-
-	rc, _, berr := runCLI("nazuna.test", "clone", "--vcs=git", "src", "dest")
-	if rc != 0 {
-		t.Logf("stderr:\n%s", berr)
-		t.Errorf("expected 0, got %d", rc)
-	}
-
-	path := filepath.Join("dest", ".nzn", "repo", ".git")
-	fi, err := os.Stat(path)
-	switch {
-	case err != nil:
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	case !fi.IsDir():
-		t.Errorf("%q is not a directory", path)
 	}
 }
 
 func TestCloneError(t *testing.T) {
-	dir, err := mkdtemp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
+	ts := testScript{
+		{
+			cmd: []string{"mkdtemp"},
+		},
+		{
+			cmd: []string{"cd", "$tempdir"},
+		},
+		{
+			cmd: []string{"nzn", "clone"},
+			out: `nzn: invalid arguments
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "clone", "src"},
+			out: `nzn clone: flag -*vcs is required (re)
+usage: nzn clone --vcs=<type> <repository> [<path>]
 
-	rc, bout, berr := runCLI("nazuna.test", "clone")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": invalid arguments") {
-		t.Error("error expected")
-	}
+  make a copy of an existing repository
 
-	rc, bout, berr = runCLI("nazuna.test", "clone", "src")
-	if rc != 2 {
-		t.Errorf("expected 2, got %d", rc)
+options:
+
+      --vcs=<type>    vcs type
+
+[2]
+`,
+		},
+		{
+			cmd: []string{"nzn", "clone", "--vcs=cvs", "src"},
+			out: `nzn: unknown vcs 'cvs'
+[1]
+`,
+		},
+		{
+			cmd: []string{"git", "init", "-q", "src"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs=git", "dest"},
+		},
+		{
+			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dest"},
+			out: `nzn: repository 'dest' already exists!
+[1]
+`,
+		},
 	}
-	if err := equal(nazuna.CloneUsage, bout); err != nil {
+	if err := ts.run(); err != nil {
 		t.Error(err)
-	}
-	if !strings.Contains(berr, ": flag --vcs is required") {
-		t.Errorf("error expected")
-	}
-
-	rc, bout, berr = runCLI("nazuna.test", "clone", "--vcs=cvs", "src")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, ": unknown vcs 'cvs'") {
-		t.Errorf("error expected")
-	}
-
-	cmd := exec.Command("git", "init", "-q", "src")
-	cmd.Stderr = new(bytes.Buffer)
-	if err := cmd.Run(); err != nil {
-		t.Logf("stderr:\n%s", cmd.Stderr)
-		t.Fatal(err)
-	}
-	rc, bout, berr = runCLI("nazuna.test", "init", "--vcs=git", "dest")
-	if rc != 0 {
-		t.Logf("stderr:\n%s", berr)
-		t.Fatalf("expected 0, got %d", rc)
-	}
-	rc, bout, berr = runCLI("nazuna.test", "clone", "--vcs=git", "src", "dest")
-	if rc != 1 {
-		t.Errorf("expected 1, got %d", rc)
-	}
-	if bout != "" {
-		t.Errorf(`expected "", got %q`, bout)
-	}
-	if !strings.Contains(berr, " already exists!") {
-		t.Errorf("error expected")
 	}
 }
