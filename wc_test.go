@@ -1,5 +1,5 @@
 //
-// nazuna :: export_test.go
+// nazuna :: wc_test.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,12 +24,61 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package nazuna_test
 
-func SortedCommands(commands []*Command) []*Command {
-	return sortedCommands(commands)
-}
+import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"testing"
 
-func Link(src, dest string) error {
-	return link(src, dest)
+	"github.com/hattya/nazuna"
+)
+
+func TestWC(t *testing.T) {
+	dir, err := mkdtemp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := mkdir(".nzn", "repo", ".git"); err != nil {
+		t.Fatal(err)
+	}
+	repo, err := nazuna.OpenRepository(nil, ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(".nzn", "state.json")
+
+	if err := mkdir(path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.WC(); err == nil {
+		t.Error("error expected")
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+
+	wc, err := repo.WC()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := wc.Flush(); err != nil {
+		t.Error(err)
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := string(data), "{}\n"; g != e {
+		t.Errorf(`expected %q, got %q`, e, g)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
 }

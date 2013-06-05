@@ -44,6 +44,7 @@ list of commands:
   help       display help information about nazuna
   init       create a new repository in the specified directory
   layer      manage repository layers
+  update     update working copy
   vcs        run the vcs command inside the repository
   version    output version and copyright information
 

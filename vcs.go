@@ -67,6 +67,7 @@ type VCS struct {
 	InitCmd  string
 	CloneCmd string
 	AddCmd   string
+	ListCmd  string
 }
 
 func (v *VCS) String() string {
@@ -85,6 +86,11 @@ func (v *VCS) Clone(src, dest string) *exec.Cmd {
 
 func (v *VCS) Add(paths ...string) *exec.Cmd {
 	args := v.expand(v.AddCmd)
+	return exec.Command(v.Cmd, append(args, paths...)...)
+}
+
+func (v *VCS) List(paths ...string) *exec.Cmd {
+	args := v.expand(v.ListCmd)
 	return exec.Command(v.Cmd, append(args, paths...)...)
 }
 
@@ -122,6 +128,7 @@ var vcsGit = &VCS{
 	InitCmd:  "init -q {path}",
 	CloneCmd: "clone {src} {dest}",
 	AddCmd:   "add",
+	ListCmd:  "ls-files",
 }
 
 var vcsHg = &VCS{
@@ -132,6 +139,7 @@ var vcsHg = &VCS{
 	InitCmd:  "init {path}",
 	CloneCmd: "clone {src} {dest}",
 	AddCmd:   "add",
+	ListCmd:  "status -madcn",
 }
 
 type VCSError struct {

@@ -100,6 +100,11 @@ func (t testScript) run() error {
 			if err := errorf(t.diff(c.out, out, rc)); err != nil {
 				return err
 			}
+		case "ln":
+			if len(args) != 3 || args[0] != "-s" {
+				return errorf("ln: invalid arguments")
+			}
+			nazuna.Link(args[1], args[2])
 		case "ls":
 			f, err := os.Open(args[0])
 			if os.IsNotExist(err) {
@@ -152,6 +157,22 @@ func (t testScript) run() error {
 			rc := nzn.Run()
 			if err := errorf(t.diff(c.out, out.String(), rc)); err != nil {
 				return err
+			}
+		case "rm":
+			var remove func(string) error
+			switch {
+			case 1 < len(args) && args[0] == "-r":
+				remove = os.RemoveAll
+				args = args[1:]
+			default:
+				remove = os.Remove
+			}
+			if err := remove(args[0]); err != nil {
+				return errorf(err)
+			}
+		case "touch":
+			if err := touch(args[0]); err != nil {
+				return errorf(err)
 			}
 		default:
 			return errorf(fmt.Sprintf("command not found: %s", c.cmd[0]))
@@ -243,4 +264,8 @@ func mkdtemp() (string, error) {
 
 func mkdir(a ...string) error {
 	return os.MkdirAll(filepath.Join(a...), 0777)
+}
+
+func touch(a ...string) error {
+	return ioutil.WriteFile(filepath.Join(a...), []byte{}, 0666)
 }

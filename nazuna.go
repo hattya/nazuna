@@ -28,6 +28,7 @@ package nazuna
 
 import (
 	"errors"
+	"fmt"
 	"os/exec"
 )
 
@@ -35,6 +36,16 @@ var Version = "0.0+"
 
 type Layer struct {
 	Name string `json:"name"`
+}
+
+type State struct {
+	WC []*Entry `json:"wc,omitempty"`
+}
+
+type Entry struct {
+	Layer string `json:"layer"`
+	Path  string `json:"path"`
+	IsDir bool   `json:"dir,omitempty"`
 }
 
 type UI interface {
@@ -48,4 +59,11 @@ type UI interface {
 	Exec(*exec.Cmd) error
 }
 
+type SystemExit int
+
+func (e SystemExit) Error() string {
+	return fmt.Sprintf("exit status %d", e)
+}
+
 var errArg = errors.New("invalid arguments")
+var errLink = errors.New("file is link")

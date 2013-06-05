@@ -130,26 +130,24 @@ func (c *CLI) Run() int {
 		cmd.Flag.Init(c.args[0], flag.ContinueOnError)
 		cmd.Flag.SetOutput(ioutil.Discard)
 		if err := cmd.Flag.Parse(args[1:]); err != nil {
-			rc := 2
 			if err == flag.ErrHelp {
-				rc, err = 0, nil
+				return c.usage(0, cmd, nil)
 			}
-			return c.usage(rc, cmd, err)
+			return c.usage(2, cmd, err)
 		}
 		args = cmd.Flag.Args()
 	}
 	if err := cmd.Run(c, args); err != nil {
-		rc := 1
-		switch err.(type) {
+		switch v := err.(type) {
 		case *CommandError:
-			cmd = nil
+			return c.usage(1, nil, err)
 		case FlagError:
-			rc = 2
-		default:
-			c.Errorf("%s: %s\n", c.args[0], err)
-			return 1
+			return c.usage(2, cmd, err)
+		case SystemExit:
+			return int(v)
 		}
-		return c.usage(rc, cmd, err)
+		c.Errorf("%s: %s\n", c.args[0], err)
+		return 1
 	}
 	return 0
 }

@@ -72,6 +72,7 @@ var Commands = []*Command{
 	cmdHelp,
 	cmdInit,
 	cmdLayer,
+	cmdUpdate,
 	cmdVCS,
 	cmdVersion,
 }

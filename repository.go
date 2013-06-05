@@ -27,7 +27,9 @@
 package nazuna
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -82,14 +84,17 @@ func (r *Repository) Flush() error {
 	return marshal(filepath.Join(r.repodir, "nazuna.json"), r.Layers)
 }
 
-func (r *Repository) NewLayer(name string) (*Layer, error) {
-	found := false
+func (r *Repository) LayerOf(name string) (*Layer, error) {
 	for _, l := range r.Layers {
-		if l.Name == name {
-			found = true
+		if name == l.Name {
+			return l, nil
 		}
 	}
-	if found || !isEmptyDir(filepath.Join(r.repodir, name)) {
+	return nil, fmt.Errorf("layer '%s' does not exist!", name)
+}
+
+func (r *Repository) NewLayer(name string) (*Layer, error) {
+	if _, err := r.LayerOf(name); err == nil || !isEmptyDir(filepath.Join(r.repodir, name)) {
 		return nil, fmt.Errorf("layer '%s' already exists!", name)
 	}
 
@@ -100,6 +105,50 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 	copy(r.Layers[1:], r.Layers)
 	r.Layers[0] = l
 	return l, r.Flush()
+}
+
+func (r *Repository) PathFor(layer *Layer, path string) string {
+	return filepath.Join(r.repodir, layer.Name, path)
+}
+
+func (r *Repository) WC() (*WC, error) {
+	return openWC(r.ui, r)
+}
+
+func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
+	cmd := r.vcs.List(path)
+	cmd.Dir = r.repodir
+	pout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+	out := bufio.NewReader(pout)
+	var line []byte
+	for {
+		data, isPrefix, err := out.ReadLine()
+		switch {
+		case err == io.EOF:
+			return cmd.Wait()
+		case err != nil:
+			cmd.Wait()
+			return err
+		default:
+			line = append(line, data...)
+			if isPrefix {
+				continue
+			}
+		}
+		p := string(line)
+		fi, err := os.Stat(filepath.Join(r.repodir, p))
+		if err := walk(p[len(path)+1:], fi, err); err != nil {
+			return err
+		}
+		line = line[:0]
+	}
 }
 
 func (r *Repository) Add(paths ...string) error {

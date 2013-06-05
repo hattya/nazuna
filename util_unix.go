@@ -1,5 +1,5 @@
 //
-// nazuna :: export_test.go
+// nazuna :: util_unix.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -23,13 +23,40 @@
 //   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //   SOFTWARE.
 //
+// +build: !plan9,!windows
 
 package nazuna
 
-func SortedCommands(commands []*Command) []*Command {
-	return sortedCommands(commands)
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
+func isLink(path string) bool {
+	fi, err := os.Lstat(path)
+	return err == nil && fi.Mode()&os.ModeSymlink != 0
 }
 
-func Link(src, dest string) error {
-	return link(src, dest)
+func linkTo(src, dest string) bool {
+	if !isLink(src) {
+		return false
+	}
+	r, err := os.Readlink(src)
+	if err != nil {
+		return false
+	}
+	return filepath.Join(filepath.Dir(src), r) == dest
+}
+
+func link(src, dest string) error {
+	rel, _ := filepath.Rel(filepath.Dir(dest), src)
+	return os.Symlink(rel, dest)
+}
+
+func unlink(path string) error {
+	if !isLink(path) {
+		return fmt.Errorf("'%s' is not a link", path)
+	}
+	return os.Remove(path)
 }

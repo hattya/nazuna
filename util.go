@@ -64,3 +64,10 @@ func unmarshal(path string, v interface{}) error {
 	}
 	return json.Unmarshal(data, v)
 }
+
+func entryPath(entry *Entry) string {
+	if entry.IsDir {
+		return entry.Path + "/"
+	}
+	return entry.Path
+}
