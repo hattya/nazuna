@@ -62,9 +62,42 @@ a
 `,
 		},
 		{
-			cmd: []string{"nzn", "layer", "-c", "a"},
-			out: `nzn: layer 'a' already exists!
-[1]
+			cmd: []string{"nzn", "layer", "-c", "c/2"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/1"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `c
+    1
+    2
+b
+a
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/1"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `c
+    1*
+    2
+b
+a
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/2"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `c
+    1
+    2*
+b
+a
 `,
 		},
 	}
@@ -93,6 +126,93 @@ func TestLayerError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "layer", "-c"},
 			out: `nzn: invalid arguments
+[1]
+`,
+		},
+		{
+			cmd: []string{"touch", ".nzn/state.json"},
+		},
+		{
+			cmd: []string{"nzn", "layer"},
+			out: `nzn: unexpected end of JSON input
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "a"},
+			out: `nzn: unexpected end of JSON input
+[1]
+`,
+		},
+		{
+			cmd: []string{"rm", ".nzn/state.json"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "a"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "a"},
+			out: `nzn: layer 'a' already exists!
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "a/1"},
+			out: `nzn: layer 'a' is not abstract
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "/"},
+			out: `nzn: invalid layer '/'
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "b/"},
+			out: `nzn: invalid layer 'b/'
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "/1"},
+			out: `nzn: invalid layer '/1'
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "b/1"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "_", "_"},
+			out: `nzn: invalid arguments
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "_"},
+			out: `nzn: layer '_' does not exist!
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "b"},
+			out: `nzn: layer 'b' is abstract
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "a"},
+			out: `nzn: layer 'a' is not abstract
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "b/1"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "b/1"},
+			out: `nzn: layer 'b' is already '1'
 [1]
 `,
 		},

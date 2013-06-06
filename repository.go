@@ -32,6 +32,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 )
 
 type Repository struct {
@@ -85,32 +87,79 @@ func (r *Repository) Flush() error {
 }
 
 func (r *Repository) LayerOf(name string) (*Layer, error) {
+	n, err := r.splitLayer(name)
+	if err != nil {
+		return nil, err
+	}
 	for _, l := range r.Layers {
-		if name == l.Name {
-			return l, nil
+		if n[0] == l.Name {
+			switch {
+			case len(n) == 1:
+				return l, nil
+			case len(l.Layers) == 0:
+				return nil, fmt.Errorf("layer '%s' is not abstract", n[0])
+			default:
+				for _, ll := range l.Layers {
+					if n[1] == ll.Name {
+						ll.parent = l
+						return ll, nil
+					}
+				}
+			}
 		}
 	}
 	return nil, fmt.Errorf("layer '%s' does not exist!", name)
 }
 
 func (r *Repository) NewLayer(name string) (*Layer, error) {
-	if _, err := r.LayerOf(name); err == nil || !isEmptyDir(filepath.Join(r.repodir, name)) {
+	switch _, err := r.LayerOf(name); {
+	case err != nil && !strings.Contains(err.Error(), "not exist"):
+		return nil, err
+	case err == nil || !isEmptyDir(filepath.Join(r.repodir, name)):
 		return nil, fmt.Errorf("layer '%s' already exists!", name)
 	}
 
-	l := &Layer{
-		Name: name,
+	var l *Layer
+	newLayer := func(n string) *Layer {
+		r.Layers = append(r.Layers, nil)
+		copy(r.Layers[1:], r.Layers)
+		r.Layers[0] = &Layer{Name: n}
+		return r.Layers[0]
 	}
-	r.Layers = append(r.Layers, nil)
-	copy(r.Layers[1:], r.Layers)
-	r.Layers[0] = l
+	switch n, _ := r.splitLayer(name); len(n) {
+	case 1:
+		l = newLayer(n[0])
+	default:
+		var err error
+		l, err = r.LayerOf(n[0])
+		if err != nil {
+			l = newLayer(n[0])
+		}
+
+		ll := &Layer{
+			Name:   n[1],
+			parent: l,
+		}
+		l.Layers = append(l.Layers, ll)
+		sort.Sort(layerByName(l.Layers))
+
+		l = ll
+	}
 
 	os.MkdirAll(r.PathFor(l, "."), 0777)
 	return l, nil
 }
 
+func (r *Repository) splitLayer(name string) ([]string, error) {
+	n := strings.Split(name, "/")
+	if 2 < len(n) || strings.TrimSpace(n[0]) == "" || (1 < len(n) && strings.TrimSpace(n[1]) == "") {
+		return nil, fmt.Errorf("invalid layer '%s'", name)
+	}
+	return n, nil
+}
+
 func (r *Repository) PathFor(layer *Layer, path string) string {
-	return filepath.Join(r.repodir, layer.Name, path)
+	return filepath.Join(r.repodir, layer.Path(), path)
 }
 
 func (r *Repository) WC() (*WC, error) {

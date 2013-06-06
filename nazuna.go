@@ -35,11 +35,27 @@ import (
 const Version = "0.0+"
 
 type Layer struct {
-	Name string `json:"name"`
+	Name   string   `json:"name"`
+	Layers []*Layer `json:"layers,omitempty"`
+
+	parent *Layer
+}
+
+func (l *Layer) Path() string {
+	if l.parent != nil {
+		return l.parent.Name + "/" + l.Name
+	}
+	return l.Name
 }
 
 type State struct {
-	WC []*Entry `json:"wc,omitempty"`
+	Layers []*SelectedLayer `json:"layers,omitempty"`
+	WC     []*Entry         `json:"wc,omitempty"`
+}
+
+type SelectedLayer struct {
+	Abstract string `json:"abstract"`
+	Selected string `json:"selected"`
 }
 
 type Entry struct {
@@ -47,6 +63,12 @@ type Entry struct {
 	Path  string `json:"path"`
 	IsDir bool   `json:"dir,omitempty"`
 }
+
+type layerByName []*Layer
+
+func (s layerByName) Len() int           { return len(s) }
+func (s layerByName) Less(i, j int) bool { return s[i].Name < s[j].Name }
+func (s layerByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 type UI interface {
 	Args() []string

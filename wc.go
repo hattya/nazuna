@@ -27,12 +27,26 @@
 package nazuna
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 )
+
+type ResolveError struct {
+	Name string
+	List []string
+}
+
+func (e *ResolveError) Error() string {
+	s := fmt.Sprintf("cannot resolve layer '%s'", e.Name)
+	if len(e.List) == 0 {
+		return s
+	}
+	return fmt.Sprintf("%s:\n    %s", s, strings.Join(e.List, "\n    "))
+}
 
 type WC struct {
 	State State
@@ -76,7 +90,7 @@ func (w *WC) IsLink(path string) bool {
 
 func (w *WC) LinkTo(path string, layer *Layer) bool {
 	for ; path != "."; path = filepath.Dir(path) {
-		if linkTo(w.PathFor(path), filepath.Join(w.repo.repodir, layer.Name, path)) {
+		if linkTo(w.PathFor(path), filepath.Join(w.repo.repodir, layer.Path(), path)) {
 			return true
 		}
 	}
@@ -103,10 +117,69 @@ func (w *WC) Unlink(path string) error {
 	return unlink(path)
 }
 
+func (w *WC) SelectLayer(name string) error {
+	l, err := w.repo.LayerOf(name)
+	switch {
+	case err != nil:
+		return err
+	case 0 < len(l.Layers):
+		return fmt.Errorf("layer '%s' is abstract", name)
+	case l.parent == nil:
+		return fmt.Errorf("layer '%s' is not abstract", name)
+	}
+	for _, sl := range w.State.Layers {
+		if sl.Abstract == l.parent.Name {
+			if sl.Selected == l.Name {
+				return fmt.Errorf("layer '%s' is already '%s'", sl.Abstract, sl.Selected)
+			}
+			sl.Selected = l.Name
+			return nil
+		}
+	}
+	w.State.Layers = append(w.State.Layers, &SelectedLayer{
+		Abstract: l.parent.Name,
+		Selected: l.Name,
+	})
+	return nil
+}
+
+func (w *WC) LayerFor(name string) (*Layer, error) {
+	for _, l := range w.State.Layers {
+		if name == l.Abstract {
+			return w.repo.LayerOf(l.Abstract + "/" + l.Selected)
+		}
+	}
+	return nil, &ResolveError{Name: name}
+}
+
+func (w *WC) Layers() ([]*Layer, error) {
+	list := make([]*Layer, len(w.repo.Layers))
+	for i, l := range w.repo.Layers {
+		if 0 < len(l.Layers) {
+			wl, err := w.LayerFor(l.Name)
+			if err == nil {
+				list[i] = wl
+				continue
+			}
+			list := make([]string, len(l.Layers))
+			for i, sl := range l.Layers {
+				list[i] = sl.Name
+			}
+			return nil, &ResolveError{l.Name, list}
+		}
+		list[i] = l
+	}
+	return list, nil
+}
+
 func (w *WC) MergeLayers() ([]*Entry, error) {
+	layers, err := w.Layers()
+	if err != nil {
+		return nil, err
+	}
 	lwc := make(layeredWC)
-	for _, l := range w.repo.Layers {
-		err := w.repo.Walk(l.Name, func(path string, fi os.FileInfo, err error) error {
+	for _, l := range layers {
+		err := w.repo.Walk(l.Path(), func(path string, fi os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -140,14 +213,14 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 			var b bool
 			for l, b = range lwc[p] {
 			}
-			w.State.WC = append(w.State.WC, &Entry{l.Name, p, b})
+			w.State.WC = append(w.State.WC, &Entry{l.Path(), p, b})
 			if b {
 				dir = p + "/"
 			} else {
 				dir = ""
 			}
 			if e, ok := wc[p]; ok {
-				if e.Layer == l.Name && e.IsDir == b {
+				if e.Layer == l.Path() && e.IsDir == b {
 					delete(wc, p)
 				}
 			}
@@ -174,6 +247,23 @@ func (w *WC) sort(m interface{}) []string {
 	}
 	list.Sort()
 	return list
+}
+
+func (w *WC) Errorf(err error) error {
+	switch v := err.(type) {
+	case *os.LinkError:
+		if r, err := filepath.Rel(w.PathFor("."), v.New); err == nil {
+			v.New = r
+		}
+		return fmt.Errorf("%s: %s", v.New, v.Err)
+	case *os.PathError:
+		if r, err := filepath.Rel(w.PathFor("."), v.Path); err == nil {
+			v.Path = r
+		}
+		return fmt.Errorf("%s: %s", v.Path, v.Err)
+	default:
+		return err
+	}
 }
 
 type layeredWC map[string]map[*Layer]bool

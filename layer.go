@@ -69,9 +69,32 @@ func runLayer(ui UI, args []string) error {
 			return err
 		}
 		return repo.Flush()
+	case 0 < len(args):
+		if len(args) != 1 {
+			return errArg
+		}
+		wc, err := repo.WC()
+		if err != nil {
+			return err
+		}
+		if err = wc.SelectLayer(args[0]); err != nil {
+			return err
+		}
+		return wc.Flush()
 	default:
+		wc, err := repo.WC()
+		if err != nil {
+			return err
+		}
 		for _, l := range repo.Layers {
 			ui.Println(l.Name)
+			for _, ll := range l.Layers {
+				var s string
+				if wl, err := wc.LayerFor(l.Name); err == nil && wl.Name == ll.Name {
+					s = "*"
+				}
+				ui.Printf("    %s%s\n", ll.Name, s)
+			}
 		}
 		return nil
 	}

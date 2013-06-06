@@ -29,7 +29,6 @@ package nazuna
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 var cmdUpdate = &Command{
@@ -60,7 +59,7 @@ func runUpdate(ui UI, args []string) error {
 	}
 	ul, err := wc.MergeLayers()
 	if err != nil {
-		return err
+		return wc.Errorf(err)
 	}
 
 	updated, removed, failed := 0, 0, 0
@@ -84,24 +83,15 @@ func runUpdate(ui UI, args []string) error {
 		removed++
 	}
 
-	errorf := func(p string, err error) {
-		r, _ := filepath.Rel(wc.PathFor("."), p)
-		ui.Errorf("error: %s: %s\n", r, err)
-	}
 	for i := 0; i < len(wc.State.WC); i++ {
 		e := wc.State.WC[i]
 		l, _ := repo.LayerOf(e.Layer)
 		if wc.LinkTo(e.Path, l) {
 			continue
 		}
-		ui.Println("link", entryPath(e), "-->", l.Name)
+		ui.Println("link", entryPath(e), "-->", l.Path())
 		if err = wc.Link(l, e.Path); err != nil {
-			switch v := err.(type) {
-			case *os.LinkError:
-				errorf(v.New, v.Err)
-			case *os.PathError:
-				errorf(v.Path, v.Err)
-			}
+			ui.Errorln("error:", wc.Errorf(err))
 			copy(wc.State.WC[i:], wc.State.WC[i+1:])
 			wc.State.WC = wc.State.WC[:len(wc.State.WC)-1]
 			failed++

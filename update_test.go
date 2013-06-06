@@ -92,6 +92,40 @@ link .vimrc --> b
 3 updated, 2 removed, 0 failed
 `,
 		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/1"},
+		},
+		{
+			cmd: []string{"touch", ".nzn/repo/c/1/.screenrc"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/2"},
+		},
+		{
+			cmd: []string{"touch", ".nzn/repo/c/2/.tmux.conf"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "add", "c"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/1"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `link .screenrc --> c/1
+1 updated, 0 removed, 0 failed
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/2"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `unlink .screenrc -/- c/1
+link .tmux.conf --> c/2
+1 updated, 1 removed, 0 failed
+`,
+		},
 	}
 	if err := ts.run(); err != nil {
 		t.Error(err)
@@ -275,6 +309,44 @@ error: .vim/syntax: .* (re)
 			out: `link .vim/syntax/go.vim --> b
 error: .vim/syntax: (re)
 0 updated, 0 removed, 1 failed
+[1]
+`,
+		},
+		{
+			cmd: []string{"rm", ".vim/syntax"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/1"},
+		},
+		{
+			cmd: []string{"touch", ".nzn/repo/c/1/.screenrc"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/2"},
+		},
+		{
+			cmd: []string{"touch", ".nzn/repo/c/2/.tmux.conf"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "add", "c"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `nzn: cannot resolve layer 'c':
+    1
+    2
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/1"},
+		},
+		{
+			cmd: []string{"rm", "-r", ".nzn/repo/c/1"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `nzn: .nzn/repo/c/1/.screenrc: .* (re)
 [1]
 `,
 		},
