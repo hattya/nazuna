@@ -104,7 +104,9 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 	r.Layers = append(r.Layers, nil)
 	copy(r.Layers[1:], r.Layers)
 	r.Layers[0] = l
-	return l, r.Flush()
+
+	os.MkdirAll(r.PathFor(l, "."), 0777)
+	return l, nil
 }
 
 func (r *Repository) PathFor(layer *Layer, path string) string {

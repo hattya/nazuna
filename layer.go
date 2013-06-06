@@ -68,10 +68,11 @@ func runLayer(ui UI, args []string) error {
 		if _, err := repo.NewLayer(args[0]); err != nil {
 			return err
 		}
+		return repo.Flush()
 	default:
 		for _, l := range repo.Layers {
 			ui.Println(l.Name)
 		}
+		return nil
 	}
-	return nil
 }

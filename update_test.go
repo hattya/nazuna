@@ -45,9 +45,6 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a"},
-		},
-		{
 			cmd: []string{"touch", ".nzn/repo/a/.gitconfig"},
 		},
 		{
@@ -72,9 +69,6 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
-		},
-		{
-			cmd: []string{"mkdir", ".nzn/repo/b"},
 		},
 		{
 			cmd: []string{"touch", ".nzn/repo/b/.vimrc"},
@@ -137,9 +131,6 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a"},
-		},
-		{
 			cmd: []string{"touch", ".nzn/repo/a/.bashrc"},
 		},
 		{
@@ -168,9 +159,6 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
-		},
-		{
-			cmd: []string{"mkdir", ".nzn/repo/b"},
 		},
 		{
 			cmd: []string{"touch", ".nzn/repo/b/.gitconfig"},
