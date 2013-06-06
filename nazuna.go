@@ -88,4 +88,5 @@ func (e SystemExit) Error() string {
 }
 
 var errArg = errors.New("invalid arguments")
-var errLink = errors.New("file is link")
+var errLink = errors.New("file is a link")
+var errNotLink = errors.New("not a link")

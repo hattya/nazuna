@@ -28,7 +28,6 @@
 package nazuna
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -56,7 +55,7 @@ func link(src, dest string) error {
 
 func unlink(path string) error {
 	if !isLink(path) {
-		return fmt.Errorf("'%s' is not a link", path)
+		return &os.PathError{"unlink", path, errNotLink}
 	}
 	return os.Remove(path)
 }

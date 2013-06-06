@@ -30,6 +30,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -80,5 +81,35 @@ func TestWC(t *testing.T) {
 	}
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestWCError(t *testing.T) {
+	dir, err := mkdtemp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := mkdir(".nzn", "repo", ".git"); err != nil {
+		t.Fatal(err)
+	}
+	repo, err := nazuna.OpenRepository(nil, ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wc, err := repo.WC()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := wc.LayerFor("_"); !strings.HasSuffix(err.Error(), "layer '_'") {
+		t.Error(err)
+	}
+	if err := wc.Unlink("_"); !strings.HasSuffix(err.Error(), ": not a link") {
+		t.Error(err)
 	}
 }
