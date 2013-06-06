@@ -32,7 +32,7 @@ import (
 	"os/exec"
 )
 
-var Version = "0.0+"
+const Version = "0.0+"
 
 type Layer struct {
 	Name string `json:"name"`

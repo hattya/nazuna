@@ -120,7 +120,7 @@ loop:
 }
 
 func sortedCommands(commands []*Command) []*Command {
-	list := make(commandsByName, len(commands))
+	list := make(commandByName, len(commands))
 	for i, c := range commands {
 		list[i] = c
 	}
@@ -128,16 +128,8 @@ func sortedCommands(commands []*Command) []*Command {
 	return list
 }
 
-type commandsByName []*Command
+type commandByName []*Command
 
-func (s commandsByName) Len() int {
-	return len(s)
-}
-
-func (s commandsByName) Less(i, j int) bool {
-	return s[i].Name() < s[j].Name()
-}
-
-func (s commandsByName) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
+func (s commandByName) Len() int           { return len(s) }
+func (s commandByName) Less(i, j int) bool { return s[i].Name() < s[j].Name() }
+func (s commandByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }

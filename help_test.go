@@ -31,12 +31,13 @@ import (
 	"testing"
 )
 
-var helpUsage = `usage: nzn help [options] [--] [command]
+const (
+	helpUsage = `usage: nzn help [options] [--] [command]
 
   display help information about nazuna
 
 `
-var helpOut = `nazuna - A layered dotfiles management
+	helpOut = `nazuna - A layered dotfiles management
 
 list of commands:
 
@@ -49,6 +50,7 @@ list of commands:
   version    output version and copyright information
 
 `
+)
 
 func TestHelp(t *testing.T) {
 	ts := testScript{

@@ -30,10 +30,12 @@ import (
 	"testing"
 )
 
-var versionOut = `nazuna, version 0.0+
+const (
+	versionOut = `nazuna, version 0.0+
 
 Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 `
+)
 
 func TestVersion(t *testing.T) {
 	ts := testScript{
