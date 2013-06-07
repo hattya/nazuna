@@ -127,26 +127,26 @@ func (w *WC) SelectLayer(name string) error {
 	case l.parent == nil:
 		return fmt.Errorf("layer '%s' is not abstract", name)
 	}
-	for _, sl := range w.State.Layers {
-		if sl.Abstract == l.parent.Name {
-			if sl.Selected == l.Name {
-				return fmt.Errorf("layer '%s' is already '%s'", sl.Abstract, sl.Selected)
+	for k, v := range w.State.Layers {
+		if k == l.parent.Name {
+			if v == l.Name {
+				return fmt.Errorf("layer '%s' is already '%s'", k, v)
 			}
-			sl.Selected = l.Name
+			w.State.Layers[k] = l.Name
 			return nil
 		}
 	}
-	w.State.Layers = append(w.State.Layers, &SelectedLayer{
-		Abstract: l.parent.Name,
-		Selected: l.Name,
-	})
+	if w.State.Layers == nil {
+		w.State.Layers = make(map[string]string)
+	}
+	w.State.Layers[l.parent.Name] = l.Name
 	return nil
 }
 
 func (w *WC) LayerFor(name string) (*Layer, error) {
-	for _, l := range w.State.Layers {
-		if name == l.Abstract {
-			return w.repo.LayerOf(l.Abstract + "/" + l.Selected)
+	for k, v := range w.State.Layers {
+		if name == k {
+			return w.repo.LayerOf(k + "/" + v)
 		}
 	}
 	return nil, &ResolveError{Name: name}

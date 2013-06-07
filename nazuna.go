@@ -49,13 +49,8 @@ func (l *Layer) Path() string {
 }
 
 type State struct {
-	Layers []*SelectedLayer `json:"layers,omitempty"`
-	WC     []*Entry         `json:"wc,omitempty"`
-}
-
-type SelectedLayer struct {
-	Abstract string `json:"abstract"`
-	Selected string `json:"selected"`
+	Layers map[string]string `json:"layers,omitempty"`
+	WC     []*Entry          `json:"wc,omitempty"`
 }
 
 type Entry struct {
