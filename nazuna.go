@@ -38,12 +38,12 @@ type Layer struct {
 	Name   string   `json:"name"`
 	Layers []*Layer `json:"layers,omitempty"`
 
-	parent *Layer
+	abstract *Layer
 }
 
 func (l *Layer) Path() string {
-	if l.parent != nil {
-		return l.parent.Name + "/" + l.Name
+	if l.abstract != nil {
+		return l.abstract.Name + "/" + l.Name
 	}
 	return l.Name
 }

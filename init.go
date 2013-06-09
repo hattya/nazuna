@@ -75,8 +75,7 @@ func runInit(ui UI, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = repo.Flush()
-	if err != nil {
+	if err := repo.Flush(); err != nil {
 		return err
 	}
 	return repo.Add(".")

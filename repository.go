@@ -101,7 +101,7 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 			default:
 				for _, ll := range l.Layers {
 					if n[1] == ll.Name {
-						ll.parent = l
+						ll.abstract = l
 						return ll, nil
 					}
 				}
@@ -137,8 +137,8 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 		}
 
 		ll := &Layer{
-			Name:   n[1],
-			parent: l,
+			Name:     n[1],
+			abstract: l,
 		}
 		l.Layers = append(l.Layers, ll)
 		sort.Sort(layerByName(l.Layers))
@@ -173,8 +173,7 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	if err != nil {
 		return err
 	}
-	err = cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 	out := bufio.NewReader(pout)

@@ -26,8 +26,8 @@
 
 package nazuna
 
-func SortedCommands(commands []*Command) []*Command {
-	return sortedCommands(commands)
+func SortCommands(commands []*Command) []*Command {
+	return sortCommands(commands)
 }
 
 func Link(src, dest string) error {

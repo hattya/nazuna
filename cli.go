@@ -145,9 +145,10 @@ func (c *CLI) Run() int {
 			return c.usage(2, cmd, err)
 		case SystemExit:
 			return int(v)
+		default:
+			c.Errorf("%s: %s\n", c.args[0], err)
+			return 1
 		}
-		c.Errorf("%s: %s\n", c.args[0], err)
-		return 1
 	}
 	return 0
 }

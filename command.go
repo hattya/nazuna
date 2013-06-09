@@ -33,24 +33,6 @@ import (
 	"strings"
 )
 
-type CommandError struct {
-	Name string
-	List []string
-}
-
-func (e *CommandError) Error() string {
-	if len(e.List) == 0 {
-		return fmt.Sprintf("unknown command '%s'", e.Name)
-	}
-	return fmt.Sprintf("command '%s' is ambiguous:\n    %s", e.Name, strings.Join(e.List, " "))
-}
-
-type FlagError string
-
-func (e FlagError) Error() string {
-	return string(e)
-}
-
 type Command struct {
 	Names       []string
 	Usage       string
@@ -67,6 +49,12 @@ func (c *Command) Name() string {
 	return c.Names[0]
 }
 
+type FlagError string
+
+func (e FlagError) Error() string {
+	return string(e)
+}
+
 var Commands = []*Command{
 	cmdClone,
 	cmdHelp,
@@ -75,6 +63,18 @@ var Commands = []*Command{
 	cmdUpdate,
 	cmdVCS,
 	cmdVersion,
+}
+
+type CommandError struct {
+	Name string
+	List []string
+}
+
+func (e *CommandError) Error() string {
+	if len(e.List) == 0 {
+		return fmt.Sprintf("unknown command '%s'", e.Name)
+	}
+	return fmt.Sprintf("command '%s' is ambiguous:\n    %s", e.Name, strings.Join(e.List, " "))
 }
 
 func FindCommand(commands []*Command, name string) (cmd *Command, err error) {
@@ -119,7 +119,7 @@ loop:
 	return
 }
 
-func sortedCommands(commands []*Command) []*Command {
+func sortCommands(commands []*Command) []*Command {
 	list := make(commandByName, len(commands))
 	for i, c := range commands {
 		list[i] = c

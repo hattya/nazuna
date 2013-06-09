@@ -79,7 +79,7 @@ func TestSortCommandsByName(t *testing.T) {
 		{Names: []string{"a"}},
 		{},
 	}
-	sorted := nazuna.SortedCommands(list)
+	sorted := nazuna.SortCommands(list)
 
 	if list[0].Name() != "z" {
 		t.Errorf(`expected "z", got "%s"`, list[0].Name())

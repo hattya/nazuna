@@ -156,9 +156,9 @@ func (e *VCSError) Error() string {
 
 func FindVCS(cmd string) (vcs *VCS, err error) {
 	set := make(map[string]*VCS)
-	cmd = strings.ToLower(cmd)
+	c := strings.ToLower(cmd)
 	for _, v := range VCSes {
-		if strings.HasPrefix(strings.ToLower(v.Cmd), cmd) {
+		if strings.HasPrefix(strings.ToLower(v.Cmd), c) {
 			set[v.Cmd] = v
 		}
 	}

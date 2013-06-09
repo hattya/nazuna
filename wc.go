@@ -124,11 +124,11 @@ func (w *WC) SelectLayer(name string) error {
 		return err
 	case 0 < len(l.Layers):
 		return fmt.Errorf("layer '%s' is abstract", name)
-	case l.parent == nil:
+	case l.abstract == nil:
 		return fmt.Errorf("layer '%s' is not abstract", name)
 	}
 	for k, v := range w.State.Layers {
-		if k == l.parent.Name {
+		if k == l.abstract.Name {
 			if v == l.Name {
 				return fmt.Errorf("layer '%s' is already '%s'", k, v)
 			}
@@ -139,7 +139,7 @@ func (w *WC) SelectLayer(name string) error {
 	if w.State.Layers == nil {
 		w.State.Layers = make(map[string]string)
 	}
-	w.State.Layers[l.parent.Name] = l.Name
+	w.State.Layers[l.abstract.Name] = l.Name
 	return nil
 }
 
@@ -157,15 +157,14 @@ func (w *WC) Layers() ([]*Layer, error) {
 	for i, l := range w.repo.Layers {
 		if 0 < len(l.Layers) {
 			wl, err := w.LayerFor(l.Name)
-			if err == nil {
-				list[i] = wl
-				continue
+			if err != nil {
+				list := make([]string, len(l.Layers))
+				for i, ll := range l.Layers {
+					list[i] = ll.Name
+				}
+				return nil, &ResolveError{l.Name, list}
 			}
-			list := make([]string, len(l.Layers))
-			for i, sl := range l.Layers {
-				list[i] = sl.Name
-			}
-			return nil, &ResolveError{l.Name, list}
+			l = wl
 		}
 		list[i] = l
 	}
@@ -184,7 +183,7 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 				return err
 			}
 			if _, ok := lwc[path]; !ok {
-				for i := 0; i < len(path); i++ {
+				for i, _ := range path {
 					if os.IsPathSeparator(path[i]) {
 						lwc.add(path[:i], l, true)
 					}
@@ -205,7 +204,7 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 	w.State.WC = w.State.WC[:0]
 
 	dir := ""
-	for _, p := range w.sort(lwc) {
+	for _, p := range w.sortKeys(lwc) {
 		switch {
 		case dir != "" && strings.HasPrefix(p, dir):
 		case len(lwc[p]) == 1:
@@ -227,23 +226,19 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 		}
 	}
 
-	list := make([]*Entry, len(wc))
-	i := 0
-	for _, p := range w.sort(wc) {
-		list[i] = wc[p]
-		i++
+	ul := make([]*Entry, len(wc))
+	for i, p := range w.sortKeys(wc) {
+		ul[i] = wc[p]
 	}
-	return list, nil
+	return ul, nil
 }
 
-func (w *WC) sort(m interface{}) []string {
+func (w *WC) sortKeys(m interface{}) []string {
 	v := reflect.ValueOf(m)
 	keys := v.MapKeys()
 	list := make(sort.StringSlice, len(keys))
-	i := 0
-	for _, k := range keys {
+	for i, k := range keys {
 		list[i] = k.String()
-		i++
 	}
 	list.Sort()
 	return list

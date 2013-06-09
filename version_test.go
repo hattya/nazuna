@@ -28,10 +28,12 @@ package nazuna_test
 
 import (
 	"testing"
+
+	"github.com/hattya/nazuna"
 )
 
 const (
-	versionOut = `nazuna, version 0.0+
+	versionOut = `nazuna, version ` + nazuna.Version + `
 
 Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 `

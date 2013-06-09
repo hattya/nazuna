@@ -61,7 +61,7 @@ func runHelp(ui UI, args []string) (err error) {
 				maxWidth = w
 			}
 		}
-		for _, cmd := range sortedCommands(Commands) {
+		for _, cmd := range sortCommands(Commands) {
 			l := strings.SplitN(strings.TrimSpace(cmd.Help), "\n", 2)[0]
 			ui.Printf("  %-*s    %s\n", maxWidth, cmd.Name(), l)
 		}
