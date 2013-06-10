@@ -96,6 +96,21 @@ link .vimrc --> a
 0 updated, 1 removed, 0 failed
 `,
 		},
+		{
+			cmd: []string{"rm", "-r", "../root"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `unlink .vim/bundle/gocode/ -/- .*/root/gocode/src/github.com/nsf/gocode/vim/ (re)
+0 updated, 1 removed, 0 failed
+`,
+		},
+		{
+			cmd: []string{"ls", "."},
+			out: `.nzn/
+.vimrc
+`,
+		},
 	}
 	if err := ts.run(); err != nil {
 		t.Error(err)

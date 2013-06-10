@@ -123,7 +123,6 @@ func (t testScript) run() error {
 				case fi.Mode().IsDir():
 					s = "/"
 				case fi.Mode()&os.ModeSymlink != 0:
-					s = "@"
 				default:
 					s = ">"
 					rc = 1

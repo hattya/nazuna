@@ -159,7 +159,10 @@ func (r *Repository) splitLayer(name string) ([]string, error) {
 }
 
 func (r *Repository) PathFor(layer *Layer, path string) string {
-	return filepath.Join(r.repodir, layer.Path(), path)
+	if layer != nil {
+		return filepath.Join(r.repodir, layer.Path(), path)
+	}
+	return filepath.Join(r.repodir, path)
 }
 
 func (r *Repository) WC() (*WC, error) {

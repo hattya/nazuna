@@ -53,12 +53,14 @@ type WC struct {
 
 	ui   UI
 	repo *Repository
+	dir  string
 }
 
 func openWC(ui UI, repo *Repository) (*WC, error) {
 	w := &WC{
 		ui:   ui,
 		repo: repo,
+		dir:  filepath.Dir(repo.nzndir),
 	}
 	p := filepath.Join(repo.nzndir, "state.json")
 	if _, err := os.Stat(p); !os.IsNotExist(err) {
@@ -76,7 +78,7 @@ func (w *WC) Flush() error {
 }
 
 func (w *WC) PathFor(path string) string {
-	return filepath.Join(filepath.Dir(w.repo.nzndir), path)
+	return filepath.Join(w.dir, path)
 }
 
 func (w *WC) Rel(path string) (string, error) {
@@ -84,7 +86,7 @@ func (w *WC) Rel(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	rel, err := filepath.Rel(filepath.Dir(w.repo.nzndir), abs)
+	rel, err := filepath.Rel(w.dir, abs)
 	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 		return "", fmt.Errorf("'%s' is not under root", path)
 	}
@@ -97,7 +99,7 @@ func (w *WC) Exists(path string) bool {
 }
 
 func (w *WC) IsLink(path string) bool {
-	return isLink(filepath.Join(filepath.Dir(w.repo.nzndir), path))
+	return isLink(w.PathFor(path))
 }
 
 func (w *WC) LinksTo(path, src string) bool {
@@ -106,8 +108,7 @@ func (w *WC) LinksTo(path, src string) bool {
 
 func (w *WC) Link(src, dst string) error {
 	dst = w.PathFor(dst)
-	for p, root := dst, filepath.Dir(w.repo.nzndir); p != root; {
-		p = filepath.Dir(p)
+	for p := filepath.Dir(dst); p != w.dir; p = filepath.Dir(p) {
 		if isLink(p) {
 			return &os.PathError{"link", p, errLink}
 		}
@@ -121,7 +122,19 @@ func (w *WC) Link(src, dst string) error {
 }
 
 func (w *WC) Unlink(path string) error {
-	return unlink(path)
+	path = w.PathFor(path)
+	if err := unlink(path); err != nil {
+		return err
+	}
+	for p := filepath.Dir(path); p != w.dir; p = filepath.Dir(p) {
+		if isLink(p) || !isEmptyDir(p) {
+			break
+		}
+		if err := os.Remove(p); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (w *WC) SelectLayer(name string) error {

@@ -29,6 +29,7 @@ package nazuna
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 var cmdUpdate = &Command{
@@ -71,17 +72,13 @@ func runUpdate(ui UI, args []string) error {
 			return fmt.Errorf("%s: not tracked", e.Path)
 		}
 		ui.Println(e.Format("unlink %s -/- %s"))
-		l, err := repo.LayerOf(e.Layer)
-		if err != nil {
-			return err
-		}
 		switch e.Type {
 		case "link":
 			if !wc.LinksTo(e.Path, e.Origin) {
 				return fmt.Errorf("not linked to '%s'", e.Origin)
 			}
 		default:
-			if !wc.LinksTo(e.Path, repo.PathFor(l, e.Path)) {
+			if !wc.LinksTo(e.Path, repo.PathFor(nil, filepath.Join(e.Layer, e.Path))) {
 				return fmt.Errorf("not linked to layer '%s'", e.Layer)
 			}
 		}
