@@ -60,6 +60,7 @@ var Commands = []*Command{
 	cmdHelp,
 	cmdInit,
 	cmdLayer,
+	cmdLink,
 	cmdUpdate,
 	cmdVCS,
 	cmdVersion,

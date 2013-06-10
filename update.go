@@ -70,12 +70,20 @@ func runUpdate(ui UI, args []string) error {
 		case !wc.IsLink(e.Path):
 			return fmt.Errorf("%s: not tracked", e.Path)
 		}
-		ui.Println("unlink", entryPath(e), "-/-", e.Layer)
-		switch l, err := repo.LayerOf(e.Layer); {
-		case err != nil:
+		ui.Println(e.Format("unlink %s -/- %s"))
+		l, err := repo.LayerOf(e.Layer)
+		if err != nil {
 			return err
-		case !wc.LinkTo(e.Path, l):
-			return fmt.Errorf("not linked to layer '%s'", e.Layer)
+		}
+		switch e.Type {
+		case "link":
+			if !wc.LinksTo(e.Path, e.Origin) {
+				return fmt.Errorf("not linked to '%s'", e.Origin)
+			}
+		default:
+			if !wc.LinksTo(e.Path, repo.PathFor(l, e.Path)) {
+				return fmt.Errorf("not linked to layer '%s'", e.Layer)
+			}
 		}
 		if err := wc.Unlink(e.Path); err != nil {
 			return err
@@ -84,20 +92,29 @@ func runUpdate(ui UI, args []string) error {
 	}
 
 	for i := 0; i < len(wc.State.WC); i++ {
-		e := wc.State.WC[i]
-		l, _ := repo.LayerOf(e.Layer)
-		if wc.LinkTo(e.Path, l) {
-			continue
+		switch e := wc.State.WC[i]; e.Type {
+		case "link":
+			if wc.LinksTo(e.Path, e.Origin) {
+				continue
+			}
+			ui.Println(e.Format("link %s --> %s"))
+			err = wc.Link(e.Origin, e.Path)
+		default:
+			l, _ := repo.LayerOf(e.Layer)
+			if wc.LinksTo(e.Path, repo.PathFor(l, e.Path)) {
+				continue
+			}
+			ui.Println(e.Format("link %s --> %s"))
+			err = wc.Link(repo.PathFor(l, e.Path), e.Path)
 		}
-		ui.Println("link", entryPath(e), "-->", l.Path())
-		if err = wc.Link(l, e.Path); err != nil {
+		if err != nil {
 			ui.Errorln("error:", wc.Errorf(err))
 			copy(wc.State.WC[i:], wc.State.WC[i+1:])
 			wc.State.WC = wc.State.WC[:len(wc.State.WC)-1]
 			failed++
-			continue
+		} else {
+			updated++
 		}
-		updated++
 	}
 
 	ui.Printf("%d updated, %d removed, %d failed\n", updated, removed, failed)

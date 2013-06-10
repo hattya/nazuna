@@ -32,11 +32,12 @@ import (
 	"os/exec"
 )
 
-const Version = "0.1"
+const Version = "0.1+"
 
 type Layer struct {
-	Name   string   `json:"name"`
-	Layers []*Layer `json:"layers,omitempty"`
+	Name   string             `json:"name"`
+	Layers []*Layer           `json:"layers,omitempty"`
+	Links  map[string][]*Link `json:"links,omitempty"`
 
 	abstract *Layer
 }
@@ -48,22 +49,51 @@ func (l *Layer) Path() string {
 	return l.Name
 }
 
+type layerByName []*Layer
+
+func (s layerByName) Len() int           { return len(s) }
+func (s layerByName) Less(i, j int) bool { return s[i].Name < s[j].Name }
+func (s layerByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+type Link struct {
+	Path []string `json:"path,omitempty"`
+	Src  string   `json:"src"`
+	Dst  string   `json:"dst"`
+}
+
+type linkByDst []*Link
+
+func (s linkByDst) Len() int           { return len(s) }
+func (s linkByDst) Less(i, j int) bool { return s[i].Dst < s[j].Dst }
+func (s linkByDst) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
 type State struct {
 	Layers map[string]string `json:"layers,omitempty"`
 	WC     []*Entry          `json:"wc,omitempty"`
 }
 
 type Entry struct {
-	Layer string `json:"layer"`
-	Path  string `json:"path"`
-	IsDir bool   `json:"dir,omitempty"`
+	Layer  string `json:"layer"`
+	Path   string `json:"path"`
+	Origin string `json:"origin,omitempty"`
+	IsDir  bool   `json:"dir,omitempty"`
+	Type   string `json:"type,omitempty"`
 }
 
-type layerByName []*Layer
+const unlinkableType = "_"
 
-func (s layerByName) Len() int           { return len(s) }
-func (s layerByName) Less(i, j int) bool { return s[i].Name < s[j].Name }
-func (s layerByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (e *Entry) Format(format string) string {
+	var sep, rhs string
+	if e.IsDir {
+		sep = "/"
+	}
+	if e.Origin == "" {
+		rhs = e.Layer
+	} else {
+		rhs = e.Origin + sep
+	}
+	return fmt.Sprintf(format, e.Path+sep, rhs)
+}
 
 type UI interface {
 	Args() []string

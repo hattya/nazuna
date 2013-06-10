@@ -37,7 +37,7 @@ func isLink(path string) bool {
 	return err == nil && fi.Mode()&os.ModeSymlink != 0
 }
 
-func linkTo(src, dest string) bool {
+func linksTo(src, dest string) bool {
 	if !isLink(src) {
 		return false
 	}
@@ -49,7 +49,10 @@ func linkTo(src, dest string) bool {
 }
 
 func link(src, dest string) error {
-	rel, _ := filepath.Rel(filepath.Dir(dest), src)
+	rel, err := filepath.Rel(filepath.Dir(dest), src)
+	if err != nil {
+		rel = src
+	}
 	return os.Symlink(rel, dest)
 }
 

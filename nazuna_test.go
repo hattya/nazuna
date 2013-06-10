@@ -104,7 +104,7 @@ func (t testScript) run() error {
 			if len(args) != 3 || args[0] != "-s" {
 				return errorf("ln: invalid arguments")
 			}
-			nazuna.Link(args[1], args[2])
+			nazuna.Ln(args[1], args[2])
 		case "ls":
 			f, err := os.Open(args[0])
 			if os.IsNotExist(err) {
