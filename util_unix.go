@@ -37,7 +37,7 @@ func isLink(path string) bool {
 	return err == nil && fi.Mode()&os.ModeSymlink != 0
 }
 
-func linksTo(src, dest string) bool {
+func linksTo(src, dst string) bool {
 	if !isLink(src) {
 		return false
 	}
@@ -45,15 +45,15 @@ func linksTo(src, dest string) bool {
 	if err != nil {
 		return false
 	}
-	return filepath.Join(filepath.Dir(src), r) == dest
+	return filepath.Join(filepath.Dir(src), r) == dst
 }
 
-func link(src, dest string) error {
-	rel, err := filepath.Rel(filepath.Dir(dest), src)
+func link(src, dst string) error {
+	rel, err := filepath.Rel(filepath.Dir(dst), src)
 	if err != nil {
 		rel = src
 	}
-	return os.Symlink(rel, dest)
+	return os.Symlink(rel, dst)
 }
 
 func unlink(path string) error {

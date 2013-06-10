@@ -56,8 +56,10 @@ options:
 `,
 }
 
-var linkLayer string
-var linkPath string
+var (
+	linkLayer string
+	linkPath  string
+)
 
 func init() {
 	cmdLink.Run = runLink

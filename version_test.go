@@ -32,12 +32,10 @@ import (
 	"github.com/hattya/nazuna"
 )
 
-const (
-	versionOut = `nazuna, version ` + nazuna.Version + `
+const versionOut = `nazuna, version ` + nazuna.Version + `
 
 Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 `
-)
 
 func TestVersion(t *testing.T) {
 	ts := testScript{

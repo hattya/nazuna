@@ -42,19 +42,19 @@ func TestClone(t *testing.T) {
 			cmd: []string{"git", "init", "-q", "src"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dest"},
-			out: `Cloning into 'dest/.nzn/repo'...
+			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
+			out: `Cloning into 'dst/.nzn/repo'...
 warning: .* (re)
 done.
 `,
 		},
 		{
-			cmd: []string{"ls", "dest/.nzn"},
+			cmd: []string{"ls", "dst/.nzn"},
 			out: `repo/
 `,
 		},
 		{
-			cmd: []string{"ls", "dest/.nzn/repo"},
+			cmd: []string{"ls", "dst/.nzn/repo"},
 			out: `.git/
 `,
 		},
@@ -102,11 +102,11 @@ options:
 			cmd: []string{"git", "init", "-q", "src"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git", "dest"},
+			cmd: []string{"nzn", "init", "--vcs=git", "dst"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dest"},
-			out: `nzn: repository 'dest' already exists!
+			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
+			out: `nzn: repository 'dst' already exists!
 [1]
 `,
 		},

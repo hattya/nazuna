@@ -79,8 +79,8 @@ func (v *VCS) Init(path string) *exec.Cmd {
 	return exec.Command(v.Cmd, args...)
 }
 
-func (v *VCS) Clone(src, dest string) *exec.Cmd {
-	args := v.expand(v.CloneCmd, "src", src, "dest", dest)
+func (v *VCS) Clone(src, dst string) *exec.Cmd {
+	args := v.expand(v.CloneCmd, "src", src, "dst", dst)
 	return exec.Command(v.Cmd, args...)
 }
 
@@ -126,7 +126,7 @@ var vcsGit = &VCS{
 	Dir:  ".git",
 
 	InitCmd:  "init -q {path}",
-	CloneCmd: "clone {src} {dest}",
+	CloneCmd: "clone {src} {dst}",
 	AddCmd:   "add",
 	ListCmd:  "ls-files",
 }
@@ -137,7 +137,7 @@ var vcsHg = &VCS{
 	Dir:  ".hg",
 
 	InitCmd:  "init {path}",
-	CloneCmd: "clone {src} {dest}",
+	CloneCmd: "clone {src} {dst}",
 	AddCmd:   "add",
 	ListCmd:  "status -madcn",
 }

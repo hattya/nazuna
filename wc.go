@@ -104,20 +104,20 @@ func (w *WC) LinksTo(path, src string) bool {
 	return linksTo(w.PathFor(path), src)
 }
 
-func (w *WC) Link(src, dest string) error {
-	dest = w.PathFor(dest)
-	for p, root := dest, filepath.Dir(w.repo.nzndir); p != root; {
+func (w *WC) Link(src, dst string) error {
+	dst = w.PathFor(dst)
+	for p, root := dst, filepath.Dir(w.repo.nzndir); p != root; {
 		p = filepath.Dir(p)
 		if isLink(p) {
 			return &os.PathError{"link", p, errLink}
 		}
 	}
-	if dir := filepath.Dir(dest); !w.Exists(dir) {
+	if dir := filepath.Dir(dst); !w.Exists(dir) {
 		if err := os.MkdirAll(dir, 0777); err != nil {
 			return err
 		}
 	}
-	return link(src, dest)
+	return link(src, dst)
 }
 
 func (w *WC) Unlink(path string) error {

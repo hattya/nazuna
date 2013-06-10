@@ -30,6 +30,6 @@ func SortCommands(commands []*Command) []*Command {
 	return sortCommands(commands)
 }
 
-func Ln(src, dest string) error {
-	return link(src, dest)
+func Ln(src, dst string) error {
+	return link(src, dst)
 }
