@@ -169,26 +169,30 @@ func (r *Repository) WC() (*WC, error) {
 	return openWC(r.ui, r)
 }
 
-func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
+func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
 	cmd := r.vcs.List(path)
 	cmd.Dir = r.repodir
 	pout, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return
 	}
-	if err := cmd.Start(); err != nil {
-		return err
+	if err = cmd.Start(); err != nil {
+		return
 	}
+	defer func() {
+		if e := cmd.Wait(); err == nil {
+			err = e
+		}
+	}()
 	out := bufio.NewReader(pout)
 	var line []byte
 	for {
-		data, isPrefix, err := out.ReadLine()
-		switch {
-		case err == io.EOF:
-			return cmd.Wait()
-		case err != nil:
-			cmd.Wait()
-			return err
+		switch data, isPrefix, e := out.ReadLine(); {
+		case e == io.EOF:
+			return
+		case e != nil:
+			err = e
+			return
 		default:
 			line = append(line, data...)
 			if isPrefix {
@@ -196,9 +200,9 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 			}
 		}
 		p := string(line)
-		fi, err := os.Stat(filepath.Join(r.repodir, p))
-		if err := walk(p[len(path)+1:], fi, err); err != nil {
-			return err
+		fi, e := os.Stat(filepath.Join(r.repodir, p))
+		if err = walk(p[len(path)+1:], fi, e); err != nil {
+			return
 		}
 		line = line[:0]
 	}
