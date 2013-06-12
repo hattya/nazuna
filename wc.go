@@ -265,7 +265,6 @@ type wcBuilder struct {
 	w     *WC
 	wc    map[string][]*Entry
 	layer string
-	warn  map[string]bool
 }
 
 func (b *wcBuilder) build() error {
@@ -274,7 +273,6 @@ func (b *wcBuilder) build() error {
 		return err
 	}
 	b.wc = make(map[string][]*Entry)
-	b.warn = make(map[string]bool)
 	for _, l := range layers {
 		b.layer = l.Path()
 		if err := b.repo(); err != nil {
@@ -324,7 +322,8 @@ func (b *wcBuilder) link(src, dst string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
-	if list, ok := b.wc[dst]; !ok {
+	switch list, ok := b.wc[dst]; {
+	case !ok:
 		b.parentDirs(dst, false)
 		b.wc[dst] = append(b.wc[dst], &Entry{
 			Layer:  b.layer,
@@ -333,9 +332,8 @@ func (b *wcBuilder) link(src, dst string) bool {
 			IsDir:  fi.IsDir(),
 			Type:   "link",
 		})
-	} else if _, ok := b.warn[dst]; !ok && list[0].Type != "link" {
+	case list[0].Layer == b.layer && list[0].Type != "link":
 		b.w.ui.Errorf("warning: link: '%s' exists in the repository\n", dst)
-		b.warn[dst] = true
 	}
 	return true
 }
