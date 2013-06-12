@@ -305,6 +305,7 @@ func (b *wcBuilder) repo() error {
 		if err != nil {
 			return err
 		}
+		path = path[len(b.layer)+1:]
 		if _, ok := b.wc[path]; !ok {
 			b.parentDirs(path, true)
 			b.wc[path] = append(b.wc[path], &Entry{

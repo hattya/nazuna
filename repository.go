@@ -169,6 +169,29 @@ func (r *Repository) WC() (*WC, error) {
 	return openWC(r.ui, r)
 }
 
+func (r *Repository) Find(layer *Layer, path string) (typ string) {
+	err := r.Walk(r.PathFor(layer, path), func(p string, fi os.FileInfo, err error) error {
+		if !strings.HasSuffix(p, "/"+path) {
+			typ = "dir"
+		} else {
+			typ = "file"
+		}
+		return filepath.SkipDir
+	})
+	if err == filepath.SkipDir {
+		return
+	}
+
+	dir, name := splitPath(path)
+	for _, l := range layer.Links[dir] {
+		if l.Dst == name {
+			typ = "link"
+			break
+		}
+	}
+	return
+}
+
 func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
 	cmd := r.vcs.List(path)
 	cmd.Dir = r.repodir
@@ -180,9 +203,10 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
 		return
 	}
 	defer func() {
-		if e := cmd.Wait(); err == nil {
+		if e := cmd.Process.Kill(); err == nil {
 			err = e
 		}
+		cmd.Wait()
 	}()
 	out := bufio.NewReader(pout)
 	var line []byte
@@ -201,7 +225,7 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
 		}
 		p := string(line)
 		fi, e := os.Stat(filepath.Join(r.repodir, p))
-		if err = walk(p[len(path)+1:], fi, e); err != nil {
+		if err = walk(p, fi, e); err != nil {
 			return
 		}
 		line = line[:0]

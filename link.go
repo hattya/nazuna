@@ -31,7 +31,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 var cmdLink = &Command{
@@ -98,19 +97,16 @@ func runLink(ui UI, args []string) error {
 		if err != nil {
 			return err
 		}
-		if _, err := os.Stat(repo.PathFor(l, dst)); !os.IsNotExist(err) {
+		switch typ := repo.Find(l, dst); typ {
+		case "dir", "file":
 			return fmt.Errorf("'%s' already exists!", dst)
-		}
-		dir, name := filepath.Split(dst)
-		dir = strings.TrimRight(dir, string(os.PathSeparator))
-		for _, ll := range l.Links[dir] {
-			if ll.Dst == name {
-				return fmt.Errorf("link '%s' already exists!", dst)
-			}
+		case "link":
+			return fmt.Errorf("%s '%s' already exists!", typ, dst)
 		}
 		if l.Links == nil {
 			l.Links = make(map[string][]*Link)
 		}
+		dir, name := splitPath(dst)
 		l.Links[dir] = append(l.Links[dir], &Link{
 			Path: filepath.SplitList(linkPath),
 			Src:  args[0],

@@ -195,13 +195,34 @@ options:
 			cmd: []string{"touch", ".nzn/repo/a/dst"},
 		},
 		{
+			cmd: []string{"nzn", "vcs", "add", "a"},
+		},
+		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
 			out: `nzn: 'dst' already exists!
 [1]
 `,
 		},
 		{
-			cmd: []string{"rm", ".nzn/repo/a/dst"},
+			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/dst"},
+		},
+		{
+			cmd: []string{"mkdir", ".nzn/repo/a/dst"},
+		},
+		{
+			cmd: []string{"touch", ".nzn/repo/a/dst/1"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "add", "a"},
+		},
+		{
+			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
+			out: `nzn: 'dst' already exists!
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "vcs", "rm", "-frq", "a/dst"},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},

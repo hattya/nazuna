@@ -31,6 +31,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
+	"unicode/utf8"
 )
 
 func isDir(path string) bool {
@@ -46,6 +49,14 @@ func isEmptyDir(path string) bool {
 	defer f.Close()
 	_, err = f.Readdir(1)
 	return err == io.EOF
+}
+
+func splitPath(path string) (string, string) {
+	dir, name := filepath.Split(path)
+	dir = strings.TrimRightFunc(dir, func(r rune) bool {
+		return r < utf8.RuneSelf && os.IsPathSeparator(uint8(r))
+	})
+	return dir, name
 }
 
 func marshal(path string, v interface{}) error {
