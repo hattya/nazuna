@@ -28,6 +28,7 @@ package nazuna
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -65,6 +66,9 @@ func runInit(ui UI, args []string) error {
 	}
 	vcs, err := FindVCS(initVCS)
 	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(nzndir, 0777); err != nil {
 		return err
 	}
 	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "repo"))); err != nil {
