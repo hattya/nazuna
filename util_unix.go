@@ -23,7 +23,7 @@
 //   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //   SOFTWARE.
 //
-// +build: !plan9,!windows
+// +build !plan9,!windows
 
 package nazuna
 
