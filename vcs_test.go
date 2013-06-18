@@ -27,7 +27,6 @@
 package nazuna_test
 
 import (
-	"os"
 	"strings"
 	"testing"
 
@@ -117,7 +116,7 @@ func TestVCSFor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
+	defer nazuna.RemoveAll(dir)
 
 	if _, err = nazuna.VCSFor(dir); err == nil {
 		t.Error("error expected")

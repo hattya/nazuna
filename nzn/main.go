@@ -28,11 +28,24 @@ package main
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/hattya/nazuna"
 )
 
 func main() {
-	c := nazuna.NewCLI(os.Args)
+	args := make([]string, len(os.Args))
+	copy(args, os.Args)
+	args[0] = filepath.Base(args[0])
+	switch runtime.GOOS {
+	case "windows":
+		if strings.HasSuffix(args[0], ".exe") {
+			args[0] = args[0][:len(args[0])-4]
+		}
+	}
+
+	c := nazuna.NewCLI(args)
 	os.Exit(c.Run())
 }

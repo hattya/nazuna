@@ -146,7 +146,7 @@ func (t testScript) run() error {
 			if err != nil {
 				return errorf(err)
 			}
-			defer os.RemoveAll(dir)
+			defer nazuna.RemoveAll(dir)
 			vars["$tempdir"] = dir
 		case "nzn":
 			for _, c := range nazuna.Commands {
@@ -166,7 +166,7 @@ func (t testScript) run() error {
 			var remove func(string) error
 			switch {
 			case 1 < len(args) && args[0] == "-r":
-				remove = os.RemoveAll
+				remove = nazuna.RemoveAll
 				args = args[1:]
 			default:
 				remove = os.Remove

@@ -41,7 +41,7 @@ func TestRepository(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
+	defer nazuna.RemoveAll(dir)
 
 	if _, err := nazuna.OpenRepository(nil, dir); !strings.HasPrefix(err.Error(), "no repository found ") {
 		t.Error("error expected")

@@ -203,9 +203,7 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
 		return
 	}
 	defer func() {
-		if e := cmd.Process.Kill(); err == nil {
-			err = e
-		}
+		cmd.Process.Kill()
 		cmd.Wait()
 	}()
 	out := bufio.NewReader(pout)

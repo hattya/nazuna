@@ -102,8 +102,8 @@ func (w *WC) IsLink(path string) bool {
 	return isLink(w.PathFor(path))
 }
 
-func (w *WC) LinksTo(path, src string) bool {
-	return linksTo(w.PathFor(path), src)
+func (w *WC) LinksTo(path, origin string) bool {
+	return linksTo(w.PathFor(path), origin)
 }
 
 func (w *WC) Link(src, dst string) error {

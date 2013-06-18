@@ -27,6 +27,7 @@
 package nazuna_test
 
 import (
+	"path/filepath"
 	"testing"
 )
 
@@ -58,7 +59,7 @@ func TestClone(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
-			out: `Cloning into 'dst/.nzn/repo'...
+			out: `Cloning into '` + filepath.Join("dst", ".nzn", "repo") + `'...
 done.
 `,
 		},

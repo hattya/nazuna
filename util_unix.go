@@ -37,15 +37,15 @@ func isLink(path string) bool {
 	return err == nil && fi.Mode()&os.ModeSymlink != 0
 }
 
-func linksTo(src, dst string) bool {
-	if !isLink(src) {
+func linksTo(path, origin string) bool {
+	if !isLink(path) {
 		return false
 	}
-	r, err := os.Readlink(src)
+	r, err := os.Readlink(path)
 	if err != nil {
 		return false
 	}
-	return filepath.Join(filepath.Dir(src), r) == dst
+	return filepath.Join(filepath.Dir(path), r) == origin
 }
 
 func link(src, dst string) error {
@@ -62,3 +62,5 @@ func unlink(path string) error {
 	}
 	return os.Remove(path)
 }
+
+var RemoveAll = os.RemoveAll

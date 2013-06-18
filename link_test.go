@@ -28,6 +28,8 @@ package nazuna_test
 
 import (
 	"os"
+	"path/filepath"
+	"regexp"
 	"testing"
 )
 
@@ -38,6 +40,7 @@ func TestLink(t *testing.T) {
 	}()
 	os.Setenv("GOPATH", "")
 
+	q := func(path string) string { return regexp.QuoteMeta(filepath.FromSlash(path)) }
 	sep := string(os.PathListSeparator)
 	ts := testScript{
 		{
@@ -81,8 +84,8 @@ func TestLink(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/bundle/gocode/ --> .*/root/gocode/src/github.com/nsf/gocode/vim/ (re)
-link .vim/bundle/golang/ --> .*/root/go/misc/vim/ (re)
+			out: `link .vim/bundle/gocode/ --> .*` + q("/root/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+link .vim/bundle/golang/ --> .*` + q("/root/go/misc/vim/") + ` (re)
 link .vimrc --> a
 3 updated, 0 removed, 0 failed
 `,
@@ -92,7 +95,7 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/golang/ -/- .*/root/go/misc/vim/ (re)
+			out: `unlink .vim/bundle/golang/ -/- .*` + q("/root/go/misc/vim/") + ` (re)
 0 updated, 1 removed, 0 failed
 `,
 		},
@@ -101,7 +104,7 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/gocode/ -/- .*/root/gocode/src/github.com/nsf/gocode/vim/ (re)
+			out: `unlink .vim/bundle/gocode/ -/- .*` + q("/root/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
 0 updated, 1 removed, 0 failed
 `,
 		},

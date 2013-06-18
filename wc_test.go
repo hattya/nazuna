@@ -41,7 +41,7 @@ func TestWC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
+	defer nazuna.RemoveAll(dir)
 	popd, err := pushd(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +91,7 @@ func TestWCError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
+	defer nazuna.RemoveAll(dir)
 	popd, err := pushd(dir)
 	if err != nil {
 		t.Fatal(err)
