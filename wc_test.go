@@ -42,9 +42,11 @@ func TestWC(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
+	popd, err := pushd(dir)
+	if err != nil {
 		t.Fatal(err)
 	}
+	defer popd()
 
 	if err := mkdir(".nzn", "repo", ".git"); err != nil {
 		t.Fatal(err)
@@ -90,9 +92,11 @@ func TestWCError(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
-	if err := os.Chdir(dir); err != nil {
+	popd, err := pushd(dir)
+	if err != nil {
 		t.Fatal(err)
 	}
+	defer popd()
 
 	if err := mkdir(".nzn", "repo", ".git"); err != nil {
 		t.Fatal(err)

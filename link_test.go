@@ -252,6 +252,9 @@ options:
 			cmd: []string{"rm", "dst"},
 		},
 		{
+			cmd: []string{"touch", "_"},
+		},
+		{
 			cmd: []string{"ln", "-s", "_", "dst"},
 		},
 		{
@@ -263,6 +266,9 @@ nzn: not linked to 'src'
 		},
 		{
 			cmd: []string{"rm", "dst"},
+		},
+		{
+			cmd: []string{"rm", "_"},
 		},
 		{
 			cmd: []string{"touch", ".nzn/repo/b/dst"},

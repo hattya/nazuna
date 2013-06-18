@@ -84,9 +84,11 @@ func (t testScript) run() error {
 				return err
 			}
 		case "cd":
-			if err := os.Chdir(args[0]); err != nil {
+			popd, err := pushd(args[0])
+			if err != nil {
 				return errorf(err)
 			}
+			defer popd()
 		case "git":
 			cmd := exec.Command(c.cmd[0], args...)
 			cmd.Env = testEnv
@@ -104,12 +106,15 @@ func (t testScript) run() error {
 			if len(args) != 3 || args[0] != "-s" {
 				return errorf("ln: invalid arguments")
 			}
-			nazuna.Ln(args[1], args[2])
+			if err := nazuna.Ln(args[1], args[2]); err != nil {
+				return errorf(err)
+			}
 		case "ls":
 			f, err := os.Open(args[0])
 			if os.IsNotExist(err) {
 				return errorf(err)
 			}
+			defer f.Close()
 			list, err := f.Readdir(-1)
 			if err != nil {
 				return errorf(err)
@@ -255,6 +260,16 @@ func (d *lines) Equal(i, j int) bool {
 		return true
 	}
 	return d.a[i] == d.b[j]
+}
+
+func pushd(path string) (func(), error) {
+	wd, err := os.Getwd()
+	popd := func() {
+		if !os.IsNotExist(err) {
+			os.Chdir(wd)
+		}
+	}
+	return popd, os.Chdir(path)
 }
 
 func mkdtemp() (string, error) {

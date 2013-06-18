@@ -75,7 +75,7 @@ func TestCLI(t *testing.T) {
 	}
 
 	cmd = exec.Command(os.Args[0], "-test.run=TestProcess", "7")
-	re := regexp.MustCompile("nazuna.test: exit status.* 7")
+	re := regexp.MustCompile(regexp.QuoteMeta(os.Args[0]) + `: exit status.* 7`)
 	switch err := c.Exec(cmd); {
 	case err == nil:
 		t.Error("error expected")

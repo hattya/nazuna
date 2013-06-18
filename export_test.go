@@ -26,10 +26,7 @@
 
 package nazuna
 
-func SortCommands(commands []*Command) []*Command {
-	return sortCommands(commands)
-}
-
-func Ln(src, dst string) error {
-	return link(src, dst)
-}
+var (
+	SortCommands = sortCommands
+	Ln           = link
+)

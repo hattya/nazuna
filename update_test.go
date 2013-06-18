@@ -231,7 +231,7 @@ link .vimrc --> a
 			cmd: []string{"rm", ".vimrc"},
 		},
 		{
-			cmd: []string{"ln", "-s", ".nzn/b/.vimrc", ".vimrc"},
+			cmd: []string{"ln", "-s", ".nzn/repo/b/.vimrc", ".vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -302,6 +302,9 @@ error: .vim/syntax: .* (re)
 			cmd: []string{"rm", ".vim/syntax"},
 		},
 		{
+			cmd: []string{"mkdir", ".nzn/repo/_/.vim/syntax"},
+		},
+		{
 			cmd: []string{"ln", "-s", ".nzn/repo/_/.vim/syntax", ".vim/syntax"},
 		},
 		{
@@ -314,6 +317,9 @@ error: .vim/syntax: (re)
 		},
 		{
 			cmd: []string{"rm", ".vim/syntax"},
+		},
+		{
+			cmd: []string{"rm", "-r", ".nzn/repo/_"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/1"},

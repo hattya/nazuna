@@ -42,9 +42,23 @@ func TestClone(t *testing.T) {
 			cmd: []string{"git", "init", "-q", "src"},
 		},
 		{
+			cmd: []string{"cd", "src"},
+		},
+		{
+			cmd: []string{"touch", "nazuna.json"},
+		},
+		{
+			cmd: []string{"git", "add", "."},
+		},
+		{
+			cmd: []string{"git", "-c", "user.email=nazuna@example.com", "commit", "-qm."},
+		},
+		{
+			cmd: []string{"cd", ".."},
+		},
+		{
 			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
 			out: `Cloning into 'dst/.nzn/repo'...
-warning: .* (re)
 done.
 `,
 		},
@@ -56,6 +70,7 @@ done.
 		{
 			cmd: []string{"ls", "dst/.nzn/repo"},
 			out: `.git/
+nazuna.json
 `,
 		},
 	}
