@@ -90,7 +90,7 @@ func (w *WC) Rel(path string) (string, error) {
 	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 		return "", fmt.Errorf("'%s' is not under root", path)
 	}
-	return rel, nil
+	return filepath.ToSlash(rel), nil
 }
 
 func (w *WC) Exists(path string) bool {
@@ -107,8 +107,7 @@ func (w *WC) LinksTo(path, src string) bool {
 }
 
 func (w *WC) Link(src, dst string) error {
-	dst = w.PathFor(dst)
-	for p := filepath.Dir(dst); p != w.dir; p = filepath.Dir(p) {
+	for p := filepath.Dir(w.PathFor(dst)); p != w.dir; p = filepath.Dir(p) {
 		if isLink(p) {
 			return &os.PathError{"link", p, errLink}
 		}
@@ -118,7 +117,7 @@ func (w *WC) Link(src, dst string) error {
 			return err
 		}
 	}
-	return link(src, dst)
+	return link(src, w.PathFor(dst))
 }
 
 func (w *WC) Unlink(path string) error {
@@ -248,12 +247,12 @@ func (w *WC) Errorf(err error) error {
 	switch v := err.(type) {
 	case *os.LinkError:
 		if r, err := filepath.Rel(w.PathFor("."), v.New); err == nil {
-			v.New = r
+			v.New = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%s: %s", v.New, v.Err)
 	case *os.PathError:
 		if r, err := filepath.Rel(w.PathFor("."), v.Path); err == nil {
-			v.Path = r
+			v.Path = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%s: %s", v.Path, v.Err)
 	default:
@@ -280,13 +279,13 @@ func (b *wcBuilder) build() error {
 		}
 		for dir, ll := range l.Links {
 			for _, l := range ll {
-				src := os.ExpandEnv(l.Src)
-				dst := filepath.Join(dir, os.ExpandEnv(l.Dst))
+				src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
+				dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
 				if 0 < len(l.Path) {
 				loop:
 					for _, v := range l.Path {
 						for _, p := range filepath.SplitList(os.ExpandEnv(v)) {
-							if b.link(filepath.Join(p, src), dst) {
+							if b.link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst) {
 								break loop
 							}
 						}
@@ -349,7 +348,7 @@ func (b *wcBuilder) parentDirs(path string, linkable bool) {
 		return nil
 	}
 	for i, _ := range path {
-		if os.IsPathSeparator(path[i]) {
+		if path[i] == '/' {
 			p := path[:i]
 			e := find(p)
 			if e == nil {

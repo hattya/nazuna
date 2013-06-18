@@ -30,6 +30,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 )
 
 const Version = "0.1+"
@@ -90,7 +91,7 @@ func (e *Entry) Format(format string) string {
 	if e.Origin == "" {
 		rhs = e.Layer
 	} else {
-		rhs = e.Origin + sep
+		rhs = filepath.FromSlash(e.Origin + sep)
 	}
 	return fmt.Sprintf(format, e.Path+sep, rhs)
 }

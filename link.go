@@ -103,14 +103,19 @@ func runLink(ui UI, args []string) error {
 		case "link":
 			return fmt.Errorf("%s '%s' already exists!", typ, dst)
 		}
+		path := filepath.SplitList(linkPath)
+		for i, p := range path {
+			path[i] = filepath.ToSlash(filepath.Clean(p))
+		}
+		src := filepath.ToSlash(filepath.Clean(args[0]))
+		dir, dst := splitPath(dst)
 		if l.Links == nil {
 			l.Links = make(map[string][]*Link)
 		}
-		dir, name := splitPath(dst)
 		l.Links[dir] = append(l.Links[dir], &Link{
-			Path: filepath.SplitList(linkPath),
-			Src:  args[0],
-			Dst:  name,
+			Path: path,
+			Src:  src,
+			Dst:  dst,
 		})
 		sort.Sort(linkByDst(l.Links[dir]))
 	}
