@@ -89,6 +89,10 @@ func (t testScript) run() error {
 				return errorf(err)
 			}
 			defer popd()
+		case "export":
+			kv := strings.SplitN(args[0], "=", 2)
+			defer os.Setenv(kv[0], os.Getenv(kv[0]))
+			os.Setenv(kv[0], kv[1])
 		case "git":
 			cmd := exec.Command(c.cmd[0], args...)
 			cmd.Env = testEnv
@@ -111,7 +115,7 @@ func (t testScript) run() error {
 			}
 		case "ls":
 			f, err := os.Open(args[0])
-			if os.IsNotExist(err) {
+			if err != nil {
 				return errorf(err)
 			}
 			defer f.Close()
@@ -265,7 +269,7 @@ func (d *lines) Equal(i, j int) bool {
 func pushd(path string) (func(), error) {
 	wd, err := os.Getwd()
 	popd := func() {
-		if !os.IsNotExist(err) {
+		if err == nil {
 			os.Chdir(wd)
 		}
 	}

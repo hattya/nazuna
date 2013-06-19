@@ -63,7 +63,7 @@ func openWC(ui UI, repo *Repository) (*WC, error) {
 		dir:  filepath.Dir(repo.nzndir),
 	}
 	p := filepath.Join(repo.nzndir, "state.json")
-	if _, err := os.Stat(p); !os.IsNotExist(err) {
+	if _, err := os.Stat(p); err == nil {
 		if err := unmarshal(p, &w.State); err != nil {
 			return nil, err
 		}
@@ -95,7 +95,7 @@ func (w *WC) Rel(path string) (string, error) {
 
 func (w *WC) Exists(path string) bool {
 	_, err := os.Lstat(w.PathFor(path))
-	return !os.IsNotExist(err)
+	return err == nil
 }
 
 func (w *WC) IsLink(path string) bool {
@@ -319,7 +319,7 @@ func (b *wcBuilder) repo() error {
 
 func (b *wcBuilder) link(src, dst string) bool {
 	fi, err := os.Stat(src)
-	if os.IsNotExist(err) {
+	if err != nil {
 		return false
 	}
 	switch list, ok := b.wc[dst]; {

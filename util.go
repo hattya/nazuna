@@ -43,7 +43,7 @@ func isDir(path string) bool {
 
 func isEmptyDir(path string) bool {
 	f, err := os.Open(path)
-	if os.IsNotExist(err) {
+	if err != nil {
 		return true
 	}
 	defer f.Close()

@@ -34,12 +34,6 @@ import (
 )
 
 func TestLink(t *testing.T) {
-	gopath := os.Getenv("GOPATH")
-	defer func() {
-		os.Setenv("GOPATH", gopath)
-	}()
-	os.Setenv("GOPATH", "")
-
 	q := func(path string) string { return regexp.QuoteMeta(filepath.FromSlash(path)) }
 	sep := string(os.PathListSeparator)
 	ts := testScript{
@@ -78,6 +72,9 @@ func TestLink(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "$tempdir/root/go/misc/vim", ".vim/bundle/golang"},
+		},
+		{
+			cmd: []string{"export", "GOPATH="},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "-p", "$GOPATH" + sep + "$tempdir/root/gocode", "src/github.com/nsf/gocode/vim", ".vim/bundle/gocode"},

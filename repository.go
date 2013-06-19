@@ -72,7 +72,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 	}
 
 	path = filepath.Join(r.repodir, "nazuna.json")
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if _, err := os.Stat(path); err == nil {
 		if err := unmarshal(path, &r.Layers); err != nil {
 			return nil, err
 		}
@@ -202,10 +202,8 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
 	if err = cmd.Start(); err != nil {
 		return
 	}
-	defer func() {
-		cmd.Process.Kill()
-		cmd.Wait()
-	}()
+	defer cmd.Wait()
+	defer cmd.Process.Kill()
 	out := bufio.NewReader(pout)
 	var line []byte
 	for {

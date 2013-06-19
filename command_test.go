@@ -34,9 +34,7 @@ import (
 )
 
 func TestFindCommand(t *testing.T) {
-	run := func(_ nazuna.UI, _ []string) error {
-		return nil
-	}
+	run := func(_ nazuna.UI, _ []string) error { return nil }
 	list := []*nazuna.Command{
 		{
 			Names: []string{"add"},
