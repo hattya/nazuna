@@ -126,6 +126,56 @@ link .tmux.conf --> c/2
 1 updated, 1 removed, 0 failed
 `,
 		},
+		{
+			cmd: []string{"mkdir", ".nzn/repo/b/.vim/autoload/go"},
+		},
+		{
+			cmd: []string{"touch", ".nzn/repo/b/.vim/autoload/go/complete.vim"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "add", "b"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `link .vim/autoload/ --> b
+1 updated, 0 removed, 0 failed
+`,
+		},
+		{
+			cmd: []string{"rm", ".vim/autoload"},
+		},
+		{
+			cmd: []string{"mkdir", ".vim/autoload"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `link .vim/autoload/go/ --> b
+1 updated, 0 removed, 0 failed
+`,
+		},
+		{
+			cmd: []string{"rm", ".vim/autoload/go"},
+		},
+		{
+			cmd: []string{"mkdir", ".vim/autoload/go"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `link .vim/autoload/go/complete.vim --> b
+1 updated, 0 removed, 0 failed
+`,
+		},
+		{
+			cmd: []string{"rm", "-r", ".vim"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `link .vim/autoload/ --> b
+link .vim/syntax/go.vim --> b
+link .vim/syntax/vim.vim --> a
+3 updated, 0 removed, 0 failed
+`,
+		},
 	}
 	if err := ts.run(); err != nil {
 		t.Error(err)

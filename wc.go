@@ -196,12 +196,7 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 		return nil, err
 	}
 
-	wc := make(map[string]*Entry)
-	for _, e := range w.State.WC {
-		wc[e.Path] = e
-	}
 	w.State.WC = w.State.WC[:0]
-
 	dir := ""
 	for _, p := range w.sortKeys(b.wc) {
 		switch {
@@ -217,17 +212,17 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 			} else {
 				dir = ""
 			}
-			if c, ok := wc[p]; ok {
+			if c, ok := b.state[p]; ok {
 				if c.Layer == e.Layer && c.IsDir == e.IsDir {
-					delete(wc, p)
+					delete(b.state, p)
 				}
 			}
 		}
 	}
 
-	ul := make([]*Entry, len(wc))
-	for i, p := range w.sortKeys(wc) {
-		ul[i] = wc[p]
+	ul := make([]*Entry, len(b.state))
+	for i, p := range w.sortKeys(b.state) {
+		ul[i] = b.state[p]
 	}
 	return ul, nil
 }
@@ -262,6 +257,7 @@ func (w *WC) Errorf(err error) error {
 
 type wcBuilder struct {
 	w     *WC
+	state map[string]*Entry
 	wc    map[string][]*Entry
 	layer string
 }
@@ -270,6 +266,10 @@ func (b *wcBuilder) build() error {
 	layers, err := b.w.Layers()
 	if err != nil {
 		return err
+	}
+	b.state = make(map[string]*Entry)
+	for _, e := range b.w.State.WC {
+		b.state[e.Path] = e
 	}
 	b.wc = make(map[string][]*Entry)
 	for _, l := range layers {
@@ -347,6 +347,7 @@ func (b *wcBuilder) parentDirs(path string, linkable bool) {
 		}
 		return nil
 	}
+	inWC := true
 	for i, _ := range path {
 		if path[i] == '/' {
 			p := path[:i]
@@ -359,7 +360,20 @@ func (b *wcBuilder) parentDirs(path string, linkable bool) {
 				}
 				b.wc[p] = append(b.wc[p], e)
 			}
-			if !linkable {
+			switch {
+			case !inWC:
+			case linkable:
+				switch _, ok := b.state[p]; {
+				case ok:
+					inWC = false
+					if b.w.Exists(p) && !b.w.IsLink(p) {
+						e.Type = unlinkableType
+						delete(b.state, p)
+					}
+				case b.w.Exists(p):
+					e.Type = unlinkableType
+				}
+			case !linkable:
 				e.Type = unlinkableType
 			}
 		}
