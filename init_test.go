@@ -76,7 +76,12 @@ func TestInitError(t *testing.T) {
 			out: `nzn init: flag --vcs is required
 usage: nzn init --vcs=<type> [<path>]
 
-  create a new repository in the specified directory
+create a new repository in the specified directory
+
+  Create a new repository in <path>. If <path> does not exist, it will be
+  created.
+
+  If <path> is not specified, the current working diretory is used.
 
 options:
 
