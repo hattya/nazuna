@@ -283,6 +283,15 @@ link dst --> b
 1 updated, 0 removed, 0 failed
 `,
 		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/1"},
+		},
+		{
+			cmd: []string{"nzn", "link", "-l", "c", "src", "dst"},
+			out: `nzn: layer 'c' is abstract
+[1]
+`,
+		},
 	}
 	if err := ts.run(); err != nil {
 		t.Error(err)

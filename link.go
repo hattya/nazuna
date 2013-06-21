@@ -90,8 +90,11 @@ func runLink(ui UI, args []string) error {
 			return errArg
 		}
 		l, err := repo.LayerOf(linkLayer)
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
+		case 0 < len(l.Layers):
+			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
 		dst, err := wc.Rel(args[1])
 		if err != nil {
