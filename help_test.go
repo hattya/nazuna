@@ -32,9 +32,14 @@ import (
 )
 
 const (
-	helpUsage = `usage: nzn help [options] [--] [command]
+	helpUsage = `usage: nzn help [options] [--] [<command>]
 
-  display help information about nazuna
+display help information about nazuna
+
+  Display help information for <command>.
+
+  If <command> is not specified, display a list of commands with short help
+  informations.
 
 `
 	helpOut = `nazuna - A layered dotfiles management

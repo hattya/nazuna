@@ -33,9 +33,14 @@ import (
 
 var cmdHelp = &Command{
 	Names: []string{"help"},
-	Usage: "help [options] [--] [command]",
+	Usage: "help [options] [--] [<command>]",
 	Help: `
-  display help information about nazuna
+display help information about nazuna
+
+  Display help information for <command>.
+
+  If <command> is not specified, display a list of commands with short help
+  informations.
 `,
 }
 
