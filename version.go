@@ -30,7 +30,7 @@ var cmdVersion = &Command{
 	Names: []string{"version"},
 	Usage: "version",
 	Help: `
-  output version and copyright information
+output version and copyright information
 `,
 }
 
