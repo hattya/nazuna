@@ -34,9 +34,11 @@ import (
 
 var cmdUpdate = &Command{
 	Names: []string{"update"},
-	Usage: "update [<path>...]",
+	Usage: "update",
 	Help: `
-  update working copy
+update working copy
+
+  Update links in the working copy to match with the repository configuration.
 `,
 }
 
