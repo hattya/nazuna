@@ -36,7 +36,12 @@ var cmdClone = &Command{
 	Names: []string{"clone"},
 	Usage: "clone --vcs=<type> <repository> [<path>]",
 	Help: `
-  make a copy of an existing repository
+create a copy of an existing repository
+
+  Create a copy of an existing repository in <path>. If <path> does not exist,
+  it will be created.
+
+  If <path> is not specified, the current working diretory is used.
 
 options:
 

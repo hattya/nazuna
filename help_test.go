@@ -42,7 +42,7 @@ const (
 list of commands:
 
   alias      create an alias for the specified path
-  clone      make a copy of an existing repository
+  clone      create a copy of an existing repository
   help       display help information about nazuna
   init       create a new repository in the specified directory
   layer      manage repository layers

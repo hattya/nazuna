@@ -99,7 +99,12 @@ func TestCloneError(t *testing.T) {
 			out: `nzn clone: flag -*vcs is required (re)
 usage: nzn clone --vcs=<type> <repository> [<path>]
 
-  make a copy of an existing repository
+create a copy of an existing repository
+
+  Create a copy of an existing repository in <path>. If <path> does not exist,
+  it will be created.
+
+  If <path> is not specified, the current working diretory is used.
 
 options:
 
