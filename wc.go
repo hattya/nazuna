@@ -256,10 +256,12 @@ func (w *WC) Errorf(err error) error {
 }
 
 type wcBuilder struct {
-	w     *WC
-	state map[string]*Entry
-	wc    map[string][]*Entry
-	layer string
+	w       *WC
+	l       *Layer
+	layer   string
+	state   map[string]*Entry
+	wc      map[string][]*Entry
+	aliases map[string]string
 }
 
 func (b *wcBuilder) build() error {
@@ -272,27 +274,17 @@ func (b *wcBuilder) build() error {
 		b.state[e.Path] = e
 	}
 	b.wc = make(map[string][]*Entry)
+	b.aliases = make(map[string]string)
 	for _, l := range layers {
+		b.l = l
 		b.layer = l.Path()
 		if err := b.repo(); err != nil {
 			return err
 		}
-		for dir, ll := range l.Links {
-			for _, l := range ll {
-				src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
-				dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
-				if 0 < len(l.Path) {
-				loop:
-					for _, v := range l.Path {
-						for _, p := range filepath.SplitList(os.ExpandEnv(v)) {
-							if b.link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst) {
-								break loop
-							}
-						}
-					}
-				} else {
-					b.link(src, dst)
-				}
+		b.link()
+		for src, dst := range b.l.Aliases {
+			if _, ok := b.aliases[src]; !ok {
+				b.aliases[src] = dst
 			}
 		}
 	}
@@ -304,54 +296,102 @@ func (b *wcBuilder) repo() error {
 		if err != nil {
 			return err
 		}
-		path = path[len(b.layer)+1:]
+		origin := path[len(b.layer)+1:]
+		path, err = b.alias(origin)
+		if err != nil {
+			return err
+		}
 		if _, ok := b.wc[path]; !ok {
 			b.parentDirs(path, true)
-			b.wc[path] = append(b.wc[path], &Entry{
+			e := &Entry{
 				Layer: b.layer,
 				Path:  path,
 				IsDir: fi.IsDir(),
-			})
+			}
+			b.wc[path] = append(b.wc[path], e)
+			if path != origin {
+				e.Origin = origin
+				for p, o := filepath.Dir(path), filepath.Dir(origin); p != "."; p = filepath.Dir(p) {
+					e := b.find(filepath.ToSlash(p))
+					if o != "." {
+						e.Origin = filepath.ToSlash(o)
+						o = filepath.Dir(o)
+					} else {
+						e.Type = unlinkableType
+					}
+				}
+			}
 		}
 		return nil
 	})
 }
 
-func (b *wcBuilder) link(src, dst string) bool {
-	fi, err := os.Stat(src)
-	if err != nil {
-		return false
+func (b *wcBuilder) link() {
+	link := func(src, dst string) bool {
+		fi, err := os.Stat(src)
+		if err != nil {
+			return false
+		}
+		dst, err = b.alias(dst)
+		if err != nil {
+			b.w.ui.Errorf("warning: link: %s\n", err)
+			return false
+		}
+		switch list, ok := b.wc[dst]; {
+		case !ok:
+			b.parentDirs(dst, false)
+			b.wc[dst] = append(b.wc[dst], &Entry{
+				Layer:  b.layer,
+				Path:   dst,
+				Origin: src,
+				IsDir:  fi.IsDir(),
+				Type:   "link",
+			})
+		case list[0].Layer == b.layer && list[0].Type != "link":
+			b.w.ui.Errorf("warning: link: '%s' exists in the repository\n", dst)
+		}
+		return true
 	}
-	switch list, ok := b.wc[dst]; {
-	case !ok:
-		b.parentDirs(dst, false)
-		b.wc[dst] = append(b.wc[dst], &Entry{
-			Layer:  b.layer,
-			Path:   dst,
-			Origin: src,
-			IsDir:  fi.IsDir(),
-			Type:   "link",
-		})
-	case list[0].Layer == b.layer && list[0].Type != "link":
-		b.w.ui.Errorf("warning: link: '%s' exists in the repository\n", dst)
+	for dir, list := range b.l.Links {
+		for _, l := range list {
+			src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
+			dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
+			if 0 < len(l.Path) {
+			loop:
+				for _, v := range l.Path {
+					for _, p := range filepath.SplitList(os.ExpandEnv(v)) {
+						if link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst) {
+							break loop
+						}
+					}
+				}
+			} else {
+				link(src, dst)
+			}
+		}
 	}
-	return true
+}
+
+func (b *wcBuilder) alias(path string) (string, error) {
+	for src := path; src != "."; src = filepath.Dir(src) {
+		if dst, ok := b.aliases[src]; ok {
+			if path == src {
+				path = dst
+			} else {
+				path = filepath.Join(dst, path[len(src)+1:])
+			}
+			return b.w.Rel(filepath.Clean(os.ExpandEnv(path)))
+		}
+	}
+	return path, nil
 }
 
 func (b *wcBuilder) parentDirs(path string, linkable bool) {
-	find := func(p string) *Entry {
-		for _, e := range b.wc[p] {
-			if e.Layer == b.layer {
-				return e
-			}
-		}
-		return nil
-	}
 	inWC := true
 	for i, _ := range path {
 		if path[i] == '/' {
 			p := path[:i]
-			e := find(p)
+			e := b.find(p)
 			if e == nil {
 				e = &Entry{
 					Layer: b.layer,
@@ -378,4 +418,13 @@ func (b *wcBuilder) parentDirs(path string, linkable bool) {
 			}
 		}
 	}
+}
+
+func (b *wcBuilder) find(p string) *Entry {
+	for _, e := range b.wc[p] {
+		if e.Layer == b.layer {
+			return e
+		}
+	}
+	return nil
 }

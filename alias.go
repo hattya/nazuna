@@ -1,5 +1,5 @@
 //
-// nazuna :: link.go
+// nazuna :: alias.go
 //
 //   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 //
@@ -30,45 +30,36 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 )
 
-var cmdLink = &Command{
-	Names: []string{"link"},
-	Usage: "link -l <layer> [-p <path>] <src> <dst>",
+var cmdAlias = &Command{
+	Names: []string{"alias"},
+	Usage: "alias -l <layer> <src> <dst>",
 	Help: `
-create a link for the specified path
+create an alias for the specified path
 
-  link is used to create a link of <src> to <dst>, and will be managed by
-  update. If <src> is not found on update, it will be ignored without error.
+  Change the location of <src> to <dst>. <src> should be existed in the lower layer
+  than <dst>, and <src> is treated as <dst> in the layer <layer>. If <src> does
+  not match any locations on update, it will be ignored without error.
 
-  The value of flag --path is a list of directories like PATH or GOPATH
-  environment variables, and it is used to search <src>.
-
-  You can refer environment variables in <path> and <src>. Supported formats
-  are ${var} and $var.
+  You can refer environment variables in <dst>. Supported formats are ${var}
+  and $var.
 
 options:
 
   -l, --layer    a layer
-  -p, --path     a list of directories to search <src>
 `,
 }
 
-var (
-	linkLayer string
-	linkPath  string
-)
+var aliasLayer string
 
 func init() {
-	cmdLink.Run = runLink
-	cmdLink.Flag.StringVar(&linkLayer, "l", "", "")
-	cmdLink.Flag.StringVar(&linkLayer, "layer", "", "")
-	cmdLink.Flag.StringVar(&linkPath, "p", "", "")
-	cmdLink.Flag.StringVar(&linkPath, "path", "", "")
+	cmdAlias.Run = runAlias
+	cmdAlias.Flag.StringVar(&aliasLayer, "l", "", "")
+	cmdAlias.Flag.StringVar(&aliasLayer, "layer", "", "")
 }
 
-func runLink(ui UI, args []string) error {
+func runAlias(ui UI, args []string) error {
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -83,45 +74,38 @@ func runLink(ui UI, args []string) error {
 	}
 
 	switch {
-	case linkLayer == "":
+	case aliasLayer == "":
 		return FlagError("flag --layer is required")
 	default:
 		if len(args) != 2 {
 			return errArg
 		}
-		l, err := repo.LayerOf(linkLayer)
+		l, err := repo.LayerOf(aliasLayer)
 		switch {
 		case err != nil:
 			return err
 		case 0 < len(l.Layers):
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
+		src := filepath.ToSlash(filepath.Clean(args[0]))
 		dst, err := wc.Rel(args[1])
-		if err != nil {
+		switch {
+		case err != nil:
 			return err
+		case src == dst:
+			return fmt.Errorf("'%s' and '%s' are the same file", src, dst)
 		}
 		switch typ := repo.Find(l, dst); typ {
-		case "":
-		case "dir", "file":
+		case "", "dir":
+		case "file":
 			return fmt.Errorf("'%s' already exists!", dst)
 		default:
 			return fmt.Errorf("%s '%s' already exists!", typ, dst)
 		}
-		path := filepath.SplitList(linkPath)
-		for i, p := range path {
-			path[i] = filepath.ToSlash(filepath.Clean(p))
+		if l.Aliases == nil {
+			l.Aliases = make(map[string]string)
 		}
-		src := filepath.ToSlash(filepath.Clean(args[0]))
-		dir, dst := splitPath(dst)
-		if l.Links == nil {
-			l.Links = make(map[string][]*Link)
-		}
-		l.Links[dir] = append(l.Links[dir], &Link{
-			Path: path,
-			Src:  src,
-			Dst:  dst,
-		})
-		sort.Sort(linkByDst(l.Links[dir]))
+		l.Aliases[src] = dst
 	}
 	return repo.Flush()
 }

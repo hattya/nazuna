@@ -182,11 +182,18 @@ func (r *Repository) Find(layer *Layer, path string) (typ string) {
 		return
 	}
 
+	for _, dst := range layer.Aliases {
+		if dst == path {
+			typ = "alias"
+			return
+		}
+	}
+
 	dir, name := splitPath(path)
 	for _, l := range layer.Links[dir] {
 		if l.Dst == name {
 			typ = "link"
-			break
+			return
 		}
 	}
 	return

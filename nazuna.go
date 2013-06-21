@@ -36,9 +36,10 @@ import (
 const Version = "0.1+"
 
 type Layer struct {
-	Name   string             `json:"name"`
-	Layers []*Layer           `json:"layers,omitempty"`
-	Links  map[string][]*Link `json:"links,omitempty"`
+	Name    string             `json:"name"`
+	Layers  []*Layer           `json:"layers,omitempty"`
+	Aliases map[string]string  `json:"aliases,omitempty"`
+	Links   map[string][]*Link `json:"links,omitempty"`
 
 	abstract *Layer
 }
@@ -88,10 +89,13 @@ func (e *Entry) Format(format string) string {
 	if e.IsDir {
 		sep = "/"
 	}
-	if e.Origin == "" {
+	switch {
+	case e.Origin == "":
 		rhs = e.Layer
-	} else {
+	case e.Type == "link":
 		rhs = filepath.FromSlash(e.Origin + sep)
+	default:
+		rhs = e.Layer + ":" + e.Origin + sep
 	}
 	return fmt.Sprintf(format, e.Path+sep, rhs)
 }

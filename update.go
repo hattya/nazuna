@@ -78,7 +78,13 @@ func runUpdate(ui UI, args []string) error {
 				return fmt.Errorf("not linked to '%s'", e.Origin)
 			}
 		default:
-			if !wc.LinksTo(e.Path, repo.PathFor(nil, filepath.Join(e.Layer, e.Path))) {
+			var origin string
+			if e.Origin != "" {
+				origin = e.Origin
+			} else {
+				origin = e.Path
+			}
+			if !wc.LinksTo(e.Path, repo.PathFor(nil, filepath.Join(e.Layer, origin))) {
 				return fmt.Errorf("not linked to layer '%s'", e.Layer)
 			}
 		}
@@ -97,12 +103,18 @@ func runUpdate(ui UI, args []string) error {
 			ui.Println(e.Format("link %s --> %s"))
 			err = wc.Link(e.Origin, e.Path)
 		default:
+			var origin string
+			if e.Origin != "" {
+				origin = e.Origin
+			} else {
+				origin = e.Path
+			}
 			l, _ := repo.LayerOf(e.Layer)
-			if wc.LinksTo(e.Path, repo.PathFor(l, e.Path)) {
+			if wc.LinksTo(e.Path, repo.PathFor(l, origin)) {
 				continue
 			}
 			ui.Println(e.Format("link %s --> %s"))
-			err = wc.Link(repo.PathFor(l, e.Path), e.Path)
+			err = wc.Link(repo.PathFor(l, origin), e.Path)
 		}
 		if err != nil {
 			ui.Errorln("error:", wc.Errorf(err))

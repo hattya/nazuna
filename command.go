@@ -56,6 +56,7 @@ func (e FlagError) Error() string {
 }
 
 var Commands = []*Command{
+	cmdAlias,
 	cmdClone,
 	cmdHelp,
 	cmdInit,
