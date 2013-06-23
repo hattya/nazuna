@@ -33,7 +33,7 @@ import (
 	"path/filepath"
 )
 
-const Version = "0.2"
+const Version = "0.2+"
 
 type Layer struct {
 	Name    string             `json:"name"`

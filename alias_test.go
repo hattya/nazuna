@@ -46,22 +46,22 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a/.config/gocode"},
+			cmd: []string{"mkdir", ".nzn/r/a/.config/gocode"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.config/gocode/config.json"},
+			cmd: []string{"touch", ".nzn/r/a/.config/gocode/config.json"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.gitconfig"},
+			cmd: []string{"touch", ".nzn/r/a/.gitconfig"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vimrc"},
+			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/a/.vim/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vim/syntax/vim.vim"},
+			cmd: []string{"touch", ".nzn/r/a/.vim/syntax/vim.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -70,10 +70,10 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "b/1"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/b/1/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/b/1/.vim/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/1/.vim/syntax/go.vim"},
+			cmd: []string{"touch", ".nzn/r/b/1/.vim/syntax/go.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -95,10 +95,10 @@ link .vimrc --> a
 			cmd: []string{"nzn", "layer", "-c", "b/2"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/b/2/vimfiles/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/b/2/vimfiles/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/2/vimfiles/syntax/go.vim"},
+			cmd: []string{"touch", ".nzn/r/b/2/vimfiles/syntax/go.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -139,7 +139,7 @@ link vimfiles/syntax/vim.vim --> a:.vim/syntax/vim.vim
 `,
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.curlrc"},
+			cmd: []string{"touch", ".nzn/r/a/.curlrc"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -248,7 +248,7 @@ options:
 `,
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/1/dst"},
+			cmd: []string{"touch", ".nzn/r/b/1/dst"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -275,7 +275,7 @@ options:
 			cmd: []string{"export", "ROOT=../"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/src"},
+			cmd: []string{"touch", ".nzn/r/a/src"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},

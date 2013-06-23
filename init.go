@@ -76,7 +76,7 @@ func runInit(ui UI, args []string) error {
 	if err := os.MkdirAll(nzndir, 0777); err != nil {
 		return err
 	}
-	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "repo"))); err != nil {
+	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "r"))); err != nil {
 		return err
 	}
 

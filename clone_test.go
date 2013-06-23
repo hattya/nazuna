@@ -59,17 +59,17 @@ func TestClone(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
-			out: `Cloning into '` + filepath.Join("dst", ".nzn", "repo") + `'...
+			out: `Cloning into '` + filepath.Join("dst", ".nzn", "r") + `'...
 done.
 `,
 		},
 		{
 			cmd: []string{"ls", "dst/.nzn"},
-			out: `repo/
+			out: `r/
 `,
 		},
 		{
-			cmd: []string{"ls", "dst/.nzn/repo"},
+			cmd: []string{"ls", "dst/.nzn/r"},
 			out: `.git/
 nazuna.json
 `,

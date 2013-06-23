@@ -45,16 +45,16 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.gitconfig"},
+			cmd: []string{"touch", ".nzn/r/a/.gitconfig"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vimrc"},
+			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/a/.vim/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vim/syntax/vim.vim"},
+			cmd: []string{"touch", ".nzn/r/a/.vim/syntax/vim.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -71,13 +71,13 @@ link .vimrc --> a
 			cmd: []string{"nzn", "layer", "-c", "b"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/.vimrc"},
+			cmd: []string{"touch", ".nzn/r/b/.vimrc"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/b/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/b/.vim/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/.vim/syntax/go.vim"},
+			cmd: []string{"touch", ".nzn/r/b/.vim/syntax/go.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -96,13 +96,13 @@ link .vimrc --> b
 			cmd: []string{"nzn", "layer", "-c", "c/1"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/c/1/.screenrc"},
+			cmd: []string{"touch", ".nzn/r/c/1/.screenrc"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/2"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/c/2/.tmux.conf"},
+			cmd: []string{"touch", ".nzn/r/c/2/.tmux.conf"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "c"},
@@ -127,10 +127,10 @@ link .tmux.conf --> c/2
 `,
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/b/.vim/autoload/go"},
+			cmd: []string{"mkdir", ".nzn/r/b/.vim/autoload/go"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/.vim/autoload/go/complete.vim"},
+			cmd: []string{"touch", ".nzn/r/b/.vim/autoload/go/complete.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -215,19 +215,19 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.bashrc"},
+			cmd: []string{"touch", ".nzn/r/a/.bashrc"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.gitconfig"},
+			cmd: []string{"touch", ".nzn/r/a/.gitconfig"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/a/.vim/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vim/syntax/vim.vim"},
+			cmd: []string{"touch", ".nzn/r/a/.vim/syntax/vim.vim"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vimrc"},
+			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -245,7 +245,7 @@ link .vimrc --> a
 			cmd: []string{"nzn", "layer", "-c", "b"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/.gitconfig"},
+			cmd: []string{"touch", ".nzn/r/b/.gitconfig"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -260,7 +260,7 @@ link .vimrc --> a
 `,
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/.vimrc"},
+			cmd: []string{"touch", ".nzn/r/b/.vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -281,7 +281,7 @@ link .vimrc --> a
 			cmd: []string{"rm", ".vimrc"},
 		},
 		{
-			cmd: []string{"ln", "-s", ".nzn/repo/b/.vimrc", ".vimrc"},
+			cmd: []string{"ln", "-s", ".nzn/r/b/.vimrc", ".vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -317,10 +317,10 @@ error: .vimrc: .* (re)
 			cmd: []string{"rm", ".vimrc"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/b/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/b/.vim/syntax"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/.vim/syntax/go.vim"},
+			cmd: []string{"touch", ".nzn/r/b/.vim/syntax/go.vim"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},
@@ -352,10 +352,10 @@ error: .vim/syntax/go.vim: .* (re)
 			cmd: []string{"rm", ".vim/syntax"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/_/.vim/syntax"},
+			cmd: []string{"mkdir", ".nzn/r/_/.vim/syntax"},
 		},
 		{
-			cmd: []string{"ln", "-s", ".nzn/repo/_/.vim/syntax", ".vim/syntax"},
+			cmd: []string{"ln", "-s", ".nzn/r/_/.vim/syntax", ".vim/syntax"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -369,19 +369,19 @@ error: .vim/syntax: (re)
 			cmd: []string{"rm", ".vim/syntax"},
 		},
 		{
-			cmd: []string{"rm", "-r", ".nzn/repo/_"},
+			cmd: []string{"rm", "-r", ".nzn/r/_"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/1"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/c/1/.screenrc"},
+			cmd: []string{"touch", ".nzn/r/c/1/.screenrc"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/2"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/c/2/.tmux.conf"},
+			cmd: []string{"touch", ".nzn/r/c/2/.tmux.conf"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "c"},
@@ -398,11 +398,11 @@ error: .vim/syntax: (re)
 			cmd: []string{"nzn", "layer", "c/1"},
 		},
 		{
-			cmd: []string{"rm", "-r", ".nzn/repo/c/1"},
+			cmd: []string{"rm", "-r", ".nzn/r/c/1"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: .nzn/repo/c/1/.screenrc: .* (re)
+			out: `nzn: .nzn/r/c/1/.screenrc: .* (re)
 [1]
 `,
 		},

@@ -65,7 +65,7 @@ func TestLink(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/.vimrc"},
+			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -192,7 +192,7 @@ options:
 `,
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/dst"},
+			cmd: []string{"touch", ".nzn/r/a/dst"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -207,10 +207,10 @@ options:
 			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/dst"},
 		},
 		{
-			cmd: []string{"mkdir", ".nzn/repo/a/dst"},
+			cmd: []string{"mkdir", ".nzn/r/a/dst"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/a/dst/1"},
+			cmd: []string{"touch", ".nzn/r/a/dst/1"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "a"},
@@ -271,7 +271,7 @@ nzn: not linked to 'src'
 			cmd: []string{"rm", "_"},
 		},
 		{
-			cmd: []string{"touch", ".nzn/repo/b/dst"},
+			cmd: []string{"touch", ".nzn/r/b/dst"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "add", "b"},

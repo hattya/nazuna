@@ -40,17 +40,17 @@ func TestInit(t *testing.T) {
 		},
 		{
 			cmd: []string{"ls", "$tempdir/.nzn"},
-			out: `repo/
+			out: `r/
 `,
 		},
 		{
-			cmd: []string{"ls", "$tempdir/.nzn/repo"},
+			cmd: []string{"ls", "$tempdir/.nzn/r"},
 			out: `.git/
 nazuna.json
 `,
 		},
 		{
-			cmd: []string{"cat", "$tempdir/.nzn/repo/nazuna.json"},
+			cmd: []string{"cat", "$tempdir/.nzn/r/nazuna.json"},
 			out: `[]
 `,
 		},
@@ -91,7 +91,7 @@ options:
 `,
 		},
 		{
-			cmd: []string{"mkdir", "$tempdir/.nzn/repo"},
+			cmd: []string{"mkdir", "$tempdir/.nzn/r"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs=git", "$tempdir"},

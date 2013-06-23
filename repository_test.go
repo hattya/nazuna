@@ -47,17 +47,17 @@ func TestRepository(t *testing.T) {
 		t.Error("error expected")
 	}
 
-	if err := mkdir(dir, ".nzn", "repo"); err != nil {
+	if err := mkdir(dir, ".nzn", "r"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = nazuna.OpenRepository(nil, dir); !strings.HasPrefix(err.Error(), "unknown vcs for directory ") {
 		t.Error(err)
 	}
 
-	if err := mkdir(dir, ".nzn", "repo", ".git"); err != nil {
+	if err := mkdir(dir, ".nzn", "r", ".git"); err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(dir, ".nzn", "repo", "nazuna.json")
+	path := filepath.Join(dir, ".nzn", "r", "nazuna.json")
 
 	if err := mkdir(path); err != nil {
 		t.Fatal(err)

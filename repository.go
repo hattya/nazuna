@@ -59,7 +59,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 	}
 
 	nzndir := filepath.Join(rootdir, ".nzn")
-	repodir := filepath.Join(nzndir, "repo")
+	repodir := filepath.Join(nzndir, "r")
 	vcs, err := VCSFor(repodir)
 	if err != nil {
 		return nil, err

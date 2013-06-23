@@ -81,5 +81,5 @@ func runClone(ui UI, args []string) error {
 	if err := os.MkdirAll(nzndir, 0777); err != nil {
 		return err
 	}
-	return ui.Exec(vcs.Clone(src, filepath.Join(nzndir, "repo")))
+	return ui.Exec(vcs.Clone(src, filepath.Join(nzndir, "r")))
 }
