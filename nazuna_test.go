@@ -198,33 +198,30 @@ func (t testScript) diff(aout, bout string, rc int) string {
 	}
 	a := strings.Split(strings.TrimSuffix(aout, "\n"), "\n")
 	b := strings.Split(strings.TrimSuffix(bout, "\n"), "\n")
-	lno := 0
 	buf := new(bytes.Buffer)
-	equal := func(i, j int) {
+	printf := func(sign string, lines []string, i, j int) {
 		for ; i < j; i++ {
-			fmt.Fprintf(buf, " %s\n", a[i])
+			fmt.Fprintf(buf, "%s%s\n", sign, lines[i])
 		}
 	}
-	insert := func(i, j int) {
-		for ; i < j; i++ {
-			fmt.Fprintf(buf, "+%s\n", b[i])
-		}
-	}
-	if aout == "" {
+	switch {
+	case aout == "":
 		if bout != "" {
-			insert(0, len(b))
+			printf("+", b, 0, len(b))
 		}
-	} else {
+	case bout == "":
+		printf("-", a, 0, len(a))
+	default:
 		cl := diff.Diff(len(a), len(b), &lines{a, b})
 		if 0 < len(cl) {
+			lno := 0
 			for _, c := range cl {
-				equal(lno, c.A)
-				for lno = c.A; lno < c.A+c.Del; lno++ {
-					fmt.Fprintf(buf, "-%s\n", a[lno])
-				}
-				insert(c.B, c.B+c.Ins)
+				printf(" ", a, lno, c.A)
+				printf("-", a, c.A, c.A+c.Del)
+				printf("+", b, c.B, c.B+c.Ins)
+				lno = c.A + c.Del
 			}
-			equal(lno, len(a))
+			printf(" ", a, lno, len(a))
 		}
 	}
 	return strings.TrimSuffix(buf.String(), "\n")

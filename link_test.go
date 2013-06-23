@@ -59,7 +59,7 @@ func TestLink(t *testing.T) {
 			cmd: []string{"cd", "work"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -132,7 +132,7 @@ func TestLinkError(t *testing.T) {
 `,
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"touch", ".nzn/state.json"},

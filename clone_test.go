@@ -58,7 +58,7 @@ func TestClone(t *testing.T) {
 			cmd: []string{"cd", ".."},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
+			cmd: []string{"nzn", "clone", "--vcs", "git", "src", "dst"},
 			out: `Cloning into '` + filepath.Join("dst", ".nzn", "r") + `'...
 done.
 `,
@@ -97,7 +97,7 @@ func TestCloneError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "clone", "src"},
 			out: `nzn clone: flag -*vcs is required (re)
-usage: nzn clone --vcs=<type> <repository> [<path>]
+usage: nzn clone --vcs <type> <repository> [<path>]
 
 create a copy of an existing repository
 
@@ -108,13 +108,13 @@ create a copy of an existing repository
 
 options:
 
-      --vcs=<type>    vcs type
+      --vcs <type>    vcs type
 
 [2]
 `,
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs=cvs", "src"},
+			cmd: []string{"nzn", "clone", "--vcs", "cvs", "src"},
 			out: `nzn: unknown vcs 'cvs'
 [1]
 `,
@@ -123,10 +123,10 @@ options:
 			cmd: []string{"git", "init", "-q", "src"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git", "dst"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "dst"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs=git", "src", "dst"},
+			cmd: []string{"nzn", "clone", "--vcs", "git", "src", "dst"},
 			out: `nzn: repository 'dst' already exists!
 [1]
 `,

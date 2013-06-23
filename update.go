@@ -97,28 +97,24 @@ func runUpdate(ui UI, args []string) error {
 	}
 
 	for i := 0; i < len(wc.State.WC); i++ {
-		switch e := wc.State.WC[i]; e.Type {
+		e := wc.State.WC[i]
+		var origin string
+		switch e.Type {
 		case "link":
-			if wc.LinksTo(e.Path, e.Origin) {
-				continue
-			}
-			ui.Println(e.Format("link %s --> %s"))
-			err = wc.Link(e.Origin, e.Path)
+			origin = e.Origin
 		default:
-			var origin string
-			if e.Origin != "" {
-				origin = e.Origin
-			} else {
-				origin = e.Path
-			}
 			l, _ := repo.LayerOf(e.Layer)
-			if wc.LinksTo(e.Path, repo.PathFor(l, origin)) {
-				continue
+			if e.Origin != "" {
+				origin = repo.PathFor(l, e.Origin)
+			} else {
+				origin = repo.PathFor(l, e.Path)
 			}
-			ui.Println(e.Format("link %s --> %s"))
-			err = wc.Link(repo.PathFor(l, origin), e.Path)
 		}
-		if err != nil {
+		if wc.LinksTo(e.Path, origin) {
+			continue
+		}
+		ui.Println(e.Format("link %s --> %s"))
+		if err := wc.Link(origin, e.Path); err != nil {
 			ui.Errorln("error:", wc.Errorf(err))
 			copy(wc.State.WC[i:], wc.State.WC[i+1:])
 			wc.State.WC = wc.State.WC[:len(wc.State.WC)-1]

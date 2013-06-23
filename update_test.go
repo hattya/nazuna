@@ -39,7 +39,7 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -197,7 +197,7 @@ func TestUpdateError(t *testing.T) {
 `,
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"touch", ".nzn/state.json"},

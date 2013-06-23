@@ -39,7 +39,7 @@ func TestLayer(t *testing.T) {
 			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer"},
@@ -121,7 +121,7 @@ func TestLayerError(t *testing.T) {
 `,
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c"},

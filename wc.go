@@ -352,8 +352,8 @@ func (b *wcBuilder) link() {
 		}
 		return true
 	}
-	for dir, list := range b.l.Links {
-		for _, l := range list {
+	for _, dir := range b.w.sortKeys(b.l.Links) {
+		for _, l := range b.l.Links[dir] {
 			src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
 			dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
 			if 0 < len(l.Path) {

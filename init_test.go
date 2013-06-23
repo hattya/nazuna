@@ -36,7 +36,7 @@ func TestInit(t *testing.T) {
 			cmd: []string{"mkdtemp"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git", "$tempdir"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "$tempdir"},
 		},
 		{
 			cmd: []string{"ls", "$tempdir/.nzn"},
@@ -66,7 +66,7 @@ func TestInitError(t *testing.T) {
 			cmd: []string{"mkdtemp"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=cvs", "$tempdir"},
+			cmd: []string{"nzn", "init", "--vcs", "cvs", "$tempdir"},
 			out: `nzn: unknown vcs 'cvs'
 [1]
 `,
@@ -74,7 +74,7 @@ func TestInitError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "init", "$tempdir"},
 			out: `nzn init: flag --vcs is required
-usage: nzn init --vcs=<type> [<path>]
+usage: nzn init --vcs <type> [<path>]
 
 create a new repository in the specified directory
 
@@ -85,7 +85,7 @@ create a new repository in the specified directory
 
 options:
 
-      --vcs=<type>    vcs type
+      --vcs <type>    vcs type
 
 [2]
 `,
@@ -94,7 +94,7 @@ options:
 			cmd: []string{"mkdir", "$tempdir/.nzn/r"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git", "$tempdir"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "$tempdir"},
 			out: `nzn: repository '.*' already exists! (re)
 [1]
 `,

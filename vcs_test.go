@@ -42,7 +42,7 @@ func TestVCS(t *testing.T) {
 			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs=git"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "--version"},
