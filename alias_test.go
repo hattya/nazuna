@@ -296,18 +296,45 @@ options:
 `,
 		},
 		{
-			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/src"},
+			cmd: []string{"nzn", "layer", "b/1"},
 		},
 		{
-			cmd: []string{"nzn", "link", "-l", "a", "_", "src"},
+			cmd: []string{"nzn", "layer", "-c", "c/1"},
+		},
+		{
+			cmd: []string{"nzn", "link", "-l", "c/1", "_", "src"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "c/2"},
+		},
+		{
+			cmd: []string{"nzn", "link", "-l", "c/2", "-p", ".", "_", "src"},
+		},
+		{
+			cmd: []string{"nzn", "layer", "-c", "d"},
+		},
+		{
+			cmd: []string{"nzn", "alias", "-l", "d", "src", "$ROOT/dst"},
 		},
 		{
 			cmd: []string{"touch", "_"},
 		},
 		{
+			cmd: []string{"nzn", "layer", "c/1"},
+		},
+		{
 			cmd: []string{"nzn", "update"},
-			out: `warning: link: '` + filepath.Join("..", "dst") + `' is not under root
-0 updated, 0 removed, 0 failed
+			out: `nzn: link '` + filepath.Join("..", "dst") + `' is not under root
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/2"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `nzn: link '` + filepath.Join("..", "dst") + `' is not under root
+[1]
 `,
 		},
 		{

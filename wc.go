@@ -281,7 +281,9 @@ func (b *wcBuilder) build() error {
 		if err := b.repo(); err != nil {
 			return err
 		}
-		b.link()
+		if err := b.link(); err != nil {
+			return err
+		}
 		for src, dst := range b.l.Aliases {
 			if _, ok := b.aliases[src]; !ok {
 				b.aliases[src] = dst
@@ -326,16 +328,15 @@ func (b *wcBuilder) repo() error {
 	})
 }
 
-func (b *wcBuilder) link() {
-	link := func(src, dst string) bool {
+func (b *wcBuilder) link() error {
+	link := func(src, dst string) (bool, error) {
 		fi, err := os.Stat(src)
 		if err != nil {
-			return false
+			return false, nil
 		}
 		dst, err = b.alias(dst)
 		if err != nil {
-			b.w.ui.Errorf("warning: link: %s\n", err)
-			return false
+			return false, fmt.Errorf("link %s", err)
 		}
 		switch list, ok := b.wc[dst]; {
 		case !ok:
@@ -350,7 +351,7 @@ func (b *wcBuilder) link() {
 		case list[0].Layer == b.layer && list[0].Type != "link":
 			b.w.ui.Errorf("warning: link: '%s' exists in the repository\n", dst)
 		}
-		return true
+		return true, nil
 	}
 	for _, dir := range b.w.sortKeys(b.l.Links) {
 		for _, l := range b.l.Links[dir] {
@@ -360,16 +361,20 @@ func (b *wcBuilder) link() {
 			loop:
 				for _, v := range l.Path {
 					for _, p := range filepath.SplitList(os.ExpandEnv(v)) {
-						if link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst) {
+						switch ok, err := link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst); {
+						case ok:
 							break loop
+						case err != nil:
+							return err
 						}
 					}
 				}
-			} else {
-				link(src, dst)
+			} else if _, err := link(src, dst); err != nil {
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 func (b *wcBuilder) alias(path string) (string, error) {
