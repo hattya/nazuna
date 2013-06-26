@@ -284,6 +284,9 @@ func (b *wcBuilder) build() error {
 		if err := b.link(); err != nil {
 			return err
 		}
+		if err := b.subrepo(); err != nil {
+			return err
+		}
 		for src, dst := range b.l.Aliases {
 			if _, ok := b.aliases[src]; !ok {
 				b.aliases[src] = dst
@@ -371,6 +374,36 @@ func (b *wcBuilder) link() error {
 				}
 			} else if _, err := link(src, dst); err != nil {
 				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (b *wcBuilder) subrepo() error {
+	for _, dir := range b.w.sortKeys(b.l.Subrepos) {
+		for _, l := range b.l.Subrepos[dir] {
+			var name string
+			if l.Name != "" {
+				name = l.Name
+			} else {
+				name = filepath.Base(l.Src)
+			}
+			dst, err := b.alias(filepath.ToSlash(filepath.Join(dir, name)))
+			if err != nil {
+				return fmt.Errorf("subrepo %s", err)
+			}
+			switch list, ok := b.wc[dst]; {
+			case !ok:
+				b.parentDirs(dst, false)
+				b.wc[dst] = append(b.wc[dst], &Entry{
+					Layer:  b.layer,
+					Path:   dst,
+					Origin: l.Src,
+					Type:   "subrepo",
+				})
+			case list[0].Layer == b.layer && list[0].Type != "subrepo":
+				b.w.ui.Errorf("warning: subrepo: '%s' exists in the repository\n", dst)
 			}
 		}
 	}

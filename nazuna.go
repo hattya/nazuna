@@ -36,10 +36,11 @@ import (
 const Version = "0.2+"
 
 type Layer struct {
-	Name    string             `json:"name"`
-	Layers  []*Layer           `json:"layers,omitempty"`
-	Aliases map[string]string  `json:"aliases,omitempty"`
-	Links   map[string][]*Link `json:"links,omitempty"`
+	Name     string                `json:"name"`
+	Layers   []*Layer              `json:"layers,omitempty"`
+	Aliases  map[string]string     `json:"aliases,omitempty"`
+	Links    map[string][]*Link    `json:"links,omitempty"`
+	Subrepos map[string][]*Subrepo `json:"subrepos,omitempty"`
 
 	abstract *Layer
 }
@@ -69,6 +70,17 @@ func (s linkByDst) Len() int           { return len(s) }
 func (s linkByDst) Less(i, j int) bool { return s[i].Dst < s[j].Dst }
 func (s linkByDst) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
+type Subrepo struct {
+	Src  string `json:"src"`
+	Name string `json:"name,omitempty"`
+}
+
+type subrepoBySrc []*Subrepo
+
+func (s subrepoBySrc) Len() int           { return len(s) }
+func (s subrepoBySrc) Less(i, j int) bool { return s[i].Src < s[j].Src }
+func (s subrepoBySrc) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
 type State struct {
 	Layers map[string]string `json:"layers,omitempty"`
 	WC     []*Entry          `json:"wc,omitempty"`
@@ -94,6 +106,8 @@ func (e *Entry) Format(format string) string {
 		rhs = e.Layer
 	case e.Type == "link":
 		rhs = filepath.FromSlash(e.Origin + sep)
+	case e.Type == "subrepo":
+		rhs = e.Origin
 	default:
 		rhs = e.Layer + ":" + e.Origin + sep
 	}

@@ -311,6 +311,12 @@ options:
 			cmd: []string{"nzn", "link", "-l", "c/2", "-p", ".", "_", "src"},
 		},
 		{
+			cmd: []string{"nzn", "layer", "-c", "c/3"},
+		},
+		{
+			cmd: []string{"nzn", "subrepo", "-l", "c/3", "-a", "_", "src"},
+		},
+		{
 			cmd: []string{"nzn", "layer", "-c", "d"},
 		},
 		{
@@ -334,6 +340,15 @@ options:
 		{
 			cmd: []string{"nzn", "update"},
 			out: `nzn: link '` + filepath.Join("..", "dst") + `' is not under root
+[1]
+`,
+		},
+		{
+			cmd: []string{"nzn", "layer", "c/3"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `nzn: subrepo '` + filepath.Join("..", "dst") + `' is not under root
 [1]
 `,
 		},

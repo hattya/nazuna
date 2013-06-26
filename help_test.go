@@ -52,6 +52,7 @@ list of commands:
   init       create a new repository in the specified directory
   layer      manage repository layers
   link       create a link for the specified path
+  subrepo    manage subrepositories
   update     update working copy
   vcs        run the vcs command inside the repository
   version    output version and copyright information

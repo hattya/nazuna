@@ -79,6 +79,10 @@ func runUpdate(ui UI, args []string) error {
 			if !wc.LinksTo(e.Path, e.Origin) {
 				return fmt.Errorf("not linked to '%s'", e.Origin)
 			}
+		case "subrepo":
+			if !wc.LinksTo(e.Path, repo.SubrepoFor(e.Origin)) {
+				return fmt.Errorf("not linked to '%s'", e.Origin)
+			}
 		default:
 			var origin string
 			if e.Origin != "" {
@@ -102,6 +106,8 @@ func runUpdate(ui UI, args []string) error {
 		switch e.Type {
 		case "link":
 			origin = e.Origin
+		case "subrepo":
+			origin = repo.SubrepoFor(e.Origin)
 		default:
 			l, _ := repo.LayerOf(e.Layer)
 			if e.Origin != "" {

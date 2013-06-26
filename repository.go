@@ -43,6 +43,7 @@ type Repository struct {
 	vcs     *VCS
 	nzndir  string
 	repodir string
+	subroot string
 }
 
 func OpenRepository(ui UI, path string) (*Repository, error) {
@@ -69,6 +70,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 		vcs:     vcs,
 		nzndir:  nzndir,
 		repodir: repodir,
+		subroot: filepath.Join(nzndir, "sub"),
 	}
 
 	path = filepath.Join(r.repodir, "nazuna.json")
@@ -165,6 +167,10 @@ func (r *Repository) PathFor(layer *Layer, path string) string {
 	return filepath.Join(r.repodir, path)
 }
 
+func (r *Repository) SubrepoFor(path string) string {
+	return filepath.Join(r.subroot, path)
+}
+
 func (r *Repository) WC() (*WC, error) {
 	return openWC(r.ui, r)
 }
@@ -192,6 +198,12 @@ func (r *Repository) Find(layer *Layer, path string) (typ string) {
 	for _, l := range layer.Links[dir] {
 		if l.Dst == name {
 			return "link"
+		}
+	}
+
+	for _, s := range layer.Subrepos[dir] {
+		if s.Name == name || filepath.Base(s.Src) == name {
+			return "subrepo"
 		}
 	}
 	return
