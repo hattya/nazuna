@@ -35,7 +35,7 @@ import (
 
 type Command struct {
 	Names       []string
-	Usage       string
+	Usage       []string
 	Help        string
 	Flag        flag.FlagSet
 	CustomFlags bool

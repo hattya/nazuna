@@ -33,7 +33,9 @@ import (
 
 var cmdHelp = &Command{
 	Names: []string{"help"},
-	Usage: "help [options] [--] [<command>]",
+	Usage: []string{
+		"help [options] [--] [<command>]",
+	},
 	Help: `
 display help information about nazuna
 
@@ -57,7 +59,8 @@ func runHelp(ui UI, args []string) (err error) {
 		}
 	}
 
-	if cmd == nil {
+	switch {
+	case cmd == nil:
 		ui.Print("nazuna - A layered dotfiles management\n\n")
 		ui.Print("list of commands:\n\n")
 		maxWidth := 0
@@ -71,8 +74,13 @@ func runHelp(ui UI, args []string) (err error) {
 			ui.Printf("  %-*s    %s\n", maxWidth, cmd.Name(), l)
 		}
 		ui.Println()
-	} else {
-		ui.Printf("usage: %s %s\n", ui.Args()[0], cmd.Usage)
+	case 0 < len(cmd.Usage):
+		name := ui.Args()[0]
+		label := "usage"
+		for _, u := range cmd.Usage {
+			ui.Printf("%s: %s %s\n", label, name, u)
+			label = "   or"
+		}
 		for _, l := range strings.Split(cmd.Help, "\n") {
 			ui.Println(strings.TrimRightFunc(l, unicode.IsSpace))
 		}

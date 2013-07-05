@@ -28,7 +28,9 @@ package nazuna
 
 var cmdVersion = &Command{
 	Names: []string{"version"},
-	Usage: "version",
+	Usage: []string{
+		"version",
+	},
 	Help: `
 output version and copyright information
 `,

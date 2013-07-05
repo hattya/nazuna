@@ -34,7 +34,9 @@ import (
 
 var cmdUpdate = &Command{
 	Names: []string{"update"},
-	Usage: "update",
+	Usage: []string{
+		"update",
+	},
 	Help: `
 update working copy
 

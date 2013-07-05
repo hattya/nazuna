@@ -32,7 +32,10 @@ import (
 
 var cmdLayer = &Command{
 	Names: []string{"layer"},
-	Usage: "layer [-c] [<name>]",
+	Usage: []string{
+		"layer [<name>]",
+		"layer -c <name>",
+	},
 	Help: `
   manage repository layers
 

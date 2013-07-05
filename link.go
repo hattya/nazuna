@@ -35,7 +35,9 @@ import (
 
 var cmdLink = &Command{
 	Names: []string{"link"},
-	Usage: "link -l <layer> [-p <path>] <src> <dst>",
+	Usage: []string{
+		"link -l <layer> [-p <path>] <src> <dst>",
+	},
 	Help: `
 create a link for the specified path
 

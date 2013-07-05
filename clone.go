@@ -34,7 +34,9 @@ import (
 
 var cmdClone = &Command{
 	Names: []string{"clone"},
-	Usage: "clone --vcs <type> <repository> [<path>]",
+	Usage: []string{
+		"clone --vcs <type> <repository> [<path>]",
+	},
 	Help: `
 create a copy of an existing repository
 

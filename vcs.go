@@ -36,7 +36,9 @@ import (
 
 var cmdVCS = &Command{
 	Names: []string{"vcs"},
-	Usage: "vcs [args]",
+	Usage: []string{
+		"vcs [args]",
+	},
 	Help: `
   run the vcs command inside the repository
 `,

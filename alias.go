@@ -34,7 +34,9 @@ import (
 
 var cmdAlias = &Command{
 	Names: []string{"alias"},
-	Usage: "alias -l <layer> <src> <dst>",
+	Usage: []string{
+		"alias -l <layer> <src> <dst>",
+	},
 	Help: `
 create an alias for the specified path
 

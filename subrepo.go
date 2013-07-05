@@ -35,7 +35,9 @@ import (
 
 var cmdSubrepo = &Command{
 	Names: []string{"subrepo"},
-	Usage: "subrepo -l <layer> -a <repository> <path>",
+	Usage: []string{
+		"subrepo -l <layer> -a <repository> <path>",
+	},
 	Help: `
 manage subrepositories
 

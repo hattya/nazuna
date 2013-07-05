@@ -34,7 +34,9 @@ import (
 
 var cmdInit = &Command{
 	Names: []string{"init"},
-	Usage: "init --vcs <type> [<path>]",
+	Usage: []string{
+		"init --vcs <type> [<path>]",
+	},
 	Help: `
 create a new repository in the specified directory
 
