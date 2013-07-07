@@ -59,7 +59,7 @@ func TestClone(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "clone", "--vcs", "git", "src", "dst"},
-			out: `Cloning into '` + filepath.Join("dst", ".nzn", "r") + `'...
+			out: `Cloning into '` + filepath.FromSlash("dst/.nzn/r") + `'...
 done.
 `,
 		},

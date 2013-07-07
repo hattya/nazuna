@@ -34,89 +34,27 @@ import (
 	"unsafe"
 )
 
-const (
-	FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
-	FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
-
-	IO_REPARSE_TAG_MOUNT_POINT = 0xa0000003
-	IO_REPARSE_TAG_SYMLINK     = 0xa000000c
-
-	FSCTL_SET_REPARSE_POINT = 0x000900a4
-	FSCTL_GET_REPARSE_POINT = 0x000900a8
-
-	SYMLINK_FLAG_RELATIVE = 0x00000001
-
-	MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16 * 1024
-)
-
-var (
-	kernel32 = syscall.NewLazyDLL("kernel32.dll")
-
-	pCreateHardLinkW = kernel32.NewProc("CreateHardLinkW")
-	pDeviceIoControl = kernel32.NewProc("DeviceIoControl")
-)
-
-type ReparseDataBuffer struct {
-	ReparseTag        uint32
-	ReparseDataLength uint16
-	Reserved          uint16
-	ReparseBuffer     [14]byte
-}
-
-type SymbolicLinkReparseBuffer struct {
-	SubstituteNameOffset uint16
-	SubstituteNameLength uint16
-	PrintNameOffset      uint16
-	PrintNameLength      uint16
-	Flags                uint32
-	PathBuffer           [1]uint16
-}
-
-type MountPointReparseBuffer struct {
-	SubstituteNameOffset uint16
-	SubstituteNameLength uint16
-	PrintNameOffset      uint16
-	PrintNameLength      uint16
-	PathBuffer           [1]uint16
-}
-
-func CreateHardLink(link, path *uint16, sa *syscall.SecurityAttributes) (err error) {
-	r1, _, e1 := pCreateHardLinkW.Call(uintptr(unsafe.Pointer(link)), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(sa)))
-	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
-			err = e1
-		} else {
-			err = syscall.EINVAL
+func RemoveAll(path string) error {
+	// syscall.DeleteFile cannot remove read-only files
+	err := filepath.Walk(path, func(path string, fi os.FileInfo, err error) error {
+		switch {
+		case err != nil:
+			return err
+		case fi.Mode().Perm()&0200 == 0:
+			mode := os.FileMode(0666)
+			if fi.IsDir() {
+				mode = 0777
+			}
+			if err := os.Chmod(path, mode); err != nil {
+				return err
+			}
 		}
-	}
-	return
-}
-
-func DeviceIoControl(h syscall.Handle, iocc uint32, inbuf []byte, outbuf []byte, retlen *uint32, overlapped *syscall.Overlapped) (err error) {
-	var inp, outp *byte
-	if 0 < len(inbuf) {
-		inp = &inbuf[0]
-	}
-	if 0 < len(outbuf) {
-		outp = &outbuf[0]
-	}
-	r1, _, e1 := pDeviceIoControl.Call(uintptr(h), uintptr(iocc), uintptr(unsafe.Pointer(inp)), uintptr(len(inbuf)), uintptr(unsafe.Pointer(outp)), uintptr(len(outbuf)), uintptr(unsafe.Pointer(retlen)), uintptr(unsafe.Pointer(overlapped)))
-	if r1 == 0 {
-		if e1.(syscall.Errno) != 0 {
-			err = e1
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func createFile(path string, access uint32) (syscall.Handle, error) {
-	p, err := syscall.UTF16PtrFromString(path)
+		return nil
+	})
 	if err != nil {
-		return syscall.InvalidHandle, err
+		return err
 	}
-	return syscall.CreateFile(p, access, syscall.FILE_SHARE_READ|syscall.FILE_SHARE_WRITE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT, 0)
+	return os.RemoveAll(path)
 }
 
 func isLink(path string) bool {
@@ -277,25 +215,10 @@ func unlink(path string) error {
 	return os.Remove(path)
 }
 
-func RemoveAll(path string) error {
-	// syscall.DeleteFile cannot remove read-only files
-	err := filepath.Walk(path, func(path string, fi os.FileInfo, err error) error {
-		switch {
-		case err != nil:
-			return err
-		case fi.IsDir():
-			if err := os.Chmod(path, 0777); err != nil {
-				return err
-			}
-		default:
-			if err := os.Chmod(path, 0666); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+func createFile(path string, access uint32) (syscall.Handle, error) {
+	p, err := syscall.UTF16PtrFromString(path)
 	if err != nil {
-		return err
+		return syscall.InvalidHandle, err
 	}
-	return os.RemoveAll(path)
+	return syscall.CreateFile(p, access, syscall.FILE_SHARE_READ|syscall.FILE_SHARE_WRITE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT, 0)
 }

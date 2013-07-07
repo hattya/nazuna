@@ -291,7 +291,7 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: '` + filepath.Join("..", "dst") + `' is not under root
+			out: `nzn: '` + filepath.FromSlash("../dst") + `' is not under root
 [1]
 `,
 		},
@@ -330,7 +330,7 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: link '` + filepath.Join("..", "dst") + `' is not under root
+			out: `nzn: link '` + filepath.FromSlash("../dst") + `' is not under root
 [1]
 `,
 		},
@@ -339,7 +339,7 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: link '` + filepath.Join("..", "dst") + `' is not under root
+			out: `nzn: link '` + filepath.FromSlash("../dst") + `' is not under root
 [1]
 `,
 		},
@@ -348,7 +348,7 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: subrepo '` + filepath.Join("..", "dst") + `' is not under root
+			out: `nzn: subrepo '` + filepath.FromSlash("../dst") + `' is not under root
 [1]
 `,
 		},

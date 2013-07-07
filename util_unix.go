@@ -32,6 +32,8 @@ import (
 	"path/filepath"
 )
 
+var RemoveAll = os.RemoveAll
+
 func isLink(path string) bool {
 	fi, err := os.Lstat(path)
 	return err == nil && fi.Mode()&os.ModeSymlink != 0
@@ -62,5 +64,3 @@ func unlink(path string) error {
 	}
 	return os.Remove(path)
 }
-
-var RemoveAll = os.RemoveAll

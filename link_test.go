@@ -44,22 +44,16 @@ func TestLink(t *testing.T) {
 			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"mkdir", "root"},
+			cmd: []string{"mkdir", "r/go/misc/vim"},
 		},
 		{
-			cmd: []string{"mkdir", "root/go/misc/vim"},
+			cmd: []string{"mkdir", "r/gocode/src/github.com/nsf/gocode/vim"},
 		},
 		{
-			cmd: []string{"mkdir", "root/gocode/src/github.com/nsf/gocode/vim"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
 		},
 		{
-			cmd: []string{"mkdir", "work"},
-		},
-		{
-			cmd: []string{"cd", "work"},
-		},
-		{
-			cmd: []string{"nzn", "init", "--vcs", "git"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -71,37 +65,37 @@ func TestLink(t *testing.T) {
 			cmd: []string{"nzn", "vcs", "add", "a"},
 		},
 		{
-			cmd: []string{"nzn", "link", "-l", "a", "$tempdir/root/go/misc/vim", ".vim/bundle/golang"},
+			cmd: []string{"nzn", "link", "-l", "a", "$tempdir/r/go/misc/vim", ".vim/bundle/golang"},
 		},
 		{
 			cmd: []string{"export", "GOPATH="},
 		},
 		{
-			cmd: []string{"nzn", "link", "-l", "a", "-p", "$GOPATH" + sep + "$tempdir/root/gocode", "src/github.com/nsf/gocode/vim", ".vim/bundle/gocode"},
+			cmd: []string{"nzn", "link", "-l", "a", "-p", "$GOPATH" + sep + "$tempdir/r/gocode", "src/github.com/nsf/gocode/vim", ".vim/bundle/gocode"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/bundle/gocode/ --> .*` + q("/root/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
-link .vim/bundle/golang/ --> .*` + q("/root/go/misc/vim/") + ` (re)
+			out: `link .vim/bundle/gocode/ --> .*` + q("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+link .vim/bundle/golang/ --> .*` + q("/r/go/misc/vim/") + ` (re)
 link .vimrc --> a
 3 updated, 0 removed, 0 failed
 `,
 		},
 		{
-			cmd: []string{"rm", "-r", "../root/go"},
+			cmd: []string{"rm", "-r", "../r/go"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/golang/ -/- .*` + q("/root/go/misc/vim/") + ` (re)
+			out: `unlink .vim/bundle/golang/ -/- .*` + q("/r/go/misc/vim/") + ` (re)
 0 updated, 1 removed, 0 failed
 `,
 		},
 		{
-			cmd: []string{"rm", "-r", "../root"},
+			cmd: []string{"rm", "-r", "../r"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/gocode/ -/- .*` + q("/root/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+			out: `unlink .vim/bundle/gocode/ -/- .*` + q("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
 0 updated, 1 removed, 0 failed
 `,
 		},

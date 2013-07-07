@@ -32,6 +32,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"strings"
 	"unicode/utf8"
 )
@@ -57,6 +59,23 @@ func splitPath(path string) (string, string) {
 		return r < utf8.RuneSelf && os.IsPathSeparator(uint8(r))
 	})
 	return dir, name
+}
+
+func sortKeys(i interface{}) []string {
+	v := reflect.Indirect(reflect.ValueOf(i))
+	if v.Kind() != reflect.Map {
+		return nil
+	}
+	keys := v.MapKeys()
+	if len(keys) == 0 || keys[0].Kind() != reflect.String {
+		return nil
+	}
+	list := make(sort.StringSlice, len(keys))
+	for i, k := range keys {
+		list[i] = k.String()
+	}
+	list.Sort()
+	return list
 }
 
 func marshal(path string, v interface{}) error {

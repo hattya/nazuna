@@ -30,8 +30,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
-	"sort"
 	"strings"
 )
 
@@ -198,7 +196,7 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 
 	w.State.WC = w.State.WC[:0]
 	dir := ""
-	for _, p := range w.sortKeys(b.wc) {
+	for _, p := range sortKeys(b.wc) {
 		switch {
 		case dir != "" && strings.HasPrefix(p, dir):
 		case len(b.wc[p]) == 1:
@@ -221,21 +219,10 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 	}
 
 	ul := make([]*Entry, len(b.state))
-	for i, p := range w.sortKeys(b.state) {
+	for i, p := range sortKeys(b.state) {
 		ul[i] = b.state[p]
 	}
 	return ul, nil
-}
-
-func (w *WC) sortKeys(m interface{}) []string {
-	v := reflect.ValueOf(m)
-	keys := v.MapKeys()
-	list := make(sort.StringSlice, len(keys))
-	for i, k := range keys {
-		list[i] = k.String()
-	}
-	list.Sort()
-	return list
 }
 
 func (w *WC) Errorf(err error) error {
@@ -356,7 +343,7 @@ func (b *wcBuilder) link() error {
 		}
 		return true, nil
 	}
-	for _, dir := range b.w.sortKeys(b.l.Links) {
+	for _, dir := range sortKeys(b.l.Links) {
 		for _, l := range b.l.Links[dir] {
 			src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
 			dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
@@ -381,7 +368,7 @@ func (b *wcBuilder) link() error {
 }
 
 func (b *wcBuilder) subrepo() error {
-	for _, dir := range b.w.sortKeys(b.l.Subrepos) {
+	for _, dir := range sortKeys(b.l.Subrepos) {
 		for _, l := range b.l.Subrepos[dir] {
 			var name string
 			if l.Name != "" {
