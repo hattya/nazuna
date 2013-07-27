@@ -66,10 +66,12 @@ type VCS struct {
 	Cmd  string
 	Dir  string
 
-	InitCmd  string
-	CloneCmd string
-	AddCmd   string
-	ListCmd  string
+	InitCmd   string
+	CloneCmd  string
+	UpdateCmd []string
+
+	AddCmd  string
+	ListCmd string
 }
 
 func (v *VCS) String() string {
@@ -77,40 +79,34 @@ func (v *VCS) String() string {
 }
 
 func (v *VCS) Init(path string) *exec.Cmd {
-	args := v.expand(v.InitCmd, "path", path)
-	return exec.Command(v.Cmd, args...)
+	m := map[string]string{
+		"path": path,
+	}
+	return v.Command(strings.Fields(format(v.InitCmd, m))...)
 }
 
 func (v *VCS) Clone(src, dst string) *exec.Cmd {
-	args := v.expand(v.CloneCmd, "src", src, "dst", dst)
-	return exec.Command(v.Cmd, args...)
+	m := map[string]string{
+		"src": src,
+		"dst": dst,
+	}
+	return v.Command(strings.Fields(format(v.CloneCmd, m))...)
+}
+
+func (v *VCS) Update() []*exec.Cmd {
+	cmds := []*exec.Cmd{}
+	for _, c := range v.UpdateCmd {
+		cmds = append(cmds, v.Command(strings.Fields(c)...))
+	}
+	return cmds
 }
 
 func (v *VCS) Add(paths ...string) *exec.Cmd {
-	args := v.expand(v.AddCmd)
-	return exec.Command(v.Cmd, append(args, paths...)...)
+	return v.Command(append(strings.Fields(v.AddCmd), paths...)...)
 }
 
 func (v *VCS) List(paths ...string) *exec.Cmd {
-	args := v.expand(v.ListCmd)
-	return exec.Command(v.Cmd, append(args, paths...)...)
-}
-
-func (v *VCS) expand(cmdline string, kv ...string) []string {
-	m := make(map[string]string)
-	for i := 0; i < len(kv); i += 2 {
-		m[kv[i]] = kv[i+1]
-	}
-	args := strings.Fields(cmdline)
-	for i, a := range args {
-		if strings.Contains(a, "{") {
-			for k, v := range m {
-				a = strings.Replace(a, "{"+k+"}", v, -1)
-			}
-		}
-		args[i] = a
-	}
-	return args
+	return v.Command(append(strings.Fields(v.ListCmd), paths...)...)
 }
 
 func (v *VCS) Command(args ...string) *exec.Cmd {
@@ -118,30 +114,35 @@ func (v *VCS) Command(args ...string) *exec.Cmd {
 }
 
 var VCSes = []*VCS{
-	vcsGit,
-	vcsHg,
-}
+	{
+		Name: "Git",
+		Cmd:  "git",
+		Dir:  ".git",
 
-var vcsGit = &VCS{
-	Name: "Git",
-	Cmd:  "git",
-	Dir:  ".git",
+		InitCmd:  "init -q {path}",
+		CloneCmd: "clone --recursive {src} {dst}",
+		UpdateCmd: []string{
+			"pull",
+			"submodule update --init --recursive",
+		},
 
-	InitCmd:  "init -q {path}",
-	CloneCmd: "clone {src} {dst}",
-	AddCmd:   "add",
-	ListCmd:  "ls-files",
-}
+		AddCmd:  "add",
+		ListCmd: "ls-files",
+	},
+	{
+		Name: "Mercurial",
+		Cmd:  "hg",
+		Dir:  ".hg",
 
-var vcsHg = &VCS{
-	Name: "Mercurial",
-	Cmd:  "hg",
-	Dir:  ".hg",
+		InitCmd:  "init {path}",
+		CloneCmd: "clone {src} {dst}",
+		UpdateCmd: []string{
+			"pull",
+		},
 
-	InitCmd:  "init {path}",
-	CloneCmd: "clone {src} {dst}",
-	AddCmd:   "add",
-	ListCmd:  "status -madcn",
+		AddCmd:  "add",
+		ListCmd: "status -madcn",
+	},
 }
 
 type VCSError struct {

@@ -28,8 +28,10 @@ package nazuna
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -93,4 +95,29 @@ func unmarshal(path string, v interface{}) error {
 		return err
 	}
 	return json.Unmarshal(data, v)
+}
+
+func format(s string, m map[string]string) string {
+	if strings.Contains(s, "{") {
+		for k, v := range m {
+			s = strings.Replace(s, "{"+k+"}", v, -1)
+		}
+	}
+	return s
+}
+
+func httpGet(uri string) ([]byte, error) {
+	resp, err := http.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("%s: %s", uri, resp.Status)
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

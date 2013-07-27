@@ -93,6 +93,19 @@ func (t testScript) run() error {
 			kv := strings.SplitN(args[0], "=", 2)
 			defer os.Setenv(kv[0], os.Getenv(kv[0]))
 			os.Setenv(kv[0], kv[1])
+
+			found := false
+			for i, s := range testEnv {
+				if s[:strings.Index(s, "=")] == kv[0] {
+					testEnv[i] = args[0]
+					defer func(i int, s string) { testEnv[i] = s }(i, s)
+					found = true
+				}
+			}
+			if !found {
+				testEnv = append(testEnv, args[0])
+				defer func() { testEnv = testEnv[:len(testEnv)-1] }()
+			}
 		case "git":
 			cmd := exec.Command(c.cmd[0], args...)
 			cmd.Env = testEnv

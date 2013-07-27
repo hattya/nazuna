@@ -135,4 +135,5 @@ var (
 	errArg     = errors.New("invalid arguments")
 	errLink    = errors.New("file is a link")
 	errNotLink = errors.New("not a link")
+	errRemote  = errors.New("unknown remote")
 )

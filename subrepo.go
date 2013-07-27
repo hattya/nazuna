@@ -37,6 +37,7 @@ var cmdSubrepo = &Command{
 	Names: []string{"subrepo"},
 	Usage: []string{
 		"subrepo -l <layer> -a <repository> <path>",
+		"subrepo -u",
 	},
 	Help: `
 manage subrepositories
@@ -47,16 +48,21 @@ manage subrepositories
   with a path separator, it will be associated as the basename of <repository>
   under <path>.
 
+  subrepo can clone or update the repositories in the working copy by flag
+  --update.
+
 options:
 
-  -l, --layer    a layer
-  -a, --add      add <repository> to <path>
+  -l, --layer     a layer
+  -a, --add       add <repository> to <path>
+  -u, --update    clone or update repositories
 `,
 }
 
 var (
-	subrepoLayer string
-	subrepoAdd   bool
+	subrepoLayer  string
+	subrepoAdd    bool
+	subrepoUpdate bool
 )
 
 func init() {
@@ -65,6 +71,8 @@ func init() {
 	cmdSubrepo.Flag.StringVar(&subrepoLayer, "layer", "", "")
 	cmdSubrepo.Flag.BoolVar(&subrepoAdd, "a", false, "")
 	cmdSubrepo.Flag.BoolVar(&subrepoAdd, "add", false, "")
+	cmdSubrepo.Flag.BoolVar(&subrepoUpdate, "u", false, "")
+	cmdSubrepo.Flag.BoolVar(&subrepoUpdate, "update", false, "")
 }
 
 func runSubrepo(ui UI, args []string) error {
@@ -82,10 +90,11 @@ func runSubrepo(ui UI, args []string) error {
 	}
 
 	switch {
-	case subrepoLayer == "":
-		return FlagError("flag --layer is required")
 	case subrepoAdd:
-		if len(args) != 2 {
+		switch {
+		case subrepoLayer == "":
+			return FlagError("flag --layer is required")
+		case len(args) != 2:
 			return errArg
 		}
 		l, err := repo.LayerOf(subrepoLayer)
@@ -127,7 +136,41 @@ func runSubrepo(ui UI, args []string) error {
 		})
 		sort.Sort(subrepoBySrc(l.Subrepos[path]))
 		return repo.Flush()
-	default:
-		return errArg
+	case subrepoUpdate:
+		_, err := wc.MergeLayers()
+		if err != nil {
+			return err
+		}
+		for _, e := range wc.State.WC {
+			if e.Type != "subrepo" {
+				continue
+			}
+			ui.Printf("* %s\n", e.Origin)
+			r, err := NewRemote(e.Origin)
+			if err != nil {
+				return err
+			}
+			dst := repo.SubrepoFor(e.Origin[:len(e.Origin)-len(r.Path)])
+			if isEmptyDir(dst) {
+				dst, _ = wc.Rel(dst)
+				c := r.VCS.Clone(r.URI, dst)
+				c.Dir = wc.PathFor(".")
+				if err := ui.Exec(c); err != nil {
+					return err
+				}
+			} else {
+				vcs, err := VCSFor(dst)
+				if err != nil {
+					return err
+				}
+				for _, c := range vcs.Update() {
+					c.Dir = dst
+					if err := ui.Exec(c); err != nil {
+						return err
+					}
+				}
+			}
+		}
 	}
+	return nil
 }
