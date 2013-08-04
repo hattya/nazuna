@@ -32,12 +32,12 @@ import (
 )
 
 func TestAlias(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -107,7 +107,7 @@ link .vimrc --> a
 			cmd: []string{"nzn", "alias", "-l", "b/2", ".vim", "vimfiles"},
 		},
 		{
-			cmd: []string{"export", "APPDATA=$tempdir/AppData/Roaming"},
+			cmd: []string{"export", "APPDATA=$tempdir/w/AppData/Roaming"},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/2", ".config/gocode/config.json", "$APPDATA/gocode/config.json"},
@@ -156,18 +156,18 @@ link AppData/Roaming/gocode/ --> a:.config/gocode/
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestAliasError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "alias"},
@@ -356,7 +356,7 @@ options:
 			cmd: []string{"rm", "_"},
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

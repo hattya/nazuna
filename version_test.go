@@ -38,13 +38,13 @@ Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
 `
 
 func TestVersion(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
 			cmd: []string{"nzn", "version"},
 			out: versionOut,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

@@ -31,12 +31,12 @@ import (
 )
 
 func TestUpdate(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -177,18 +177,18 @@ link .vim/syntax/vim.vim --> a
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestUpdateError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -407,7 +407,7 @@ error: .vim/syntax: (re)
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

@@ -61,7 +61,7 @@ func TestWC(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := repo.WC(); err == nil {
-		t.Error("error expected")
+		t.Error("expected error")
 	}
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
@@ -79,7 +79,7 @@ func TestWC(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g, e := string(data), "{}\n"; g != e {
-		t.Errorf(`expected %q, got %q`, e, g)
+		t.Errorf("expected %q, got %q", e, g)
 	}
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
@@ -110,10 +110,16 @@ func TestWCError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := wc.LayerFor("_"); !strings.HasSuffix(err.Error(), "layer '_'") {
-		t.Error(err)
+	switch _, err := wc.LayerFor("_"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasSuffix(err.Error(), "layer '_'"):
+		t.Error("unexpected error:", err)
 	}
-	if err := wc.Unlink("_"); !strings.HasSuffix(err.Error(), ": not a link") {
-		t.Error(err)
+	switch err := wc.Unlink("_"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasSuffix(err.Error(), ": not a link"):
+		t.Error("unexpected error:", err)
 	}
 }

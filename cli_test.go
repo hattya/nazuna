@@ -41,11 +41,11 @@ import (
 func TestCLI(t *testing.T) {
 	c := nazuna.NewCLI([]string{"nazuna.test"})
 	args := c.Args()
-	switch {
-	case len(args) != 1:
-		t.Errorf("expected 1, got %d", len(args))
-	case args[0] != "nazuna.test":
-		t.Errorf(`expected "nazuna.test", got %q`, args[0])
+	if g, e := len(args), 1; g != e {
+		t.Fatalf("expected %v, got %v", e, g)
+	}
+	if g, e := args[0], "nazuna.test"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 
 	in := new(bytes.Buffer)
@@ -59,14 +59,14 @@ func TestCLI(t *testing.T) {
 	c.Printf("%s\n", "Printf()")
 	c.Println("Println()")
 	if g, e := out.String(), "Print()\nPrintf()\nPrintln()\n"; g != e {
-		t.Errorf(`expected %q, got %q`, e, g)
+		t.Errorf("expected %q, got %q", e, g)
 	}
 
 	c.Error("Error()\n")
 	c.Errorf("%s\n", "Errorf()")
 	c.Errorln("Errorln()")
 	if g, e := err.String(), "Error()\nErrorf()\nErrorln()\n"; g != e {
-		t.Errorf(`expected %q, got %q`, e, g)
+		t.Errorf("expected %q, got %q", e, g)
 	}
 
 	cmd := exec.Command(os.Args[0], "-test.run=TestProcess", "0")
@@ -78,14 +78,14 @@ func TestCLI(t *testing.T) {
 	re := regexp.MustCompile(regexp.QuoteMeta(os.Args[0]) + `: exit status.* 7`)
 	switch err := c.Exec(cmd); {
 	case err == nil:
-		t.Error("error expected")
+		t.Error("expected error")
 	case !re.MatchString(err.Error()):
-		t.Errorf("expected %q, got %q", re, err)
+		t.Error("unexpected error:", err)
 	}
 }
 
 func TestRunCLI(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
 			cmd: []string{"nzn", "--nazuna"},
 			out: fmt.Sprintf("nzn: flag .* not defined: -*nazuna (re)\n%s[2]\n", helpOut),
@@ -115,7 +115,7 @@ func TestRunCLI(t *testing.T) {
 			out: fmt.Sprintf("nzn help: flag .* not defined: -*nazuna (re)\n%s[2]\n", helpUsage),
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

@@ -52,63 +52,63 @@ func newHTTPClient(addr string) *http.Client {
 }
 
 func TestRemote(t *testing.T) {
-	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, "/1.0/repositories/") {
 			l := strings.Split(r.RequestURI[18:], "/")
 			fmt.Fprintf(w, `{"owner":"%s","scm":"%s"}`, l[0], l[1])
 		}
 	}))
-	defer ts.Close()
+	defer s.Close()
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(ts.Listener.Addr().String())
+	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
 
 	r, err := nazuna.NewRemote("github.com/kien/ctrlp.vim")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e, g := "git", r.VCS.Cmd; e != g {
-		t.Errorf(`expected %q, got %q`, e, g)
+	if g, e := r.VCS.Cmd, "git"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if e, g := "https://github.com/kien/ctrlp.vim", r.URI; e != g {
-		t.Errorf(`expected %q, got %q`, e, g)
+	if g, e := r.URI, "https://github.com/kien/ctrlp.vim"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if r.Path != "" {
-		t.Errorf(`expected "", got %q`, r.Path)
+	if g, e := r.Path, ""; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 
 	r, err = nazuna.NewRemote("bitbucket.org/hattya/git")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e, g := "git", r.VCS.Cmd; e != g {
-		t.Errorf(`expected %q, got %q`, e, g)
+	if g, e := r.VCS.Cmd, "git"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if e, g := "https://bitbucket.org/hattya/git.git", r.URI; e != g {
-		t.Errorf(`expected %q, got %q`, e, g)
+	if g, e := r.URI, "https://bitbucket.org/hattya/git.git"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if r.Path != "" {
-		t.Errorf(`expected "", got %q`, r.Path)
+	if g, e := r.Path, ""; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 
 	r, err = nazuna.NewRemote("bitbucket.org/hattya/hg")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e, g := "hg", r.VCS.Cmd; e != g {
-		t.Errorf(`expected %q, got %q`, e, g)
+	if g, e := r.VCS.Cmd, "hg"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if e, g := "https://bitbucket.org/hattya/hg", r.URI; e != g {
-		t.Errorf(`expected %q, got %q`, e, g)
+	if g, e := r.URI, "https://bitbucket.org/hattya/hg"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if r.Path != "" {
-		t.Errorf(`expected "", got %q`, r.Path)
+	if g, e := r.Path, ""; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 }
 
 func TestRemoteError(t *testing.T) {
-	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, "/1.0/repositories/") {
 			l := strings.Split(r.RequestURI[18:], "/")
 			if l[0] != "_" {
@@ -121,22 +121,34 @@ func TestRemoteError(t *testing.T) {
 			}
 		}
 	}))
-	defer ts.Close()
+	defer s.Close()
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(ts.Listener.Addr().String())
+	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
 
-	if _, err := nazuna.NewRemote("github.com/hattya"); err.Error() != "unknown remote" {
-		t.Errorf("unexpected error: %v", err)
+	switch _, err := nazuna.NewRemote("github.com/hattya"); {
+	case err == nil:
+		t.Error("expected error")
+	case err.Error() != "unknown remote":
+		t.Error("unexpected error:", err)
 	}
-	if _, err := nazuna.NewRemote("bitbucket.org/hattya/svn"); !strings.HasPrefix(err.Error(), "cannot detect remote vcs ") {
-		t.Errorf("unexpected error: %v", err)
+	switch _, err := nazuna.NewRemote("bitbucket.org/hattya/svn"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasPrefix(err.Error(), "cannot detect remote vcs "):
+		t.Error("unexpected error:", err)
 	}
-	if _, err := nazuna.NewRemote("bitbucket.org/hattya/_"); !strings.HasSuffix(err.Error(), "/hattya/_: 404 Not Found") {
-		t.Errorf("unexpected error: %v", err)
+	switch _, err := nazuna.NewRemote("bitbucket.org/hattya/_"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasSuffix(err.Error(), "/hattya/_: 404 Not Found"):
+		t.Error("unexpected error:", err)
 	}
-	if _, err := nazuna.NewRemote("bitbucket.org/_/_"); !strings.HasSuffix(err.Error(), "/_/_: unexpected end of JSON input") {
-		t.Errorf("unexpected error: %v", err)
+	switch _, err := nazuna.NewRemote("bitbucket.org/_/_"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasSuffix(err.Error(), "/_/_: unexpected end of JSON input"):
+		t.Error("unexpected error:", err)
 	}
 }

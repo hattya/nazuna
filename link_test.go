@@ -28,20 +28,14 @@ package nazuna_test
 
 import (
 	"os"
-	"path/filepath"
-	"regexp"
 	"testing"
 )
 
 func TestLink(t *testing.T) {
-	q := func(path string) string { return regexp.QuoteMeta(filepath.FromSlash(path)) }
 	sep := string(os.PathListSeparator)
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
-		},
-		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"setup"},
 		},
 		{
 			cmd: []string{"mkdir", "r/go/misc/vim"},
@@ -50,10 +44,10 @@ func TestLink(t *testing.T) {
 			cmd: []string{"mkdir", "r/gocode/src/github.com/nsf/gocode/vim"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
+			cmd: []string{"cd", "w"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -75,8 +69,8 @@ func TestLink(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/bundle/gocode/ --> .*` + q("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
-link .vim/bundle/golang/ --> .*` + q("/r/go/misc/vim/") + ` (re)
+			out: `link .vim/bundle/gocode/ --> .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
 link .vimrc --> a
 3 updated, 0 removed, 0 failed
 `,
@@ -86,7 +80,7 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/golang/ -/- .*` + q("/r/go/misc/vim/") + ` (re)
+			out: `unlink .vim/bundle/golang/ -/- .*` + quote("/r/go/misc/vim/") + ` (re)
 0 updated, 1 removed, 0 failed
 `,
 		},
@@ -95,7 +89,7 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/gocode/ -/- .*` + q("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+			out: `unlink .vim/bundle/gocode/ -/- .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
 0 updated, 1 removed, 0 failed
 `,
 		},
@@ -106,24 +100,24 @@ link .vimrc --> a
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestLinkError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
-		},
-		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"setup"},
 		},
 		{
 			cmd: []string{"nzn", "link"},
 			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
 [1]
 `,
+		},
+		{
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -287,7 +281,7 @@ link dst --> b
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

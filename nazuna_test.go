@@ -41,169 +41,105 @@ import (
 	"github.com/mb0/diff"
 )
 
-var testVarRe = regexp.MustCompile(`\$[[:alnum:]]+`)
-var testEnv []string
+type shell struct {
+	dir         string
+	env         map[string]string
+	gitconfig   map[string]string
+	funcs       map[string]interface{}
+	atexitFuncs []func()
+}
 
-func init() {
+func newShell() (*shell, error) {
+	dir, err := mkdtemp()
+	if err != nil {
+		return nil, err
+	}
+	sh := &shell{
+		dir: dir,
+		env: map[string]string{
+			"tempdir": dir,
+		},
+		gitconfig: map[string]string{
+			"core.autocrlf": "false",
+			"user.email":    "nazuna@example.com",
+		},
+	}
 	for _, v := range os.Environ() {
-		if strings.HasPrefix(v, "LANG") || strings.HasPrefix(v, "LC_") {
+		if strings.HasPrefix(v, "LANG") || strings.HasPrefix(v, "LC_") || strings.Contains(v, "PWD=") {
 			continue
 		}
-		testEnv = append(testEnv, v)
+		i := strings.Index(v, "=")
+		if i == -1 {
+			continue
+		}
+		sh.env[v[:i]] = v[i+1:]
 	}
+	sh.funcs = map[string]interface{}{
+		"cat":    sh.cat,
+		"cd":     sh.cd,
+		"export": sh.export,
+		"git":    sh.git,
+		"ln":     sh.ln,
+		"ls":     sh.ls,
+		"mkdir":  sh.mkdir,
+		"nzn":    sh.nzn,
+		"rm":     sh.rm,
+		"setup":  sh.setup,
+		"touch":  sh.touch,
+	}
+	sh.atexit(func() { nazuna.RemoveAll(sh.dir) })
+	return sh, nil
 }
 
-type testCmdLine struct {
-	cmd []string
-	out string
-}
+func (sh *shell) run(s script) error {
+	popd, err := pushd(sh.dir)
+	if err != nil {
+		return err
+	}
+	defer popd()
 
-type testScript []*testCmdLine
-
-func (t testScript) run() error {
-	vars := make(map[string]string)
-	for i, c := range t {
-		errorf := func(a interface{}) error {
-			var s string
-			switch v := a.(type) {
-			case string:
-				s = v
-			case error:
-				s = v.Error()
-			}
-			return t.errorf(i+1, c, s)
+	i := 1
+	for _, c := range s {
+		args := sh.expand(c.cmd[1:]...)
+		out, rc := "unknown command", 1
+		switch f := sh.funcs[c.cmd[0]].(type) {
+		case func(*shell, ...string) (string, int):
+			out, rc = f(sh, args...)
+		case func(...string) (string, int):
+			out, rc = f(args...)
 		}
-		args := t.expand(c.cmd[1:], vars)
-		switch c.cmd[0] {
-		case "cat":
-			data, err := ioutil.ReadFile(args[0])
-			if err != nil {
-				return errorf(err)
-			}
-			if err := errorf(t.diff(c.out, string(data), 0)); err != nil {
-				return err
-			}
-		case "cd":
-			popd, err := pushd(args[0])
-			if err != nil {
-				return errorf(err)
-			}
-			defer popd()
-		case "export":
-			kv := strings.SplitN(args[0], "=", 2)
-			defer os.Setenv(kv[0], os.Getenv(kv[0]))
-			os.Setenv(kv[0], kv[1])
-
-			found := false
-			for i, s := range testEnv {
-				if s[:strings.Index(s, "=")] == kv[0] {
-					testEnv[i] = args[0]
-					defer func(i int, s string) { testEnv[i] = s }(i, s)
-					found = true
-				}
-			}
-			if !found {
-				testEnv = append(testEnv, args[0])
-				defer func() { testEnv = testEnv[:len(testEnv)-1] }()
-			}
-		case "git":
-			cmd := exec.Command(c.cmd[0], args...)
-			cmd.Env = testEnv
-			b, err := cmd.CombinedOutput()
-			out := string(b)
-			rc := 0
-			if err != nil {
-				out += fmt.Sprintf("%s\n", err)
-				rc = 1
-			}
-			if err := errorf(t.diff(c.out, out, rc)); err != nil {
-				return err
-			}
-		case "ln":
-			if len(args) != 3 || args[0] != "-s" {
-				return errorf("ln: invalid arguments")
-			}
-			if err := nazuna.Ln(args[1], args[2]); err != nil {
-				return errorf(err)
-			}
-		case "ls":
-			f, err := os.Open(args[0])
-			if err != nil {
-				return errorf(err)
-			}
-			defer f.Close()
-			list, err := f.Readdir(-1)
-			if err != nil {
-				return errorf(err)
-			}
-			out := new(bytes.Buffer)
-			rc := 0
-			for _, fi := range list {
-				var s string
-				switch {
-				case fi.Mode().IsRegular():
-				case fi.Mode().IsDir():
-					s = "/"
-				case fi.Mode()&os.ModeSymlink != 0:
-				default:
-					s = ">"
-					rc = 1
-				}
-				fmt.Fprintf(out, "%s%s\n", fi.Name(), s)
-			}
-			if err := errorf(t.diff(c.out, out.String(), rc)); err != nil {
-				return err
-			}
-		case "mkdir":
-			if err := mkdir(args[0]); err != nil {
-				return errorf(err)
-			}
-		case "mkdtemp":
-			dir, err := mkdtemp()
-			if err != nil {
-				return errorf(err)
-			}
-			defer nazuna.RemoveAll(dir)
-			vars["$tempdir"] = dir
-		case "nzn":
-			for _, c := range nazuna.Commands {
-				c.Flag.Visit(func(f *flag.Flag) {
-					c.Flag.Set(f.Name, f.DefValue)
-				})
-			}
-			out := new(bytes.Buffer)
-			nzn := nazuna.NewCLI(append([]string{c.cmd[0]}, args...))
-			nzn.SetOut(out)
-			nzn.SetErr(out)
-			rc := nzn.Run()
-			if err := errorf(t.diff(c.out, out.String(), rc)); err != nil {
-				return err
-			}
-		case "rm":
-			var remove func(string) error
-			switch {
-			case 1 < len(args) && args[0] == "-r":
-				remove = nazuna.RemoveAll
-				args = args[1:]
-			default:
-				remove = os.Remove
-			}
-			if err := remove(args[0]); err != nil {
-				return errorf(err)
-			}
-		case "touch":
-			if err := touch(args[0]); err != nil {
-				return errorf(err)
-			}
-		default:
-			return errorf(fmt.Sprintf("command not found: %s", c.cmd[0]))
+		if diff := sh.verify(c.out, out, rc); diff != "" {
+			return fmt.Errorf("script:%d:\n$ %s\n%s", i, strings.Join(c.cmd, " "), diff)
 		}
+		i++
 	}
 	return nil
 }
 
-func (t testScript) diff(aout, bout string, rc int) string {
-	if 0 < len(bout) && bout[len(bout)-1] != '\n' {
+func (sh *shell) expand(args ...string) []string {
+	list := make([]string, len(args))
+	for i, a := range args {
+		list[i] = os.Expand(a, func(k string) string {
+			if 'a' <= k[0] && k[0] <= 'z' {
+				if v, ok := sh.env[k]; ok {
+					return v
+				}
+			}
+			return "$" + k
+		})
+	}
+	return list
+}
+
+func (sh shell) report(err error) (string, int) {
+	if err != nil {
+		return err.Error(), 1
+	}
+	return "", 0
+}
+
+func (sh shell) verify(aout, bout string, rc int) string {
+	if bout != "" && bout[len(bout)-1] != '\n' {
 		bout += " (no-eol)\n"
 	}
 	if rc != 0 {
@@ -240,24 +176,160 @@ func (t testScript) diff(aout, bout string, rc int) string {
 	return strings.TrimSuffix(buf.String(), "\n")
 }
 
-func (t testScript) errorf(i int, c *testCmdLine, s string) error {
-	if s == "" {
-		return nil
-	}
-	return fmt.Errorf("script:%d:\n$ %s\n%s", i, strings.Join(c.cmd, " "), s)
+func (sh *shell) atexit(f func()) {
+	sh.atexitFuncs = append(sh.atexitFuncs, f)
 }
 
-func (t testScript) expand(args []string, vars map[string]string) []string {
-	list := make([]string, len(args))
-	for i, a := range args {
-		list[i] = testVarRe.ReplaceAllStringFunc(a, func(s string) string {
-			if s, ok := vars[s]; ok {
-				return s
-			}
-			return s
+func (sh *shell) exit() {
+	for i := len(sh.atexitFuncs) - 1; 0 <= i; i-- {
+		sh.atexitFuncs[i]()
+	}
+}
+
+func (sh *shell) cat(args ...string) (string, int) {
+	data, err := ioutil.ReadFile(args[0])
+	if err != nil {
+		return sh.report(err)
+	}
+	return string(data), 0
+}
+
+func (sh *shell) cd(args ...string) (string, int) {
+	_, err := pushd(args[0])
+	return sh.report(err)
+}
+
+func (sh *shell) export(args ...string) (string, int) {
+	kv := strings.SplitN(args[0], "=", 2)
+	v := os.Getenv(kv[0])
+	if err := os.Setenv(kv[0], kv[1]); err != nil {
+		return sh.report(err)
+	}
+	sh.atexit(func() { os.Setenv(kv[0], v) })
+	sh.env[kv[0]] = kv[1]
+	return sh.report(nil)
+}
+
+func (sh *shell) git(args ...string) (string, int) {
+	env := make([]string, len(sh.env))
+	i := 0
+	for n, v := range sh.env {
+		env[i] = n + "=" + v
+		i++
+	}
+	rc := 0
+	cmd := exec.Command("git", args...)
+	cmd.Env = env
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		rc = 1
+	}
+	return string(out), rc
+}
+
+func (sh *shell) ln(args ...string) (string, int) {
+	if len(args) != 3 || args[0] != "-s" {
+		return sh.report(fmt.Errorf("invalid arguments"))
+	}
+	return sh.report(nazuna.Ln(args[1], args[2]))
+}
+
+func (sh *shell) ls(args ...string) (string, int) {
+	f, err := os.Open(args[0])
+	if err != nil {
+		return sh.report(err)
+	}
+	defer f.Close()
+	list, err := f.Readdir(-1)
+	if err != nil {
+		return sh.report(err)
+	}
+	rc := 0
+	b := new(bytes.Buffer)
+	for _, fi := range list {
+		var s string
+		switch {
+		case fi.Mode().IsRegular():
+		case fi.Mode().IsDir():
+			s = "/"
+		case fi.Mode()&os.ModeSymlink != 0:
+		default:
+			s = ">"
+			rc = 1
+		}
+		fmt.Fprintf(b, "%s%s\n", fi.Name(), s)
+	}
+	return b.String(), rc
+}
+
+func (sh *shell) mkdir(args ...string) (string, int) {
+	return sh.report(mkdir(args[0]))
+}
+
+func (sh *shell) nzn(args ...string) (string, int) {
+	for _, c := range nazuna.Commands {
+		c.Flag.Visit(func(f *flag.Flag) {
+			c.Flag.Set(f.Name, f.DefValue)
 		})
 	}
-	return list
+	b := new(bytes.Buffer)
+	nzn := nazuna.NewCLI(append([]string{"nzn"}, args...))
+	nzn.SetOut(b)
+	nzn.SetErr(b)
+	rc := nzn.Run()
+	return b.String(), rc
+}
+
+func (sh *shell) rm(args ...string) (string, int) {
+	var remove func(string) error
+	switch {
+	case 1 < len(args) && args[0] == "-r":
+		remove = nazuna.RemoveAll
+		args = args[1:]
+	default:
+		remove = os.Remove
+	}
+	return sh.report(remove(args[0]))
+}
+
+func (sh *shell) setup(args ...string) (string, int) {
+	for _, d := range []string{"h", "r", "w"} {
+		out, rc := sh.mkdir(d)
+		if rc != 0 {
+			return out, rc
+		}
+	}
+	out, rc := sh.export(sh.expand("HOME=$tempdir/h")...)
+	if rc != 0 {
+		return out, rc
+	}
+	for n, v := range sh.gitconfig {
+		out, rc = sh.git("config", "--global", n, v)
+		if rc != 0 {
+			return out, rc
+		}
+	}
+	return sh.report(nil)
+}
+
+func (sh *shell) touch(args ...string) (string, int) {
+	return sh.report(ioutil.WriteFile(filepath.Clean(args[0]), []byte{}, 0666))
+}
+
+type script []*cmdLine
+
+func (s script) exec() error {
+	sh, err := newShell()
+	if err != nil {
+		return err
+	}
+	defer sh.exit()
+	return sh.run(s)
+}
+
+type cmdLine struct {
+	cmd []string
+	out string
 }
 
 type lines struct {
@@ -268,10 +340,7 @@ type lines struct {
 func (d *lines) Equal(i, j int) bool {
 	if strings.HasSuffix(d.a[i], " (re)") {
 		m, err := regexp.MatchString(d.a[i][:len(d.a[i])-5], d.b[j])
-		if err != nil || !m {
-			return false
-		}
-		return true
+		return err == nil && m
 	}
 	return d.a[i] == d.b[j]
 }
@@ -294,6 +363,6 @@ func mkdir(a ...string) error {
 	return os.MkdirAll(filepath.Join(a...), 0777)
 }
 
-func touch(a ...string) error {
-	return ioutil.WriteFile(filepath.Join(a...), []byte{}, 0666)
+func quote(path string) string {
+	return regexp.QuoteMeta(filepath.FromSlash(path))
 }

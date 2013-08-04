@@ -34,12 +34,12 @@ import (
 )
 
 func TestVCS(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -50,18 +50,18 @@ func TestVCS(t *testing.T) {
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestVCSError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "--version"},
@@ -70,17 +70,14 @@ func TestVCSError(t *testing.T) {
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestFindVCS(t *testing.T) {
-	vcses := nazuna.VCSes
-	defer func() {
-		nazuna.VCSes = vcses
-	}()
-
+	v := nazuna.VCSes
+	defer func() { nazuna.VCSes = v }()
 	nazuna.VCSes = []*nazuna.VCS{
 		{
 			Name: "Subversion",
@@ -92,22 +89,28 @@ func TestFindVCS(t *testing.T) {
 		},
 	}
 
-	if _, err := nazuna.FindVCS("cvs"); err == nil || !strings.HasPrefix(err.Error(), "unknown vcs 'cvs'") {
-		t.Error("error expected")
+	switch _, err := nazuna.FindVCS("cvs"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasPrefix(err.Error(), "unknown vcs 'cvs'"):
+		t.Error("unexpected error:", err)
 	}
-	if _, err := nazuna.FindVCS("sv"); err == nil || !strings.HasPrefix(err.Error(), "vcs 'sv' is ambiguous:") {
-		t.Error("error expected")
+	switch _, err := nazuna.FindVCS("sv"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.HasPrefix(err.Error(), "vcs 'sv' is ambiguous:"):
+		t.Error("unexpected error:", err)
 	}
 
 	vcs, err := nazuna.FindVCS("svn")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if vcs.Cmd != "svn" {
-		t.Errorf(`expected "svn", got %q`, vcs.Cmd)
+	if g, e := vcs.Cmd, "svn"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if vcs.String() != "Subversion" {
-		t.Errorf(`expected "Subversion", got %q`, vcs)
+	if g, e := vcs.String(), "Subversion"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 }
 
@@ -119,7 +122,7 @@ func TestVCSFor(t *testing.T) {
 	defer nazuna.RemoveAll(dir)
 
 	if _, err = nazuna.VCSFor(dir); err == nil {
-		t.Error("error expected")
+		t.Error("expected error")
 	}
 
 	if err := mkdir(dir, ".git"); err != nil {
@@ -129,10 +132,10 @@ func TestVCSFor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if vcs.Cmd != "git" {
-		t.Errorf(`expected "git", got %q`, vcs.Cmd)
+	if g, e := vcs.Cmd, "git"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if vcs.String() != "Git" {
-		t.Errorf(`expected "Git", got %q`, vcs)
+	if g, e := vcs.String(), "Git"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 }

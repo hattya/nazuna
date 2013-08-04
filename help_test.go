@@ -61,7 +61,7 @@ list of commands:
 )
 
 func TestHelp(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
 			cmd: []string{"nzn", "help"},
 			out: helpOut,
@@ -71,19 +71,19 @@ func TestHelp(t *testing.T) {
 			out: helpUsage,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestHelpError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
 			cmd: []string{"nzn", "help", "nazuna"},
 			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%s[1]\n", helpOut),
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

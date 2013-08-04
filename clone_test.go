@@ -32,18 +32,15 @@ import (
 )
 
 func TestClone(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"git", "init", "-q", "r"},
 		},
 		{
-			cmd: []string{"git", "init", "-q", "src"},
-		},
-		{
-			cmd: []string{"cd", "src"},
+			cmd: []string{"cd", "r"},
 		},
 		{
 			cmd: []string{"touch", "nazuna.json"},
@@ -52,41 +49,38 @@ func TestClone(t *testing.T) {
 			cmd: []string{"git", "add", "."},
 		},
 		{
-			cmd: []string{"git", "-c", "user.email=nazuna@example.com", "commit", "-qm."},
+			cmd: []string{"git", "commit", "-qm."},
 		},
 		{
 			cmd: []string{"cd", ".."},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "git", "src", "dst"},
-			out: `Cloning into '` + filepath.FromSlash("dst/.nzn/r") + `'...
+			cmd: []string{"nzn", "clone", "--vcs", "git", "r", "w"},
+			out: `Cloning into '` + filepath.FromSlash("w/.nzn/r") + `'...
 done.
 `,
 		},
 		{
-			cmd: []string{"ls", "dst/.nzn"},
+			cmd: []string{"ls", "w/.nzn"},
 			out: `r/
 `,
 		},
 		{
-			cmd: []string{"ls", "dst/.nzn/r"},
+			cmd: []string{"ls", "w/.nzn/r"},
 			out: `.git/
 nazuna.json
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestCloneError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
-		},
-		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"setup"},
 		},
 		{
 			cmd: []string{"nzn", "clone"},
@@ -95,7 +89,10 @@ func TestCloneError(t *testing.T) {
 `,
 		},
 		{
-			cmd: []string{"nzn", "clone", "src"},
+			cmd: []string{"git", "init", "-q", "r"},
+		},
+		{
+			cmd: []string{"nzn", "clone", "r", "w"},
 			out: `nzn clone: flag -*vcs is required (re)
 usage: nzn clone --vcs <type> <repository> [<path>]
 
@@ -114,25 +111,31 @@ options:
 `,
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "cvs", "src"},
+			cmd: []string{"nzn", "clone", "--vcs", "cvs", "r", "w"},
 			out: `nzn: unknown vcs 'cvs'
 [1]
 `,
 		},
 		{
-			cmd: []string{"git", "init", "-q", "src"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "dst"},
+			cmd: []string{"nzn", "clone", "--vcs", "git", "r", "w"},
+			out: `nzn: repository 'w' already exists!
+[1]
+`,
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "git", "src", "dst"},
-			out: `nzn: repository 'dst' already exists!
+			cmd: []string{"cd", "w"},
+		},
+		{
+			cmd: []string{"nzn", "clone", "--vcs", "git", "../r"},
+			out: `nzn: repository '.' already exists!
 [1]
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

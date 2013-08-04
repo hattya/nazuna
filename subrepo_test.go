@@ -31,59 +31,39 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/hattya/nazuna"
 )
 
 func TestSubrepo(t *testing.T) {
-	dir, err := mkdtemp()
+	sh, err := newShell()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer sh.exit()
 
-	fs := http.FileServer(http.Dir(filepath.Join(dir, "r")))
-	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "r")))
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, "/1.0/repositories/") {
 			fmt.Fprintf(w, `{"owner":"%s","scm":"git"}`, strings.Split(r.RequestURI[18:], "/")[0])
 		} else {
 			fs.ServeHTTP(w, r)
 		}
 	}))
-	defer s.Close()
+	defer ts.Close()
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
+	http.DefaultClient = newHTTPClient(ts.Listener.Addr().String())
 
-	q := func(path string) string { return regexp.QuoteMeta(filepath.FromSlash(path)) }
-	ts := testScript{
+	sh.gitconfig["merge.stat"] = "false"
+	sh.gitconfig["http.sslVerify"] = "false"
+	sh.gitconfig["url."+ts.URL+"/vim-pathogen/.git.insteadOf"] = "https://github.com/tpope/vim-pathogen"
+	sh.gitconfig["url."+ts.URL+"/editorconfig-vim/.git.insteadOf"] = "https://bitbucket.org/editorconfig/editorconfig-vim.git"
+
+	s := script{
 		{
-			cmd: []string{"cd", dir},
-		},
-		{
-			cmd: []string{"mkdir", "h"},
-		},
-		{
-			cmd: []string{"export", "HOME=" + filepath.Join(dir, "h")},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "user.email", "nazuna@example.com"},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "merge.stat", "false"},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "http.sslVerify", "false"},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "url." + s.URL + "/vim-pathogen/.git.insteadOf", "https://github.com/tpope/vim-pathogen"},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "url." + s.URL + "/editorconfig-vim/.git.insteadOf", "https://bitbucket.org/editorconfig/editorconfig-vim.git"},
+			cmd: []string{"setup"},
 		},
 		{
 			cmd: []string{"git", "init", "-q", "r/vim-pathogen"},
@@ -134,16 +114,16 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"cd", "../.."},
 		},
 		{
-			cmd: []string{"export", "GOROOT=" + dir + "/r/go"},
+			cmd: []string{"export", "GOROOT=$tempdir/r/go"},
 		},
 		{
 			cmd: []string{"mkdir", "r/go/misc/vim"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
+			cmd: []string{"cd", "w"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -168,7 +148,7 @@ Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
 		{
 			cmd: []string{"nzn", "update"},
 			out: `link .vim/bundle/editorconfig-vim --> bitbucket.org/editorconfig/editorconfig-vim
-link .vim/bundle/golang/ --> .*` + q("/r/go/misc/vim/") + ` (re)
+link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
 link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
 3 updated, 0 removed, 0 failed
 `,
@@ -206,18 +186,18 @@ Already up-to-date.
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := sh.run(s); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestSubrepoError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo"},
@@ -384,47 +364,34 @@ link .vim/bundle/ctrlp.vim/ --> b
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestSubrepoUpdateError(t *testing.T) {
-	dir, err := mkdtemp()
+	sh, err := newShell()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer sh.exit()
 
-	fs := http.FileServer(http.Dir(filepath.Join(dir, "r")))
-	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "r")))
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	}))
-	defer s.Close()
+	defer ts.Close()
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
+	http.DefaultClient = newHTTPClient(ts.Listener.Addr().String())
 
-	q := func(path string) string { return regexp.QuoteMeta(filepath.FromSlash(path)) }
-	ts := testScript{
+	sh.gitconfig["http.sslVerify"] = "false"
+	sh.gitconfig["url."+ts.URL+"/vim-pathogen/.git.insteadOf"] = "https://github.com/tpope/vim-pathogen"
+
+	s := script{
 		{
-			cmd: []string{"cd", dir},
-		},
-		{
-			cmd: []string{"mkdir", "h"},
-		},
-		{
-			cmd: []string{"export", "HOME=" + filepath.Join(dir, "h")},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "user.email", "nazuna@example.com"},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "http.sslVerify", "false"},
-		},
-		{
-			cmd: []string{"git", "config", "--global", "url." + s.URL + "/vim-pathogen/.git.insteadOf", "https://github.com/tpope/vim-pathogen"},
+			cmd: []string{"setup"},
 		},
 		{
 			cmd: []string{"git", "init", "-q", "r/vim-pathogen"},
@@ -448,10 +415,10 @@ func TestSubrepoUpdateError(t *testing.T) {
 			cmd: []string{"cd", "../.."},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
+			cmd: []string{"cd", "w"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "git"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -467,7 +434,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `nzn: \w+ .*` + q("/w/.nzn/r/a/.vimrc") + `: .* (re)
+			out: `nzn: \w+ .*` + quote("/w/.nzn/r/a/.vimrc") + `: .* (re)
 [1]
 `,
 		},
@@ -539,7 +506,7 @@ nzn: unknown remote
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := sh.run(s); err != nil {
 		t.Error(err)
 	}
 }

@@ -31,48 +31,42 @@ import (
 )
 
 func TestInit(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "$tempdir"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
 		},
 		{
-			cmd: []string{"ls", "$tempdir/.nzn"},
+			cmd: []string{"ls", "w/.nzn"},
 			out: `r/
 `,
 		},
 		{
-			cmd: []string{"ls", "$tempdir/.nzn/r"},
+			cmd: []string{"ls", "w/.nzn/r"},
 			out: `.git/
 nazuna.json
 `,
 		},
 		{
-			cmd: []string{"cat", "$tempdir/.nzn/r/nazuna.json"},
+			cmd: []string{"cat", "w/.nzn/r/nazuna.json"},
 			out: `[]
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestInitError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "cvs", "$tempdir"},
-			out: `nzn: unknown vcs 'cvs'
-[1]
-`,
-		},
-		{
-			cmd: []string{"nzn", "init", "$tempdir"},
+			cmd: []string{"nzn", "init", "w"},
 			out: `nzn init: flag --vcs is required
 usage: nzn init --vcs <type> [<path>]
 
@@ -91,16 +85,22 @@ options:
 `,
 		},
 		{
-			cmd: []string{"mkdir", "$tempdir/.nzn/r"},
+			cmd: []string{"nzn", "init", "--vcs", "cvs", "w"},
+			out: `nzn: unknown vcs 'cvs'
+[1]
+`,
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "$tempdir"},
+			cmd: []string{"mkdir", "w/.nzn/r"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
 			out: `nzn: repository '.*' already exists! (re)
 [1]
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }

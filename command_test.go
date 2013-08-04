@@ -50,24 +50,32 @@ func TestFindCommand(t *testing.T) {
 		},
 	}
 
-	if _, err := nazuna.FindCommand(list, "clone"); err == nil || !strings.Contains(err.Error(), "unknown command") {
-		t.Error("error expected")
+	switch _, err := nazuna.FindCommand(list, "clone"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.Contains(err.Error(), "unknown command"):
+		t.Error("unexpected error:", err)
 	}
-	if _, err := nazuna.FindCommand(list, "s"); err == nil || !strings.Contains(err.Error(), " ambiguous:") {
-		t.Error("error expected")
+	switch _, err := nazuna.FindCommand(list, "s"); {
+	case err == nil:
+		t.Error("expected error")
+	case !strings.Contains(err.Error(), " ambiguous:"):
+		t.Error("unexpected error:", err)
 	}
 
-	switch cmd, err := nazuna.FindCommand(list, "st"); {
-	case err != nil:
-		t.Error(err)
-	case cmd.Name() != "status":
-		t.Errorf(`expected "status", got %q`, cmd.Name())
+	cmd, err := nazuna.FindCommand(list, "st")
+	if err != nil {
+		t.Fatal(err)
 	}
-	switch cmd, err := nazuna.FindCommand(list, "stash"); {
-	case err != nil:
-		t.Error(err)
-	case cmd.Name() != "stash":
-		t.Errorf(`expected "stash", got %q`, cmd.Name())
+	if g, e := cmd.Name(), "status"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
+	cmd, err = nazuna.FindCommand(list, "stash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := cmd.Name(), "stash"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 }
 
@@ -79,23 +87,23 @@ func TestSortCommandsByName(t *testing.T) {
 	}
 	sorted := nazuna.SortCommands(list)
 
-	if list[0].Name() != "z" {
-		t.Errorf(`expected "z", got "%s"`, list[0].Name())
+	if g, e := list[0].Name(), "z"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if list[1].Name() != "a" {
-		t.Errorf(`expected "a", got "%s"`, list[1].Name())
+	if g, e := list[1].Name(), "a"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if list[2].Name() != "" {
-		t.Errorf(`expected "", got "%s"`, list[2].Name())
+	if g, e := list[2].Name(), ""; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 
-	if sorted[0].Name() != "" {
-		t.Errorf(`expected "", got "%s"`, sorted[0].Name())
+	if g, e := sorted[0].Name(), ""; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if sorted[1].Name() != "a" {
-		t.Errorf(`expected "a", got "%s"`, sorted[1].Name())
+	if g, e := sorted[1].Name(), "a"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
-	if sorted[2].Name() != "z" {
-		t.Errorf(`expected "z", got "%s"`, sorted[2].Name())
+	if g, e := sorted[2].Name(), "z"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
 	}
 }

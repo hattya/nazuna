@@ -31,12 +31,12 @@ import (
 )
 
 func TestLayer(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
+			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -101,24 +101,24 @@ a
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestLayerError(t *testing.T) {
-	ts := testScript{
+	s := script{
 		{
-			cmd: []string{"mkdtemp"},
-		},
-		{
-			cmd: []string{"cd", "$tempdir"},
+			cmd: []string{"setup"},
 		},
 		{
 			cmd: []string{"nzn", "layer"},
 			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
 [1]
 `,
+		},
+		{
+			cmd: []string{"cd", "w"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -217,7 +217,7 @@ func TestLayerError(t *testing.T) {
 `,
 		},
 	}
-	if err := ts.run(); err != nil {
+	if err := s.exec(); err != nil {
 		t.Error(err)
 	}
 }
