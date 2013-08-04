@@ -66,7 +66,7 @@ func runLayer(ui UI, args []string) error {
 	switch {
 	case layerCreate:
 		if len(args) != 1 {
-			return errArg
+			return ErrArg
 		}
 		if _, err := repo.NewLayer(args[0]); err != nil {
 			return err
@@ -74,7 +74,7 @@ func runLayer(ui UI, args []string) error {
 		return repo.Flush()
 	case 0 < len(args):
 		if len(args) != 1 {
-			return errArg
+			return ErrArg
 		}
 		wc, err := repo.WC()
 		if err != nil {

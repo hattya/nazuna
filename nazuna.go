@@ -27,7 +27,6 @@
 package nazuna
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -130,10 +129,3 @@ type SystemExit int
 func (e SystemExit) Error() string {
 	return fmt.Sprintf("exit status %d", e)
 }
-
-var (
-	errArg     = errors.New("invalid arguments")
-	errLink    = errors.New("file is a link")
-	errNotLink = errors.New("not a link")
-	errRemote  = errors.New("unknown remote")
-)

@@ -27,10 +27,16 @@
 package nazuna
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+)
+
+var (
+	ErrLink    = errors.New("file is a link")
+	ErrNotLink = errors.New("not a link")
 )
 
 type ResolveError struct {
@@ -107,7 +113,7 @@ func (w *WC) LinksTo(path, origin string) bool {
 func (w *WC) Link(src, dst string) error {
 	for p := filepath.Dir(w.PathFor(dst)); p != w.dir; p = filepath.Dir(p) {
 		if isLink(p) {
-			return &os.PathError{"link", p, errLink}
+			return &os.PathError{"link", p, ErrLink}
 		}
 	}
 	if dir := filepath.Dir(dst); !w.Exists(dir) {

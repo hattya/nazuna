@@ -80,7 +80,7 @@ func runAlias(ui UI, args []string) error {
 		return FlagError("flag --layer is required")
 	default:
 		if len(args) != 2 {
-			return errArg
+			return ErrArg
 		}
 		l, err := repo.LayerOf(aliasLayer)
 		switch {

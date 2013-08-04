@@ -95,7 +95,7 @@ func runSubrepo(ui UI, args []string) error {
 		case subrepoLayer == "":
 			return FlagError("flag --layer is required")
 		case len(args) != 2:
-			return errArg
+			return ErrArg
 		}
 		l, err := repo.LayerOf(subrepoLayer)
 		switch {

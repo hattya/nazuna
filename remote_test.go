@@ -130,7 +130,7 @@ func TestRemoteError(t *testing.T) {
 	switch _, err := nazuna.NewRemote("github.com/hattya"); {
 	case err == nil:
 		t.Error("expected error")
-	case err.Error() != "unknown remote":
+	case err != nazuna.ErrRemote:
 		t.Error("unexpected error:", err)
 	}
 	switch _, err := nazuna.NewRemote("bitbucket.org/hattya/svn"); {

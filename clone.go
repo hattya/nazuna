@@ -60,7 +60,7 @@ func init() {
 
 func runClone(ui UI, args []string) error {
 	if len(args) == 0 {
-		return errArg
+		return ErrArg
 	}
 	src := args[0]
 

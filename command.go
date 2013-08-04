@@ -27,11 +27,14 @@
 package nazuna
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"sort"
 	"strings"
 )
+
+var ErrArg = errors.New("invalid arguments")
 
 type Command struct {
 	Names       []string

@@ -28,10 +28,13 @@ package nazuna
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 )
+
+var ErrRemote = errors.New("unknown remote")
 
 type Remote struct {
 	VCS  *VCS
@@ -73,7 +76,7 @@ func NewRemote(src string) (*Remote, error) {
 		}
 		return r, nil
 	}
-	return nil, errRemote
+	return nil, ErrRemote
 }
 
 type RemoteHandler struct {

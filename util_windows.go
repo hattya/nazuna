@@ -210,7 +210,7 @@ func link(src, dst string) error {
 
 func unlink(path string) error {
 	if !isLink(path) {
-		return &os.PathError{"unlink", path, errNotLink}
+		return &os.PathError{"unlink", path, ErrNotLink}
 	}
 	return os.Remove(path)
 }
