@@ -65,7 +65,7 @@ func isLink(path string) bool {
 	defer syscall.CloseHandle(h)
 
 	var fi syscall.ByHandleFileInformation
-	if err = syscall.GetFileInformationByHandle(h, &fi); err == nil && 1 < fi.NumberOfLinks {
+	if err := syscall.GetFileInformationByHandle(h, &fi); err == nil && 1 < fi.NumberOfLinks {
 		return true
 	}
 
@@ -94,7 +94,7 @@ func linksTo(path, origin string) bool {
 	defer syscall.CloseHandle(h)
 
 	var fi syscall.ByHandleFileInformation
-	switch err = syscall.GetFileInformationByHandle(h, &fi); {
+	switch err := syscall.GetFileInformationByHandle(h, &fi); {
 	case err != nil:
 		return false
 	case 1 < fi.NumberOfLinks:

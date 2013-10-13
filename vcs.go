@@ -82,7 +82,7 @@ func (v *VCS) Init(path string) *exec.Cmd {
 	m := map[string]string{
 		"path": path,
 	}
-	return v.Command(strings.Fields(format(v.InitCmd, m))...)
+	return v.Command(v.expand(v.InitCmd, m)...)
 }
 
 func (v *VCS) Clone(src, dst string) *exec.Cmd {
@@ -90,23 +90,33 @@ func (v *VCS) Clone(src, dst string) *exec.Cmd {
 		"src": src,
 		"dst": dst,
 	}
-	return v.Command(strings.Fields(format(v.CloneCmd, m))...)
+	return v.Command(v.expand(v.CloneCmd, m)...)
 }
 
 func (v *VCS) Update() []*exec.Cmd {
 	cmds := []*exec.Cmd{}
 	for _, c := range v.UpdateCmd {
-		cmds = append(cmds, v.Command(strings.Fields(c)...))
+		cmds = append(cmds, v.Command(v.expand(c, nil)...))
 	}
 	return cmds
 }
 
 func (v *VCS) Add(paths ...string) *exec.Cmd {
-	return v.Command(append(strings.Fields(v.AddCmd), paths...)...)
+	return v.Command(append(v.expand(v.AddCmd, nil), paths...)...)
 }
 
 func (v *VCS) List(paths ...string) *exec.Cmd {
-	return v.Command(append(strings.Fields(v.ListCmd), paths...)...)
+	return v.Command(append(v.expand(v.ListCmd, nil), paths...)...)
+}
+
+func (v *VCS) expand(cmdline string, m map[string]string) []string {
+	args := strings.Fields(cmdline)
+	if m != nil {
+		for i, a := range args {
+			args[i] = format(a, m)
+		}
+	}
+	return args
 }
 
 func (v *VCS) Command(args ...string) *exec.Cmd {

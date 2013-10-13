@@ -42,26 +42,26 @@ type Repository struct {
 	ui      UI
 	vcs     *VCS
 	nzndir  string
-	repodir string
+	rdir    string
 	subroot string
 }
 
 func OpenRepository(ui UI, path string) (*Repository, error) {
-	rootdir, err := filepath.Abs(path)
+	root, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
-	for !isDir(filepath.Join(rootdir, ".nzn")) {
-		p := rootdir
-		rootdir = filepath.Dir(rootdir)
-		if rootdir == p {
+	for !isDir(filepath.Join(root, ".nzn")) {
+		p := root
+		root = filepath.Dir(root)
+		if root == p {
 			return nil, fmt.Errorf("no repository found in '%s' (.nzn not found)!", path)
 		}
 	}
 
-	nzndir := filepath.Join(rootdir, ".nzn")
-	repodir := filepath.Join(nzndir, "r")
-	vcs, err := VCSFor(repodir)
+	nzndir := filepath.Join(root, ".nzn")
+	rdir := filepath.Join(nzndir, "r")
+	vcs, err := VCSFor(rdir)
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +69,11 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 		ui:      ui,
 		vcs:     vcs,
 		nzndir:  nzndir,
-		repodir: repodir,
+		rdir:    rdir,
 		subroot: filepath.Join(nzndir, "sub"),
 	}
 
-	path = filepath.Join(r.repodir, "nazuna.json")
+	path = filepath.Join(r.rdir, "nazuna.json")
 	if _, err := os.Stat(path); err == nil {
 		if err := unmarshal(path, &r.Layers); err != nil {
 			return nil, err
@@ -85,7 +85,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 }
 
 func (r *Repository) Flush() error {
-	return marshal(filepath.Join(r.repodir, "nazuna.json"), r.Layers)
+	return marshal(filepath.Join(r.rdir, "nazuna.json"), r.Layers)
 }
 
 func (r *Repository) LayerOf(name string) (*Layer, error) {
@@ -100,12 +100,11 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 				return l, nil
 			case len(l.Layers) == 0:
 				return nil, fmt.Errorf("layer '%s' is not abstract", n[0])
-			default:
-				for _, ll := range l.Layers {
-					if n[1] == ll.Name {
-						ll.abstract = l
-						return ll, nil
-					}
+			}
+			for _, ll := range l.Layers {
+				if n[1] == ll.Name {
+					ll.abstract = l
+					return ll, nil
 				}
 			}
 		}
@@ -117,7 +116,7 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 	switch _, err := r.LayerOf(name); {
 	case err != nil && !strings.Contains(err.Error(), "not exist"):
 		return nil, err
-	case err == nil || !isEmptyDir(filepath.Join(r.repodir, name)):
+	case err == nil || !isEmptyDir(filepath.Join(r.rdir, name)):
 		return nil, fmt.Errorf("layer '%s' already exists!", name)
 	}
 
@@ -137,17 +136,14 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 		if err != nil {
 			l = newLayer(n[0])
 		}
-
 		ll := &Layer{
 			Name:     n[1],
 			abstract: l,
 		}
 		l.Layers = append(l.Layers, ll)
 		sort.Sort(layerByName(l.Layers))
-
 		l = ll
 	}
-
 	os.MkdirAll(r.PathFor(l, "."), 0777)
 	return l, nil
 }
@@ -162,9 +158,9 @@ func (r *Repository) splitLayer(name string) ([]string, error) {
 
 func (r *Repository) PathFor(layer *Layer, path string) string {
 	if layer != nil {
-		return filepath.Join(r.repodir, layer.Path(), path)
+		return filepath.Join(r.rdir, layer.Path(), path)
 	}
-	return filepath.Join(r.repodir, path)
+	return filepath.Join(r.rdir, path)
 }
 
 func (r *Repository) SubrepoFor(path string) string {
@@ -209,50 +205,43 @@ func (r *Repository) Find(layer *Layer, path string) (typ string) {
 	return
 }
 
-func (r *Repository) Walk(path string, walk filepath.WalkFunc) (err error) {
+func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	cmd := r.vcs.List(path)
-	cmd.Dir = r.repodir
-	pout, err := cmd.StdoutPipe()
+	cmd.Dir = r.rdir
+	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return
+		return err
 	}
-	if err = cmd.Start(); err != nil {
-		return
+	if err := cmd.Start(); err != nil {
+		return err
 	}
 	defer cmd.Wait()
 	defer cmd.Process.Kill()
-	out := bufio.NewReader(pout)
-	var line []byte
+	br := bufio.NewReader(out)
 	for {
-		switch data, isPrefix, e := out.ReadLine(); {
-		case e == io.EOF:
-			return
-		case e != nil:
-			err = e
-			return
-		default:
-			line = append(line, data...)
-			if isPrefix {
-				continue
+		l, err := br.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				return nil
 			}
+			return err
 		}
-		p := string(line)
-		fi, e := os.Stat(filepath.Join(r.repodir, p))
-		if err = walk(p, fi, e); err != nil {
-			return
+		l = strings.TrimRight(l, "\n\r")
+		fi, err := os.Stat(filepath.Join(r.rdir, l))
+		if err = walk(l, fi, err); err != nil {
+			return err
 		}
-		line = line[:0]
 	}
 }
 
 func (r *Repository) Add(paths ...string) error {
 	cmd := r.vcs.Add(paths...)
-	cmd.Dir = r.repodir
+	cmd.Dir = r.rdir
 	return r.ui.Exec(cmd)
 }
 
 func (r *Repository) Command(args ...string) error {
 	cmd := r.vcs.Command(args...)
-	cmd.Dir = r.repodir
+	cmd.Dir = r.rdir
 	return r.ui.Exec(cmd)
 }

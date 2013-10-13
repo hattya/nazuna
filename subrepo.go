@@ -60,19 +60,20 @@ options:
 }
 
 var (
-	subrepoLayer  string
-	subrepoAdd    bool
-	subrepoUpdate bool
+	subrepoL string
+	subrepoA bool
+	subrepoU bool
 )
 
 func init() {
+	cmdSubrepo.Flag.StringVar(&subrepoL, "l", "", "")
+	cmdSubrepo.Flag.StringVar(&subrepoL, "layer", "", "")
+	cmdSubrepo.Flag.BoolVar(&subrepoA, "a", false, "")
+	cmdSubrepo.Flag.BoolVar(&subrepoA, "add", false, "")
+	cmdSubrepo.Flag.BoolVar(&subrepoU, "u", false, "")
+	cmdSubrepo.Flag.BoolVar(&subrepoU, "update", false, "")
+
 	cmdSubrepo.Run = runSubrepo
-	cmdSubrepo.Flag.StringVar(&subrepoLayer, "l", "", "")
-	cmdSubrepo.Flag.StringVar(&subrepoLayer, "layer", "", "")
-	cmdSubrepo.Flag.BoolVar(&subrepoAdd, "a", false, "")
-	cmdSubrepo.Flag.BoolVar(&subrepoAdd, "add", false, "")
-	cmdSubrepo.Flag.BoolVar(&subrepoUpdate, "u", false, "")
-	cmdSubrepo.Flag.BoolVar(&subrepoUpdate, "update", false, "")
 }
 
 func runSubrepo(ui UI, args []string) error {
@@ -90,14 +91,14 @@ func runSubrepo(ui UI, args []string) error {
 	}
 
 	switch {
-	case subrepoAdd:
+	case subrepoA:
 		switch {
-		case subrepoLayer == "":
+		case subrepoL == "":
 			return FlagError("flag --layer is required")
 		case len(args) != 2:
 			return ErrArg
 		}
-		l, err := repo.LayerOf(subrepoLayer)
+		l, err := repo.LayerOf(subrepoL)
 		switch {
 		case err != nil:
 			return err
@@ -136,7 +137,7 @@ func runSubrepo(ui UI, args []string) error {
 		})
 		sort.Sort(subrepoBySrc(l.Subrepos[path]))
 		return repo.Flush()
-	case subrepoUpdate:
+	case subrepoU:
 		_, err := wc.MergeLayers()
 		if err != nil {
 			return err

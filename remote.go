@@ -43,25 +43,25 @@ type Remote struct {
 }
 
 func NewRemote(src string) (*Remote, error) {
-	for _, r := range RemoteHandlers {
-		if !strings.HasPrefix(src, r.Prefix) {
+	for _, rh := range RemoteHandlers {
+		if !strings.HasPrefix(src, rh.Prefix) {
 			continue
 		}
-		m := r.re.FindStringSubmatch(src)
+		m := rh.re.FindStringSubmatch(src)
 		if m == nil {
 			continue
 		}
 		g := map[string]string{
-			"vcs": r.VCS,
+			"vcs": rh.VCS,
 		}
-		for i, n := range r.re.SubexpNames() {
+		for i, n := range rh.re.SubexpNames() {
 			if n != "" && g[n] == "" {
 				g[n] = m[i]
 			}
 		}
-		g["uri"] = r.Scheme + "://" + g["root"]
-		if r.Check != nil {
-			if err := r.Check(g); err != nil {
+		g["uri"] = rh.Scheme + "://" + g["root"]
+		if rh.Check != nil {
+			if err := rh.Check(g); err != nil {
 				return nil, err
 			}
 		}

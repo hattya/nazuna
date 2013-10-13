@@ -54,18 +54,19 @@ options:
 var initVCS string
 
 func init() {
-	cmdInit.Run = runInit
 	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
+
+	cmdInit.Run = runInit
 }
 
 func runInit(ui UI, args []string) error {
-	rootdir := "."
+	root := "."
 	if 0 < len(args) {
-		rootdir = args[0]
+		root = args[0]
 	}
-	nzndir := filepath.Join(rootdir, ".nzn")
+	nzndir := filepath.Join(root, ".nzn")
 	if !isEmptyDir(nzndir) {
-		return fmt.Errorf("repository '%s' already exists!", rootdir)
+		return fmt.Errorf("repository '%s' already exists!", root)
 	}
 
 	if initVCS == "" {
@@ -82,7 +83,7 @@ func runInit(ui UI, args []string) error {
 		return err
 	}
 
-	repo, err := OpenRepository(ui, rootdir)
+	repo, err := OpenRepository(ui, root)
 	if err != nil {
 		return err
 	}

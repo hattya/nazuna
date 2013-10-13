@@ -58,16 +58,17 @@ options:
 }
 
 var (
-	linkLayer string
-	linkPath  string
+	linkL string
+	linkP string
 )
 
 func init() {
+	cmdLink.Flag.StringVar(&linkL, "l", "", "")
+	cmdLink.Flag.StringVar(&linkL, "layer", "", "")
+	cmdLink.Flag.StringVar(&linkP, "p", "", "")
+	cmdLink.Flag.StringVar(&linkP, "path", "", "")
+
 	cmdLink.Run = runLink
-	cmdLink.Flag.StringVar(&linkLayer, "l", "", "")
-	cmdLink.Flag.StringVar(&linkLayer, "layer", "", "")
-	cmdLink.Flag.StringVar(&linkPath, "p", "", "")
-	cmdLink.Flag.StringVar(&linkPath, "path", "", "")
 }
 
 func runLink(ui UI, args []string) error {
@@ -85,13 +86,13 @@ func runLink(ui UI, args []string) error {
 	}
 
 	switch {
-	case linkLayer == "":
+	case linkL == "":
 		return FlagError("flag --layer is required")
 	default:
 		if len(args) != 2 {
 			return ErrArg
 		}
-		l, err := repo.LayerOf(linkLayer)
+		l, err := repo.LayerOf(linkL)
 		switch {
 		case err != nil:
 			return err
@@ -109,7 +110,7 @@ func runLink(ui UI, args []string) error {
 		default:
 			return fmt.Errorf("%s '%s' already exists!", typ, dst)
 		}
-		path := filepath.SplitList(linkPath)
+		path := filepath.SplitList(linkP)
 		for i, p := range path {
 			path[i] = filepath.ToSlash(filepath.Clean(p))
 		}

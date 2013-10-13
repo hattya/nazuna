@@ -63,15 +63,14 @@ func runHelp(ui UI, args []string) (err error) {
 	case cmd == nil:
 		ui.Print("nazuna - A layered dotfiles management\n\n")
 		ui.Print("list of commands:\n\n")
-		maxWidth := 0
+		width := 0
 		for _, cmd := range Commands {
-			if w := len(cmd.Name()); maxWidth < w {
-				maxWidth = w
+			if w := len(cmd.Name()); width < w {
+				width = w
 			}
 		}
 		for _, cmd := range sortCommands(Commands) {
-			l := strings.SplitN(strings.TrimSpace(cmd.Help), "\n", 2)[0]
-			ui.Printf("  %-*s    %s\n", maxWidth, cmd.Name(), l)
+			ui.Printf("  %-*s    %s\n", width, cmd.Name(), strings.SplitN(strings.TrimSpace(cmd.Help), "\n", 2)[0])
 		}
 		ui.Println()
 	case 0 < len(cmd.Usage):

@@ -53,12 +53,13 @@ options:
 `,
 }
 
-var aliasLayer string
+var aliasL string
 
 func init() {
+	cmdAlias.Flag.StringVar(&aliasL, "l", "", "")
+	cmdAlias.Flag.StringVar(&aliasL, "layer", "", "")
+
 	cmdAlias.Run = runAlias
-	cmdAlias.Flag.StringVar(&aliasLayer, "l", "", "")
-	cmdAlias.Flag.StringVar(&aliasLayer, "layer", "", "")
 }
 
 func runAlias(ui UI, args []string) error {
@@ -76,13 +77,13 @@ func runAlias(ui UI, args []string) error {
 	}
 
 	switch {
-	case aliasLayer == "":
+	case aliasL == "":
 		return FlagError("flag --layer is required")
 	default:
 		if len(args) != 2 {
 			return ErrArg
 		}
-		l, err := repo.LayerOf(aliasLayer)
+		l, err := repo.LayerOf(aliasL)
 		switch {
 		case err != nil:
 			return err

@@ -45,12 +45,13 @@ options:
 `,
 }
 
-var layerCreate bool
+var layerC bool
 
 func init() {
+	cmdLayer.Flag.BoolVar(&layerC, "c", false, "")
+	cmdLayer.Flag.BoolVar(&layerC, "create", false, "")
+
 	cmdLayer.Run = runLayer
-	cmdLayer.Flag.BoolVar(&layerCreate, "c", false, "")
-	cmdLayer.Flag.BoolVar(&layerCreate, "create", false, "")
 }
 
 func runLayer(ui UI, args []string) error {
@@ -64,7 +65,7 @@ func runLayer(ui UI, args []string) error {
 	}
 
 	switch {
-	case layerCreate:
+	case layerC:
 		if len(args) != 1 {
 			return ErrArg
 		}
@@ -80,7 +81,7 @@ func runLayer(ui UI, args []string) error {
 		if err != nil {
 			return err
 		}
-		if err = wc.SelectLayer(args[0]); err != nil {
+		if err := wc.SelectLayer(args[0]); err != nil {
 			return err
 		}
 		return wc.Flush()

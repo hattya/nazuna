@@ -54,8 +54,9 @@ options:
 var cloneVCS string
 
 func init() {
-	cmdClone.Run = runClone
 	cmdClone.Flag.StringVar(&cloneVCS, "vcs", "", "")
+
+	cmdClone.Run = runClone
 }
 
 func runClone(ui UI, args []string) error {
@@ -64,13 +65,13 @@ func runClone(ui UI, args []string) error {
 	}
 	src := args[0]
 
-	rootdir := "."
+	root := "."
 	if 1 < len(args) {
-		rootdir = args[1]
+		root = args[1]
 	}
-	nzndir := filepath.Join(rootdir, ".nzn")
+	nzndir := filepath.Join(root, ".nzn")
 	if !isEmptyDir(nzndir) {
-		return fmt.Errorf("repository '%s' already exists!", rootdir)
+		return fmt.Errorf("repository '%s' already exists!", root)
 	}
 
 	if cloneVCS == "" {

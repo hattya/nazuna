@@ -169,12 +169,12 @@ func (c *CLI) usage(rc int, cmd *Command, err error) int {
 	return rc
 }
 
-func (c *CLI) Exec(cmd *exec.Cmd) error {
+func (c *CLI) Exec(cmd *exec.Cmd) (err error) {
 	cmd.Stdin = c.in
 	cmd.Stdout = c.out
 	cmd.Stderr = c.err
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %s", cmd.Args[0], err)
+	if err = cmd.Run(); err != nil {
+		err = fmt.Errorf("%s: %s", cmd.Args[0], err)
 	}
-	return nil
+	return
 }

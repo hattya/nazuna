@@ -243,9 +243,8 @@ func (w *WC) Errorf(err error) error {
 			v.Path = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%s: %s", v.Path, v.Err)
-	default:
-		return err
 	}
+	return err
 }
 
 type wcBuilder struct {
@@ -354,12 +353,12 @@ func (b *wcBuilder) link() error {
 			src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
 			dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
 			if 0 < len(l.Path) {
-			loop:
+			L:
 				for _, v := range l.Path {
 					for _, p := range filepath.SplitList(os.ExpandEnv(v)) {
 						switch ok, err := link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst); {
 						case ok:
-							break loop
+							break L
 						case err != nil:
 							return err
 						}

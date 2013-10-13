@@ -36,6 +36,12 @@ import (
 
 var ErrArg = errors.New("invalid arguments")
 
+type FlagError string
+
+func (e FlagError) Error() string {
+	return string(e)
+}
+
 type Command struct {
 	Names       []string
 	Usage       []string
@@ -50,12 +56,6 @@ func (c *Command) Name() string {
 		return ""
 	}
 	return c.Names[0]
-}
-
-type FlagError string
-
-func (e FlagError) Error() string {
-	return string(e)
 }
 
 var Commands = []*Command{
@@ -85,19 +85,19 @@ func (e *CommandError) Error() string {
 
 func FindCommand(commands []*Command, name string) (cmd *Command, err error) {
 	set := make(map[string]*Command)
-loop:
+L:
 	for _, c := range commands {
 		if c.Run != nil {
 			for _, n := range c.Names {
 				if n == name {
 					set[n] = c
-					continue loop
+					continue L
 				}
 			}
 			for _, n := range c.Names {
 				if strings.HasPrefix(n, name) {
 					set[n] = c
-					continue loop
+					continue L
 				}
 			}
 		}
@@ -110,7 +110,7 @@ loop:
 		for _, cmd = range set {
 		}
 	default:
-		if c, found := set[name]; found {
+		if c, ok := set[name]; ok {
 			cmd = c
 		} else {
 			list := make([]string, len(set))
