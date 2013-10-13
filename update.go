@@ -126,6 +126,7 @@ func runUpdate(ui UI, args []string) error {
 			ui.Errorln("error:", wc.Errorf(err))
 			copy(wc.State.WC[i:], wc.State.WC[i+1:])
 			wc.State.WC = wc.State.WC[:len(wc.State.WC)-1]
+			i--
 			failed++
 		} else {
 			updated++

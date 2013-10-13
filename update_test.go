@@ -344,7 +344,9 @@ link .vimrc --> b
 			cmd: []string{"nzn", "update"},
 			out: `link .vim/syntax/go.vim --> b
 error: .vim/syntax/go.vim: .* (re)
-0 updated, 0 removed, 1 failed
+link .vim/syntax/vim.vim --> a
+error: .vim/syntax/vim.vim: .* (re)
+0 updated, 0 removed, 2 failed
 [1]
 `,
 		},
@@ -361,7 +363,9 @@ error: .vim/syntax/go.vim: .* (re)
 			cmd: []string{"nzn", "update"},
 			out: `link .vim/syntax/go.vim --> b
 error: .vim/syntax: (re)
-0 updated, 0 removed, 1 failed
+link .vim/syntax/vim.vim --> a
+error: .vim/syntax: (re)
+0 updated, 0 removed, 2 failed
 [1]
 `,
 		},
