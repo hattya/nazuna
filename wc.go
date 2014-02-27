@@ -1,7 +1,7 @@
 //
 // nazuna :: wc.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -85,10 +85,26 @@ func (w *WC) PathFor(path string) string {
 	return filepath.Join(w.dir, path)
 }
 
-func (w *WC) Rel(path string) (string, error) {
-	abs, err := filepath.Abs(path)
-	if err != nil {
-		return "", err
+func (w *WC) Rel(base rune, path string) (string, error) {
+	if strings.HasPrefix(path, "$") {
+		return filepath.ToSlash(path), nil
+	}
+
+	var abs string
+	var err error
+	switch base {
+	case '/':
+		if filepath.IsAbs(path) {
+			abs = path
+		} else {
+			abs = filepath.Join(w.dir, path)
+		}
+	case '.':
+		if abs, err = filepath.Abs(path); err != nil {
+			return "", err
+		}
+	default:
+		return "", fmt.Errorf("unknown base '%c'", base)
 	}
 	rel, err := filepath.Rel(w.dir, abs)
 	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
@@ -234,12 +250,12 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 func (w *WC) Errorf(err error) error {
 	switch v := err.(type) {
 	case *os.LinkError:
-		if r, err := filepath.Rel(w.PathFor("."), v.New); err == nil {
+		if r, err := w.Rel('/', v.New); err == nil {
 			v.New = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%s: %s", v.New, v.Err)
 	case *os.PathError:
-		if r, err := filepath.Rel(w.PathFor("."), v.Path); err == nil {
+		if r, err := w.Rel('/', v.Path); err == nil {
 			v.Path = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%s: %s", v.Path, v.Err)
@@ -410,7 +426,7 @@ func (b *wcBuilder) alias(path string) (string, error) {
 			} else {
 				path = filepath.Join(dst, path[len(src)+1:])
 			}
-			return b.w.Rel(filepath.Clean(os.ExpandEnv(path)))
+			return b.w.Rel('/', filepath.Clean(os.ExpandEnv(path)))
 		}
 	}
 	return path, nil

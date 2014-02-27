@@ -1,7 +1,7 @@
 //
 // nazuna :: repository.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -144,7 +144,7 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 		sort.Sort(layerByName(l.Layers))
 		l = ll
 	}
-	os.MkdirAll(r.PathFor(l, "."), 0777)
+	os.MkdirAll(r.PathFor(l, "/"), 0777)
 	return l, nil
 }
 

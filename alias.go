@@ -1,7 +1,7 @@
 //
 // nazuna :: alias.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -29,7 +29,6 @@ package nazuna
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 var cmdAlias = &Command{
@@ -90,8 +89,11 @@ func runAlias(ui UI, args []string) error {
 		case 0 < len(l.Layers):
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
-		src := filepath.ToSlash(filepath.Clean(args[0]))
-		dst, err := wc.Rel(args[1])
+		src, err := wc.Rel('/', args[0])
+		if err != nil {
+			return err
+		}
+		dst, err := wc.Rel('.', args[1])
 		switch {
 		case err != nil:
 			return err

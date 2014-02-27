@@ -1,7 +1,7 @@
 //
 // nazuna :: subrepo.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -106,11 +106,10 @@ func runSubrepo(ui UI, args []string) error {
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
 		src := args[0]
-		path, err := wc.Rel(args[1])
+		path, err := wc.Rel('.', args[1])
 		if err != nil {
 			return err
 		}
-		path = filepath.ToSlash(path)
 		var name, dst string
 		if 0 < len(args[1]) && os.IsPathSeparator(args[1][len(args[1])-1]) {
 			dst = path + "/" + filepath.Base(src)
@@ -153,9 +152,9 @@ func runSubrepo(ui UI, args []string) error {
 			}
 			dst := repo.SubrepoFor(e.Origin[:len(e.Origin)-len(r.Path)])
 			if isEmptyDir(dst) {
-				dst, _ = wc.Rel(dst)
+				dst, _ = wc.Rel('.', dst)
 				c := r.VCS.Clone(r.URI, dst)
-				c.Dir = wc.PathFor(".")
+				c.Dir = wc.PathFor("/")
 				if err := ui.Exec(c); err != nil {
 					return err
 				}

@@ -1,7 +1,7 @@
 //
 // nazuna :: link.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -99,7 +99,7 @@ func runLink(ui UI, args []string) error {
 		case 0 < len(l.Layers):
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
-		dst, err := wc.Rel(args[1])
+		dst, err := wc.Rel('.', args[1])
 		if err != nil {
 			return err
 		}
