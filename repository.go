@@ -36,6 +36,9 @@ import (
 	"strings"
 )
 
+// disable repository discovery in tests
+var discover = true
+
 type Repository struct {
 	Layers []*Layer
 
@@ -54,7 +57,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 	for !isDir(filepath.Join(root, ".nzn")) {
 		p := root
 		root = filepath.Dir(root)
-		if root == p {
+		if !discover || root == p {
 			return nil, fmt.Errorf("no repository found in '%s' (.nzn not found)!", path)
 		}
 	}

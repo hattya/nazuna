@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna_test.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -97,6 +97,8 @@ func (sh *shell) run(s script) error {
 		return err
 	}
 	defer popd()
+	// disable repository discovery
+	nazuna.SetDiscover(false)
 
 	i := 1
 	for _, c := range s {
