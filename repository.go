@@ -43,7 +43,7 @@ type Repository struct {
 	Layers []*Layer
 
 	ui      UI
-	vcs     *VCS
+	vcs     VCS
 	nzndir  string
 	rdir    string
 	subroot string
@@ -64,7 +64,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 
 	nzndir := filepath.Join(root, ".nzn")
 	rdir := filepath.Join(nzndir, "r")
-	vcs, err := VCSFor(rdir)
+	vcs, err := VCSFor(ui, rdir)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,6 @@ func (r *Repository) Find(layer *Layer, path string) (typ string) {
 
 func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	cmd := r.vcs.List(path)
-	cmd.Dir = r.rdir
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -238,13 +237,9 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 }
 
 func (r *Repository) Add(paths ...string) error {
-	cmd := r.vcs.Add(paths...)
-	cmd.Dir = r.rdir
-	return r.ui.Exec(cmd)
+	return r.vcs.Add(paths...)
 }
 
 func (r *Repository) Command(args ...string) error {
-	cmd := r.vcs.Command(args...)
-	cmd.Dir = r.rdir
-	return r.ui.Exec(cmd)
+	return r.vcs.Exec(args...)
 }

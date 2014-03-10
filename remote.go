@@ -1,7 +1,7 @@
 //
 // nazuna :: remote.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -37,7 +37,7 @@ import (
 var ErrRemote = errors.New("unknown remote")
 
 type Remote struct {
-	VCS  *VCS
+	VCS  string
 	URI  string
 	Path string
 }
@@ -65,12 +65,8 @@ func NewRemote(src string) (*Remote, error) {
 				return nil, err
 			}
 		}
-		vcs, err := FindVCS(g["vcs"])
-		if err != nil {
-			return nil, fmt.Errorf("cannot detect remote vcs for %s", src)
-		}
 		r := &Remote{
-			VCS:  vcs,
+			VCS:  g["vcs"],
 			URI:  g["uri"],
 			Path: g["path"],
 		}

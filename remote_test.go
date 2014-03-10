@@ -1,7 +1,7 @@
 //
 // nazuna :: remote_test.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -68,7 +68,7 @@ func TestRemote(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, e := r.VCS.Cmd, "git"; g != e {
+	if g, e := r.VCS, "git"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if g, e := r.URI, "https://github.com/kien/ctrlp.vim"; g != e {
@@ -82,7 +82,7 @@ func TestRemote(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, e := r.VCS.Cmd, "git"; g != e {
+	if g, e := r.VCS, "git"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if g, e := r.URI, "https://bitbucket.org/hattya/git.git"; g != e {
@@ -96,7 +96,7 @@ func TestRemote(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, e := r.VCS.Cmd, "hg"; g != e {
+	if g, e := r.VCS, "hg"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if g, e := r.URI, "https://bitbucket.org/hattya/hg"; g != e {
@@ -131,12 +131,6 @@ func TestRemoteError(t *testing.T) {
 	case err == nil:
 		t.Error("expected error")
 	case err != nazuna.ErrRemote:
-		t.Error("unexpected error:", err)
-	}
-	switch _, err := nazuna.NewRemote("bitbucket.org/hattya/svn"); {
-	case err == nil:
-		t.Error("expected error")
-	case !strings.HasPrefix(err.Error(), "cannot detect remote vcs "):
 		t.Error("unexpected error:", err)
 	}
 	switch _, err := nazuna.NewRemote("bitbucket.org/hattya/_"); {

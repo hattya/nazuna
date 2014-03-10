@@ -1,7 +1,7 @@
 //
 // nazuna :: clone.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -77,12 +77,12 @@ func runClone(ui UI, args []string) error {
 	if cloneVCS == "" {
 		return FlagError("flag --vcs is required")
 	}
-	vcs, err := FindVCS(cloneVCS)
+	vcs, err := FindVCS(ui, cloneVCS, "")
 	if err != nil {
 		return err
 	}
 	if err := os.MkdirAll(nzndir, 0777); err != nil {
 		return err
 	}
-	return ui.Exec(vcs.Clone(src, filepath.Join(nzndir, "r")))
+	return vcs.Clone(src, filepath.Join(nzndir, "r"))
 }

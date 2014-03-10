@@ -1,7 +1,7 @@
 //
 // nazuna :: wc_test.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -48,7 +48,7 @@ func TestWC(t *testing.T) {
 	}
 	defer popd()
 
-	if err := mkdir(".nzn", "r", ".git"); err != nil {
+	if err := mkdir(".nzn/r/.git"); err != nil {
 		t.Fatal(err)
 	}
 	repo, err := nazuna.OpenRepository(nil, ".")
@@ -98,7 +98,7 @@ func TestWCError(t *testing.T) {
 	}
 	defer popd()
 
-	if err := mkdir(".nzn", "r", ".git"); err != nil {
+	if err := mkdir(".nzn/r/.git"); err != nil {
 		t.Fatal(err)
 	}
 	repo, err := nazuna.OpenRepository(nil, ".")

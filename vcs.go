@@ -1,7 +1,7 @@
 //
 // nazuna :: vcs.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -27,11 +27,12 @@
 package nazuna
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
+	"sync"
 )
 
 var cmdVCS = &Command{
@@ -61,144 +62,179 @@ func runVCS(ui UI, args []string) error {
 	return repo.Command(args...)
 }
 
-type VCS struct {
-	Name string
-	Cmd  string
-	Dir  string
+type VCS interface {
+	String() string
+	Exec(...string) error
 
-	InitCmd   string
-	CloneCmd  string
-	UpdateCmd []string
+	Init(string) error
+	Clone(string, string) error
 
-	AddCmd  string
-	ListCmd string
+	Add(...string) error
+	List(...string) *exec.Cmd
+	Update() error
 }
 
-func (v *VCS) String() string {
+type BaseVCS struct {
+	Name string
+	Cmd  string
+	UI   UI
+	Dir  string
+}
+
+func (v *BaseVCS) String() string {
 	return v.Name
 }
 
-func (v *VCS) Init(path string) *exec.Cmd {
-	m := map[string]string{
-		"path": path,
-	}
-	return v.Command(v.expand(v.InitCmd, m)...)
+func (v *BaseVCS) Command(args ...string) *exec.Cmd {
+	cmd := exec.Command(v.Cmd, args...)
+	cmd.Dir = v.Dir
+	return cmd
 }
 
-func (v *VCS) Clone(src, dst string) *exec.Cmd {
-	m := map[string]string{
-		"src": src,
-		"dst": dst,
-	}
-	return v.Command(v.expand(v.CloneCmd, m)...)
+func (v *BaseVCS) Exec(args ...string) error {
+	return v.UI.Exec(v.Command(args...))
 }
 
-func (v *VCS) Update() []*exec.Cmd {
-	cmds := []*exec.Cmd{}
-	for _, c := range v.UpdateCmd {
-		cmds = append(cmds, v.Command(v.expand(c, nil)...))
-	}
-	return cmds
+func (v *BaseVCS) Init(string) error {
+	return errors.New("VCS.Init not implemented")
 }
 
-func (v *VCS) Add(paths ...string) *exec.Cmd {
-	return v.Command(append(v.expand(v.AddCmd, nil), paths...)...)
+func (v *BaseVCS) Clone(string, string) error {
+	return errors.New("VCS.Clone not implemented")
 }
 
-func (v *VCS) List(paths ...string) *exec.Cmd {
-	return v.Command(append(v.expand(v.ListCmd, nil), paths...)...)
+func (v *BaseVCS) Add(...string) error {
+	return errors.New("VCS.Add not implemented")
 }
 
-func (v *VCS) expand(cmdline string, m map[string]string) []string {
-	args := strings.Fields(cmdline)
-	if m != nil {
-		for i, a := range args {
-			args[i] = format(a, m)
-		}
-	}
-	return args
+func (v *BaseVCS) List(...string) *exec.Cmd {
+	return nil
 }
 
-func (v *VCS) Command(args ...string) *exec.Cmd {
-	return exec.Command(v.Cmd, args...)
+func (v *BaseVCS) Update() error {
+	return errors.New("VCS.Update not implemented")
 }
 
-var VCSes = []*VCS{
-	{
+type Git struct {
+	BaseVCS
+}
+
+func newGit(ui UI, dir string) VCS {
+	return &Git{BaseVCS{
 		Name: "Git",
 		Cmd:  "git",
-		Dir:  ".git",
+		UI:   ui,
+		Dir:  dir,
+	}}
+}
 
-		InitCmd:  "init -q {path}",
-		CloneCmd: "clone --recursive {src} {dst}",
-		UpdateCmd: []string{
-			"pull",
-			"submodule update --init --recursive",
-		},
+func (v *Git) Init(dir string) error {
+	return v.Exec("init", "-q", dir)
+}
 
-		AddCmd:  "add",
-		ListCmd: "ls-files",
-	},
-	{
+func (v *Git) Clone(src, dst string) error {
+	return v.Exec("clone", "--recursive", src, dst)
+}
+
+func (v *Git) Add(paths ...string) error {
+	return v.Exec(append([]string{"add"}, paths...)...)
+}
+
+func (v *Git) List(paths ...string) *exec.Cmd {
+	return v.Command(append([]string{"ls-files"}, paths...)...)
+}
+
+func (v *Git) Update() error {
+	if err := v.Exec("pull"); err != nil {
+		return err
+	}
+	return v.Exec("submodule", "update", "--init", "--recursive")
+}
+
+type Mercurial struct {
+	BaseVCS
+}
+
+func newMercurial(ui UI, dir string) VCS {
+	return &Mercurial{BaseVCS{
 		Name: "Mercurial",
 		Cmd:  "hg",
-		Dir:  ".hg",
-
-		InitCmd:  "init {path}",
-		CloneCmd: "clone {src} {dst}",
-		UpdateCmd: []string{
-			"pull",
-		},
-
-		AddCmd:  "add",
-		ListCmd: "status -madcn",
-	},
+		UI:   ui,
+		Dir:  dir,
+	}}
 }
 
-type VCSError struct {
-	Cmd  string
-	List []string
+func (v *Mercurial) Init(dir string) error {
+	return v.Exec("init", dir)
 }
 
-func (e *VCSError) Error() string {
-	if len(e.List) == 0 {
-		return fmt.Sprintf("unknown vcs '%s'", e.Cmd)
+func (v *Mercurial) Clone(src, dst string) error {
+	return v.Exec("clone", src, dst)
+}
+
+func (v *Mercurial) Add(paths ...string) error {
+	return v.Exec(append([]string{"add"}, paths...)...)
+}
+
+func (v *Mercurial) List(paths ...string) *exec.Cmd {
+	return v.Command(append([]string{"status", "-madcn"}, paths...)...)
+}
+
+func (v *Mercurial) Update() error {
+	if err := v.Exec("pull"); err != nil {
+		return err
 	}
-	return fmt.Sprintf("vcs '%s' is ambiguous:\n    %s", e.Cmd, strings.Join(e.List, " "))
+	return v.Exec("update")
 }
 
-func FindVCS(cmd string) (vcs *VCS, err error) {
-	set := make(map[string]*VCS)
-	c := strings.ToLower(cmd)
-	for _, v := range VCSes {
-		if strings.HasPrefix(strings.ToLower(v.Cmd), c) {
-			set[v.Cmd] = v
-		}
-	}
+type NewVCS func(UI, string) VCS
 
-	switch len(set) {
-	case 0:
-		err = &VCSError{Cmd: cmd}
-	case 1:
-		for _, vcs = range set {
-		}
-	default:
-		list := make([]string, len(set))
-		i := 0
-		for n, _ := range set {
-			list[i] = n
-			i++
-		}
-		err = &VCSError{cmd, list}
-	}
-	return
+type vcsType struct {
+	ctrlDir string
+	new     NewVCS
 }
 
-func VCSFor(path string) (*VCS, error) {
-	for _, vcs := range VCSes {
-		if isDir(filepath.Join(path, vcs.Dir)) {
+var (
+	mu sync.RWMutex
+
+	vcses = map[string]*vcsType{
+		"git": {".git", newGit},
+		"hg":  {".hg", newMercurial},
+	}
+)
+
+func RegisterVCS(cmd, ctrlDir string, new NewVCS) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if new == nil {
+		panic("NewVCS is nil")
+	}
+	if _, dup := vcses[cmd]; dup {
+		panic(fmt.Sprintf("vcs '%s' already registered", cmd))
+	}
+	vcses[cmd] = &vcsType{ctrlDir, new}
+}
+
+func FindVCS(ui UI, cmd, dir string) (VCS, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	if v, ok := vcses[cmd]; ok {
+		return v.new(ui, dir), nil
+	}
+	return nil, fmt.Errorf("unknown vcs '%s'", cmd)
+}
+
+func VCSFor(ui UI, dir string) (VCS, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	for _, v := range vcses {
+		if isDir(filepath.Join(dir, v.ctrlDir)) {
+			vcs := v.new(ui, dir)
 			return vcs, nil
 		}
 	}
-	return nil, fmt.Errorf("unknown vcs for directory '%s'", path)
+	return nil, fmt.Errorf("unknown vcs for directory '%s'", dir)
 }

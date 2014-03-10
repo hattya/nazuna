@@ -1,7 +1,7 @@
 //
 // nazuna :: repository_test.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -42,40 +42,45 @@ func TestRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer nazuna.RemoveAll(dir)
+	popd, err := pushd(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer popd()
 
-	switch _, err := nazuna.OpenRepository(nil, dir); {
+	switch _, err := nazuna.OpenRepository(nil, "."); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasPrefix(err.Error(), "no repository found "):
 		t.Error("unexpected error:", err)
 	}
 
-	if err := mkdir(dir, ".nzn", "r"); err != nil {
+	if err := mkdir(".nzn/r"); err != nil {
 		t.Fatal(err)
 	}
-	switch _, err = nazuna.OpenRepository(nil, dir); {
+	switch _, err = nazuna.OpenRepository(nil, "."); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasPrefix(err.Error(), "unknown vcs for directory "):
 		t.Error("unexpected error:", err)
 	}
 
-	if err := mkdir(dir, ".nzn", "r", ".git"); err != nil {
+	if err := mkdir(".nzn/r/.git"); err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(dir, ".nzn", "r", "nazuna.json")
+	path := filepath.Join(".nzn", "r", "nazuna.json")
 
 	if err := mkdir(path); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = nazuna.OpenRepository(nil, dir); err == nil {
+	if _, err = nazuna.OpenRepository(nil, "."); err == nil {
 		t.Error("expected error")
 	}
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
 	}
 
-	repo, err := nazuna.OpenRepository(nil, dir)
+	repo, err := nazuna.OpenRepository(nil, ".")
 	if err != nil {
 		t.Fatal(err)
 	}

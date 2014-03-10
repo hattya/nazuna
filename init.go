@@ -1,7 +1,7 @@
 //
 // nazuna :: init.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -72,14 +72,14 @@ func runInit(ui UI, args []string) error {
 	if initVCS == "" {
 		return FlagError("flag --vcs is required")
 	}
-	vcs, err := FindVCS(initVCS)
+	vcs, err := FindVCS(ui, initVCS, "")
 	if err != nil {
 		return err
 	}
 	if err := os.MkdirAll(nzndir, 0777); err != nil {
 		return err
 	}
-	if err := ui.Exec(vcs.Init(filepath.Join(nzndir, "r"))); err != nil {
+	if err := vcs.Init(filepath.Join(nzndir, "r")); err != nil {
 		return err
 	}
 

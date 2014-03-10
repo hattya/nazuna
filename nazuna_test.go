@@ -315,7 +315,7 @@ func (sh *shell) setup(args ...string) (string, int) {
 }
 
 func (sh *shell) touch(args ...string) (string, int) {
-	return sh.report(ioutil.WriteFile(filepath.Clean(args[0]), []byte{}, 0666))
+	return sh.report(touch(args[0]))
 }
 
 type script []*cmdLine
@@ -347,12 +347,13 @@ func (d *lines) Equal(i, j int) bool {
 	return d.a[i] == d.b[j]
 }
 
-func pushd(path string) (func(), error) {
+func pushd(path string) (func() error, error) {
 	wd, err := os.Getwd()
-	popd := func() {
+	popd := func() error {
 		if err == nil {
-			os.Chdir(wd)
+			return os.Chdir(wd)
 		}
+		return err
 	}
 	return popd, os.Chdir(path)
 }
@@ -361,8 +362,12 @@ func mkdtemp() (string, error) {
 	return ioutil.TempDir("", "nazuna.test")
 }
 
-func mkdir(a ...string) error {
-	return os.MkdirAll(filepath.Join(a...), 0777)
+func mkdir(path string) error {
+	return os.MkdirAll(filepath.Clean(path), 0777)
+}
+
+func touch(path string) error {
+	return ioutil.WriteFile(filepath.Clean(path), []byte{}, 0666)
 }
 
 func quote(path string) string {
