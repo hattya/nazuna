@@ -64,7 +64,7 @@ func TestRemote(t *testing.T) {
 	defer func() { http.DefaultClient = c }()
 	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
 
-	r, err := nazuna.NewRemote("github.com/kien/ctrlp.vim")
+	r, err := nazuna.NewRemote(nil, "github.com/kien/ctrlp.vim")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,11 +74,14 @@ func TestRemote(t *testing.T) {
 	if g, e := r.URI, "https://github.com/kien/ctrlp.vim"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
+	if g, e := r.Root, "github.com/kien/ctrlp.vim"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
 	if g, e := r.Path, ""; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 
-	r, err = nazuna.NewRemote("bitbucket.org/hattya/git")
+	r, err = nazuna.NewRemote(nil, "bitbucket.org/hattya/git")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,11 +91,14 @@ func TestRemote(t *testing.T) {
 	if g, e := r.URI, "https://bitbucket.org/hattya/git.git"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
+	if g, e := r.Root, "bitbucket.org/hattya/git"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
 	if g, e := r.Path, ""; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 
-	r, err = nazuna.NewRemote("bitbucket.org/hattya/hg")
+	r, err = nazuna.NewRemote(nil, "bitbucket.org/hattya/hg")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,6 +106,9 @@ func TestRemote(t *testing.T) {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if g, e := r.URI, "https://bitbucket.org/hattya/hg"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
+	if g, e := r.Root, "bitbucket.org/hattya/hg"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if g, e := r.Path, ""; g != e {
@@ -127,19 +136,19 @@ func TestRemoteError(t *testing.T) {
 	defer func() { http.DefaultClient = c }()
 	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
 
-	switch _, err := nazuna.NewRemote("github.com/hattya"); {
+	switch _, err := nazuna.NewRemote(nil, "github.com/hattya"); {
 	case err == nil:
 		t.Error("expected error")
 	case err != nazuna.ErrRemote:
 		t.Error("unexpected error:", err)
 	}
-	switch _, err := nazuna.NewRemote("bitbucket.org/hattya/_"); {
+	switch _, err := nazuna.NewRemote(nil, "bitbucket.org/hattya/_"); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasSuffix(err.Error(), "/hattya/_: 404 Not Found"):
 		t.Error("unexpected error:", err)
 	}
-	switch _, err := nazuna.NewRemote("bitbucket.org/_/_"); {
+	switch _, err := nazuna.NewRemote(nil, "bitbucket.org/_/_"); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasSuffix(err.Error(), "/_/_: unexpected end of JSON input"):

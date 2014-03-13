@@ -1,7 +1,7 @@
 //
 // nazuna :: util.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -95,15 +95,6 @@ func unmarshal(path string, v interface{}) error {
 		return err
 	}
 	return json.Unmarshal(data, v)
-}
-
-func format(s string, m map[string]string) string {
-	if strings.Contains(s, "{") {
-		for k, v := range m {
-			s = strings.Replace(s, "{"+k+"}", v, -1)
-		}
-	}
-	return s
 }
 
 func httpGet(uri string) ([]byte, error) {

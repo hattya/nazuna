@@ -146,28 +146,19 @@ func runSubrepo(ui UI, args []string) error {
 				continue
 			}
 			ui.Printf("* %s\n", e.Origin)
-			r, err := NewRemote(e.Origin)
+			r, err := NewRemote(ui, e.Origin)
 			if err != nil {
 				return err
 			}
-			dst := repo.SubrepoFor(e.Origin[:len(e.Origin)-len(r.Path)])
+			dst := repo.SubrepoFor(r.Root)
 			if isEmptyDir(dst) {
-				vcs, err := FindVCS(ui, r.VCS, wc.PathFor("/"))
-				if err != nil {
-					return fmt.Errorf("cannot detect remote vcs for %s", e.Origin)
-				}
 				dst, _ = wc.Rel('.', dst)
-				if err := vcs.Clone(r.URI, dst); err != nil {
-					return err
-				}
+				err = r.Clone(wc.PathFor("/"), dst)
 			} else {
-				vcs, err := VCSFor(ui, dst)
-				if err != nil {
-					return err
-				}
-				if err := vcs.Update(); err != nil {
-					return err
-				}
+				err = r.Update(dst)
+			}
+			if err != nil {
+				return err
 			}
 		}
 	}

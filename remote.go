@@ -39,10 +39,14 @@ var ErrRemote = errors.New("unknown remote")
 type Remote struct {
 	VCS  string
 	URI  string
+	Root string
 	Path string
+
+	ui  UI
+	src string
 }
 
-func NewRemote(src string) (*Remote, error) {
+func NewRemote(ui UI, src string) (*Remote, error) {
 	for _, rh := range RemoteHandlers {
 		if !strings.HasPrefix(src, rh.Prefix) {
 			continue
@@ -68,11 +72,30 @@ func NewRemote(src string) (*Remote, error) {
 		r := &Remote{
 			VCS:  g["vcs"],
 			URI:  g["uri"],
+			Root: g["root"],
 			Path: g["path"],
+			ui:   ui,
+			src:  src,
 		}
 		return r, nil
 	}
 	return nil, ErrRemote
+}
+
+func (r *Remote) Clone(base, dst string) error {
+	vcs, err := FindVCS(r.ui, r.VCS, base)
+	if err != nil {
+		return fmt.Errorf("cannot detect remote vcs for %s", r.src)
+	}
+	return vcs.Clone(r.URI, dst)
+}
+
+func (r *Remote) Update(dir string) error {
+	vcs, err := VCSFor(r.ui, dir)
+	if err != nil {
+		return err
+	}
+	return vcs.Update()
 }
 
 type RemoteHandler struct {
@@ -80,14 +103,14 @@ type RemoteHandler struct {
 	Expr   string
 	VCS    string
 	Scheme string
-	Check  func(match map[string]string) error
+	Check  func(map[string]string) error
 
 	re *regexp.Regexp
 }
 
 var RemoteHandlers = []*RemoteHandler{
 	{
-		Prefix: "github.com",
+		Prefix: "github.com/",
 		Expr:   `^(?P<root>github\.com/[^/]+/[^/]+)(?P<path>.*)$`,
 		VCS:    "git",
 		Scheme: "https",
@@ -106,21 +129,21 @@ func init() {
 	}
 }
 
-func bitbucket(match map[string]string) error {
+func bitbucket(m map[string]string) error {
 	var resp struct {
 		SCM string
 	}
-	uri := format("https://api.bitbucket.org/1.0/repositories/{repo}", match)
+	uri := "https://api.bitbucket.org/1.0/repositories/" + m["repo"]
 	data, err := httpGet(uri)
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(data, &resp); err != nil {
+	if err = json.Unmarshal(data, &resp); err != nil {
 		return fmt.Errorf("%s: %v", uri, err)
 	}
-	match["vcs"] = resp.SCM
+	m["vcs"] = resp.SCM
 	if resp.SCM == "git" {
-		match["uri"] += ".git"
+		m["uri"] += ".git"
 	}
 	return nil
 }
