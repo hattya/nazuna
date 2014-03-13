@@ -28,7 +28,6 @@ package nazuna
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 )
@@ -71,15 +70,7 @@ func init() {
 	cmdLink.Run = runLink
 }
 
-func runLink(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
-	}
+func runLink(ui UI, repo *Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err

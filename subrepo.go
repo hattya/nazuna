@@ -76,15 +76,7 @@ func init() {
 	cmdSubrepo.Run = runSubrepo
 }
 
-func runSubrepo(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
-	}
+func runSubrepo(ui UI, repo *Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err

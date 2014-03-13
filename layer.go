@@ -1,7 +1,7 @@
 //
 // nazuna :: layer.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -25,10 +25,6 @@
 //
 
 package nazuna
-
-import (
-	"os"
-)
 
 var cmdLayer = &Command{
 	Names: []string{"layer"},
@@ -54,16 +50,7 @@ func init() {
 	cmdLayer.Run = runLayer
 }
 
-func runLayer(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
-	}
-
+func runLayer(ui UI, repo *Repository, args []string) error {
 	switch {
 	case layerC:
 		if len(args) != 1 {

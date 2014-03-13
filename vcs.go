@@ -29,7 +29,6 @@ package nazuna
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"sync"
@@ -50,15 +49,7 @@ func init() {
 	cmdVCS.Run = runVCS
 }
 
-func runVCS(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
-	}
+func runVCS(ui UI, repo *Repository, args []string) error {
 	return repo.Command(args...)
 }
 

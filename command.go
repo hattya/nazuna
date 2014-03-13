@@ -1,7 +1,7 @@
 //
 // nazuna :: command.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -30,6 +30,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 )
@@ -48,7 +49,7 @@ type Command struct {
 	Help        string
 	Flag        flag.FlagSet
 	CustomFlags bool
-	Run         func(UI, []string) error
+	Run         CommandFunc
 }
 
 func (c *Command) Name() string {
@@ -57,6 +58,26 @@ func (c *Command) Name() string {
 	}
 	return c.Names[0]
 }
+
+func (c *Command) Invoke(ui UI, args []string) error {
+	switch f := c.Run.(type) {
+	case func(UI, []string) error:
+		return f(ui, args)
+	case func(UI, *Repository, []string) error:
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		repo, err := OpenRepository(ui, wd)
+		if err != nil {
+			return err
+		}
+		return f(ui, repo, args)
+	}
+	return fmt.Errorf("cannot invoke: %T", c.Run)
+}
+
+type CommandFunc interface{}
 
 var Commands = []*Command{
 	cmdAlias,

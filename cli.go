@@ -1,7 +1,7 @@
 //
 // nazuna :: cli.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -137,7 +137,7 @@ func (c *CLI) Run() int {
 		}
 		args = cmd.Flag.Args()
 	}
-	if err := cmd.Run(c, args); err != nil {
+	if err := cmd.Invoke(c, args); err != nil {
 		switch v := err.(type) {
 		case *CommandError:
 			return c.usage(1, nil, err)
@@ -165,7 +165,7 @@ func (c *CLI) usage(rc int, cmd *Command, err error) int {
 	if cmd != nil {
 		args = append(args, cmd.Name())
 	}
-	cmdHelp.Run(c, args)
+	cmdHelp.Invoke(c, args)
 	return rc
 }
 

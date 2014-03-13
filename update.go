@@ -1,7 +1,7 @@
 //
 // nazuna :: update.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -28,7 +28,6 @@ package nazuna
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 )
 
@@ -48,16 +47,7 @@ func init() {
 	cmdUpdate.Run = runUpdate
 }
 
-func runUpdate(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
-	}
-
+func runUpdate(ui UI, repo *Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err

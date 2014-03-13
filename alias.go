@@ -28,7 +28,6 @@ package nazuna
 
 import (
 	"fmt"
-	"os"
 )
 
 var cmdAlias = &Command{
@@ -61,15 +60,7 @@ func init() {
 	cmdAlias.Run = runAlias
 }
 
-func runAlias(ui UI, args []string) error {
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	repo, err := OpenRepository(ui, wd)
-	if err != nil {
-		return err
-	}
+func runAlias(ui UI, repo *Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err
