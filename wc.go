@@ -129,7 +129,11 @@ func (w *WC) LinksTo(path, origin string) bool {
 func (w *WC) Link(src, dst string) error {
 	for p := filepath.Dir(w.PathFor(dst)); p != w.dir; p = filepath.Dir(p) {
 		if isLink(p) {
-			return &os.PathError{"link", p, ErrLink}
+			return &os.PathError{
+				Op:   "link",
+				Path: p,
+				Err:  ErrLink,
+			}
 		}
 	}
 	if dir := filepath.Dir(dst); !w.Exists(dir) {

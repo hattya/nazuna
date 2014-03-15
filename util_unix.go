@@ -1,7 +1,7 @@
 //
 // nazuna :: util_unix.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -60,7 +60,11 @@ func link(src, dst string) error {
 
 func unlink(path string) error {
 	if !isLink(path) {
-		return &os.PathError{"unlink", path, ErrNotLink}
+		return &os.PathError{
+			Op:   "unlink",
+			Path: path,
+			Err:  ErrNotLink,
+		}
 	}
 	return os.Remove(path)
 }

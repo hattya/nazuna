@@ -140,6 +140,7 @@ L:
 				list[i] = n
 				i++
 			}
+			sort.Strings(list)
 			err = &CommandError{name, list}
 		}
 	}
