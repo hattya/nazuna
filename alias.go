@@ -26,9 +26,7 @@
 
 package nazuna
 
-import (
-	"fmt"
-)
+import "fmt"
 
 var cmdAlias = &Command{
 	Names: []string{"alias"},

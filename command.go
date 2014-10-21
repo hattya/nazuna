@@ -60,9 +60,9 @@ func (c *Command) Name() string {
 }
 
 func (c *Command) Invoke(ui UI, args []string) error {
-	switch f := c.Run.(type) {
+	switch fn := c.Run.(type) {
 	case func(UI, []string) error:
-		return f(ui, args)
+		return fn(ui, args)
 	case func(UI, *Repository, []string) error:
 		wd, err := os.Getwd()
 		if err != nil {
@@ -72,7 +72,7 @@ func (c *Command) Invoke(ui UI, args []string) error {
 		if err != nil {
 			return err
 		}
-		return f(ui, repo, args)
+		return fn(ui, repo, args)
 	}
 	return fmt.Errorf("cannot invoke: %T", c.Run)
 }

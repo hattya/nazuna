@@ -394,12 +394,12 @@ func (b *wcBuilder) link() error {
 
 func (b *wcBuilder) subrepo() error {
 	for _, dir := range sortKeys(b.l.Subrepos) {
-		for _, l := range b.l.Subrepos[dir] {
+		for _, sub := range b.l.Subrepos[dir] {
 			var name string
-			if l.Name != "" {
-				name = l.Name
+			if sub.Name != "" {
+				name = sub.Name
 			} else {
-				name = filepath.Base(l.Src)
+				name = filepath.Base(sub.Src)
 			}
 			dst, err := b.alias(filepath.ToSlash(filepath.Join(dir, name)))
 			if err != nil {
@@ -411,7 +411,7 @@ func (b *wcBuilder) subrepo() error {
 				b.wc[dst] = append(b.wc[dst], &Entry{
 					Layer:  b.layer,
 					Path:   dst,
-					Origin: l.Src,
+					Origin: sub.Src,
 					Type:   "subrepo",
 				})
 			case list[0].Layer == b.layer && list[0].Type != "subrepo":
