@@ -1,7 +1,7 @@
 //
 // nazuna :: subrepo_test.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -129,13 +129,18 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
-			cmd: []string{"nzn", "link", "-l", "a", "$GOROOT/misc/vim", ".vim/bundle/golang"},
-		},
-		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "bitbucket.org/editorconfig/editorconfig-vim", ".vim/bundle/"},
+		},
+		{
+			cmd: []string{"nzn", "update"},
+			out: `0 updated, 0 removed, 0 failed
+`,
+		},
+		{
+			cmd: []string{"nzn", "link", "-l", "a", "$GOROOT/misc/vim", ".vim/bundle/golang"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},

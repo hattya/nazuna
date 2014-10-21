@@ -100,6 +100,9 @@ func runUpdate(ui UI, repo *Repository, args []string) error {
 			origin = e.Origin
 		case "subrepo":
 			origin = repo.SubrepoFor(e.Origin)
+			if !isDir(origin) {
+				continue
+			}
 		default:
 			l, _ := repo.LayerOf(e.Layer)
 			if e.Origin != "" {
