@@ -1,1 +1,6 @@
+*.exe
+*.html
+*.out
 *.sw?
+*.test
+nzn/nzn
