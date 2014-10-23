@@ -1,7 +1,7 @@
 //
-// nazuna :: syscall_windows.go
+// nazuna :: sys_windows.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
