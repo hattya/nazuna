@@ -1,7 +1,7 @@
 //
 // nazuna :: util_windows.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -69,17 +69,17 @@ func isLink(path string) bool {
 		return true
 	}
 
-	if fi.FileAttributes&FILE_ATTRIBUTE_REPARSE_POINT == 0 {
+	if fi.FileAttributes&_FILE_ATTRIBUTE_REPARSE_POINT == 0 {
 		return false
 	}
-	buf := make([]byte, MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+	buf := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 	var retlen uint32
-	if err := DeviceIoControl(h, FSCTL_GET_REPARSE_POINT, nil, buf, &retlen, nil); err != nil {
+	if err := deviceIoControl(h, _FSCTL_GET_REPARSE_POINT, nil, buf, &retlen, nil); err != nil {
 		return false
 	}
-	switch rdb := (*ReparseDataBuffer)(unsafe.Pointer(&buf[0])); rdb.ReparseTag {
-	case IO_REPARSE_TAG_MOUNT_POINT:
-	case IO_REPARSE_TAG_SYMLINK:
+	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&buf[0])); rdb.ReparseTag {
+	case _IO_REPARSE_TAG_MOUNT_POINT:
+	case _IO_REPARSE_TAG_SYMLINK:
 	default:
 		return false
 	}
@@ -111,7 +111,7 @@ func linksTo(path, origin string) bool {
 		return fi.VolumeSerialNumber == ofi.VolumeSerialNumber && fi.FileIndexHigh == ofi.FileIndexHigh && fi.FileIndexLow == ofi.FileIndexLow
 	}
 
-	if fi.FileAttributes&FILE_ATTRIBUTE_REPARSE_POINT == 0 {
+	if fi.FileAttributes&_FILE_ATTRIBUTE_REPARSE_POINT == 0 {
 		return false
 	}
 	path, err = filepath.Abs(path)
@@ -122,23 +122,23 @@ func linksTo(path, origin string) bool {
 	if err != nil {
 		return false
 	}
-	buf := make([]byte, MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+	buf := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 	var retlen uint32
-	if err := DeviceIoControl(h, FSCTL_GET_REPARSE_POINT, nil, buf, &retlen, nil); err != nil {
+	if err := deviceIoControl(h, _FSCTL_GET_REPARSE_POINT, nil, buf, &retlen, nil); err != nil {
 		return false
 	}
-	switch rdb := (*ReparseDataBuffer)(unsafe.Pointer(&buf[0])); rdb.ReparseTag {
-	case IO_REPARSE_TAG_MOUNT_POINT:
-		rb := (*MountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
+	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&buf[0])); rdb.ReparseTag {
+	case _IO_REPARSE_TAG_MOUNT_POINT:
+		rb := (*mountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
 		start := rb.SubstituteNameOffset / 2
 		end := start + rb.SubstituteNameLength/2
 		path = syscall.UTF16ToString((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[start:end])
-	case IO_REPARSE_TAG_SYMLINK:
-		rb := (*SymbolicLinkReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
+	case _IO_REPARSE_TAG_SYMLINK:
+		rb := (*symbolicLinkReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
 		start := rb.SubstituteNameOffset / 2
 		end := start + rb.SubstituteNameLength/2
 		p := syscall.UTF16ToString((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[start:end])
-		if rb.Flags&SYMLINK_FLAG_RELATIVE != 0 {
+		if rb.Flags&_SYMLINK_FLAG_RELATIVE != 0 {
 			path = filepath.Join(filepath.Dir(path), p)
 		} else {
 			path = p
@@ -153,16 +153,25 @@ func linksTo(path, origin string) bool {
 }
 
 func link(src, dst string) error {
+	linkError := func(err error) error {
+		return &os.LinkError{
+			Op:  "link",
+			Old: src,
+			New: dst,
+			Err: err,
+		}
+	}
+
 	if isDir(src) {
 		if isDir(dst) {
-			return &os.LinkError{"link", src, dst, syscall.ERROR_ALREADY_EXISTS}
+			return linkError(syscall.ERROR_ALREADY_EXISTS)
 		}
 		if err := os.MkdirAll(dst, 0777); err != nil {
 			return err
 		}
 		h, err := createFile(dst, syscall.GENERIC_WRITE)
 		if err != nil {
-			return &os.LinkError{"link", src, dst, err}
+			return linkError(err)
 		}
 		defer syscall.CloseHandle(h)
 
@@ -173,36 +182,36 @@ func link(src, dst string) error {
 		path = `\??\` + path
 		p, err := syscall.UTF16FromString(path)
 		if err != nil {
-			return &os.LinkError{"link", src, dst, err}
+			return linkError(err)
 		}
 		p = append(p, 0)
 
-		buf := make([]byte, MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+		buf := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 		var retlen uint32
-		rdb := (*ReparseDataBuffer)(unsafe.Pointer(&buf[0]))
-		rdb.ReparseTag = IO_REPARSE_TAG_MOUNT_POINT
+		rdb := (*reparseDataBuffer)(unsafe.Pointer(&buf[0]))
+		rdb.ReparseTag = _IO_REPARSE_TAG_MOUNT_POINT
 		rdb.Reserved = 0
-		rb := (*MountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
+		rb := (*mountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
 		rb.SubstituteNameOffset = 0
 		rb.SubstituteNameLength = uint16((len(p) - 2) * 2)
 		rb.PrintNameOffset = rb.SubstituteNameLength + 2
 		rb.PrintNameLength = 0
 		copy((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[:], p)
 		rdb.ReparseDataLength = 8 + rb.PrintNameOffset + rb.PrintNameLength + 2
-		if err := DeviceIoControl(h, FSCTL_SET_REPARSE_POINT, buf[:rdb.ReparseDataLength+8], nil, &retlen, nil); err != nil {
-			return &os.LinkError{"link", src, dst, err}
+		if err := deviceIoControl(h, _FSCTL_SET_REPARSE_POINT, buf[:rdb.ReparseDataLength+8], nil, &retlen, nil); err != nil {
+			return linkError(err)
 		}
 	} else {
 		s, err := syscall.UTF16PtrFromString(src)
 		if err != nil {
-			return &os.LinkError{"link", src, dst, err}
+			return linkError(err)
 		}
 		d, err := syscall.UTF16PtrFromString(dst)
 		if err != nil {
-			return &os.LinkError{"link", src, dst, err}
+			return linkError(err)
 		}
-		if err := CreateHardLink(d, s, nil); err != nil {
-			return &os.LinkError{"link", src, dst, err}
+		if err := createHardLink(d, s, nil); err != nil {
+			return linkError(err)
 		}
 	}
 	return nil
@@ -210,7 +219,11 @@ func link(src, dst string) error {
 
 func unlink(path string) error {
 	if !isLink(path) {
-		return &os.PathError{"unlink", path, ErrNotLink}
+		return &os.PathError{
+			Op:   "unlink",
+			Path: path,
+			Err:  ErrNotLink,
+		}
 	}
 	return os.Remove(path)
 }
@@ -220,5 +233,5 @@ func createFile(path string, access uint32) (syscall.Handle, error) {
 	if err != nil {
 		return syscall.InvalidHandle, err
 	}
-	return syscall.CreateFile(p, access, syscall.FILE_SHARE_READ|syscall.FILE_SHARE_WRITE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS|FILE_FLAG_OPEN_REPARSE_POINT, 0)
+	return syscall.CreateFile(p, access, syscall.FILE_SHARE_READ|syscall.FILE_SHARE_WRITE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS|_FILE_FLAG_OPEN_REPARSE_POINT, 0)
 }

@@ -32,18 +32,18 @@ import (
 )
 
 const (
-	FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
-	FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+	_FILE_ATTRIBUTE_REPARSE_POINT = 0x00000400
+	_FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
 
-	IO_REPARSE_TAG_MOUNT_POINT = 0xa0000003
-	IO_REPARSE_TAG_SYMLINK     = 0xa000000c
+	_IO_REPARSE_TAG_MOUNT_POINT = 0xa0000003
+	_IO_REPARSE_TAG_SYMLINK     = 0xa000000c
 
-	FSCTL_SET_REPARSE_POINT = 0x000900a4
-	FSCTL_GET_REPARSE_POINT = 0x000900a8
+	_FSCTL_SET_REPARSE_POINT = 0x000900a4
+	_FSCTL_GET_REPARSE_POINT = 0x000900a8
 
-	SYMLINK_FLAG_RELATIVE = 0x00000001
+	_SYMLINK_FLAG_RELATIVE = 0x00000001
 
-	MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16 * 1024
+	_MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16 * 1024
 )
 
 var (
@@ -53,14 +53,14 @@ var (
 	pDeviceIoControl = kernel32.NewProc("DeviceIoControl")
 )
 
-type ReparseDataBuffer struct {
+type reparseDataBuffer struct {
 	ReparseTag        uint32
 	ReparseDataLength uint16
 	Reserved          uint16
 	ReparseBuffer     [14]byte
 }
 
-type SymbolicLinkReparseBuffer struct {
+type symbolicLinkReparseBuffer struct {
 	SubstituteNameOffset uint16
 	SubstituteNameLength uint16
 	PrintNameOffset      uint16
@@ -69,7 +69,7 @@ type SymbolicLinkReparseBuffer struct {
 	PathBuffer           [1]uint16
 }
 
-type MountPointReparseBuffer struct {
+type mountPointReparseBuffer struct {
 	SubstituteNameOffset uint16
 	SubstituteNameLength uint16
 	PrintNameOffset      uint16
@@ -77,7 +77,7 @@ type MountPointReparseBuffer struct {
 	PathBuffer           [1]uint16
 }
 
-func CreateHardLink(link, path *uint16, sa *syscall.SecurityAttributes) (err error) {
+func createHardLink(link, path *uint16, sa *syscall.SecurityAttributes) (err error) {
 	r1, _, e1 := pCreateHardLinkW.Call(uintptr(unsafe.Pointer(link)), uintptr(unsafe.Pointer(path)), uintptr(unsafe.Pointer(sa)))
 	if r1 == 0 {
 		if e1.(syscall.Errno) != 0 {
@@ -89,7 +89,7 @@ func CreateHardLink(link, path *uint16, sa *syscall.SecurityAttributes) (err err
 	return
 }
 
-func DeviceIoControl(h syscall.Handle, iocc uint32, inbuf []byte, outbuf []byte, retlen *uint32, overlapped *syscall.Overlapped) (err error) {
+func deviceIoControl(h syscall.Handle, iocc uint32, inbuf []byte, outbuf []byte, retlen *uint32, overlapped *syscall.Overlapped) (err error) {
 	var inp, outp *byte
 	if 0 < len(inbuf) {
 		inp = &inbuf[0]
