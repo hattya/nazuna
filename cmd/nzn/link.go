@@ -1,5 +1,5 @@
 //
-// nazuna :: link.go
+// nzn :: link.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,15 +24,17 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
 import (
 	"fmt"
 	"path/filepath"
 	"sort"
+
+	"github.com/hattya/nazuna"
 )
 
-var cmdLink = &Command{
+var cmdLink = &nazuna.Command{
 	Names: []string{"link"},
 	Usage: []string{
 		"link -l <layer> [-p <path>] <src> <dst>",
@@ -70,7 +72,7 @@ func init() {
 	cmdLink.Run = runLink
 }
 
-func runLink(ui UI, repo *Repository, args []string) error {
+func runLink(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err
@@ -78,10 +80,10 @@ func runLink(ui UI, repo *Repository, args []string) error {
 
 	switch {
 	case linkL == "":
-		return FlagError("flag --layer is required")
+		return nazuna.FlagError("flag --layer is required")
 	default:
 		if len(args) != 2 {
-			return ErrArg
+			return nazuna.ErrArg
 		}
 		l, err := repo.LayerOf(linkL)
 		switch {
@@ -106,16 +108,16 @@ func runLink(ui UI, repo *Repository, args []string) error {
 			path[i] = filepath.ToSlash(filepath.Clean(p))
 		}
 		src := filepath.ToSlash(filepath.Clean(args[0]))
-		dir, dst := splitPath(dst)
+		dir, dst := nazuna.SplitPath(dst)
 		if l.Links == nil {
-			l.Links = make(map[string][]*Link)
+			l.Links = make(map[string][]*nazuna.Link)
 		}
-		l.Links[dir] = append(l.Links[dir], &Link{
+		l.Links[dir] = append(l.Links[dir], &nazuna.Link{
 			Path: path,
 			Src:  src,
 			Dst:  dst,
 		})
-		sort.Sort(linkByDst(l.Links[dir]))
+		sort.Sort(nazuna.LinkByDst(l.Links[dir]))
 	}
 	return repo.Flush()
 }

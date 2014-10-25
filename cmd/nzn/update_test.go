@@ -1,5 +1,5 @@
 //
-// nazuna :: update_test.go
+// nzn :: update_test.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,7 +24,7 @@
 //   SOFTWARE.
 //
 
-package nazuna_test
+package main
 
 import "testing"
 

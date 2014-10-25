@@ -1,5 +1,5 @@
 //
-// nazuna :: alias.go
+// nzn :: alias.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,11 +24,15 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
-import "fmt"
+import (
+	"fmt"
 
-var cmdAlias = &Command{
+	"github.com/hattya/nazuna"
+)
+
+var cmdAlias = &nazuna.Command{
 	Names: []string{"alias"},
 	Usage: []string{
 		"alias -l <layer> <src> <dst>",
@@ -58,7 +62,7 @@ func init() {
 	cmdAlias.Run = runAlias
 }
 
-func runAlias(ui UI, repo *Repository, args []string) error {
+func runAlias(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err
@@ -66,10 +70,10 @@ func runAlias(ui UI, repo *Repository, args []string) error {
 
 	switch {
 	case aliasL == "":
-		return FlagError("flag --layer is required")
+		return nazuna.FlagError("flag --layer is required")
 	default:
 		if len(args) != 2 {
-			return ErrArg
+			return nazuna.ErrArg
 		}
 		l, err := repo.LayerOf(aliasL)
 		switch {

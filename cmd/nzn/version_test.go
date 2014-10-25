@@ -1,5 +1,5 @@
 //
-// nazuna :: layer.go
+// nzn :: version_test.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,69 +24,31 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
-var cmdLayer = &Command{
-	Names: []string{"layer"},
-	Usage: []string{
-		"layer [<name>]",
-		"layer -c <name>",
-	},
-	Help: `
-  manage repository layers
+import (
+	"testing"
 
-options:
+	"github.com/hattya/nazuna"
+)
 
-  -c, --create    create a new layer
-`,
-}
+const versionOut = `nazuna, version ` + nazuna.Version + `
 
-var layerC bool
+Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+`
 
-func init() {
-	cmdLayer.Flag.BoolVar(&layerC, "c", false, "")
-	cmdLayer.Flag.BoolVar(&layerC, "create", false, "")
-
-	cmdLayer.Run = runLayer
-}
-
-func runLayer(ui UI, repo *Repository, args []string) error {
-	switch {
-	case layerC:
-		if len(args) != 1 {
-			return ErrArg
-		}
-		if _, err := repo.NewLayer(args[0]); err != nil {
-			return err
-		}
-		return repo.Flush()
-	case 0 < len(args):
-		if len(args) != 1 {
-			return ErrArg
-		}
-		wc, err := repo.WC()
-		if err != nil {
-			return err
-		}
-		if err := wc.SelectLayer(args[0]); err != nil {
-			return err
-		}
-		return wc.Flush()
-	default:
-		wc, err := repo.WC()
-		if err != nil {
-			return err
-		}
-		for _, l := range repo.Layers {
-			ui.Println(l.Name)
-			for _, ll := range l.Layers {
-				var s string
-				if wl, err := wc.LayerFor(l.Name); err == nil && wl.Name == ll.Name {
-					s = "*"
-				}
-				ui.Printf("    %s%s\n", ll.Name, s)
-			}
-		}
-		return nil
+func TestVersion(t *testing.T) {
+	s := script{
+		{
+			cmd: []string{"nzn", "--version"},
+			out: versionOut,
+		},
+		{
+			cmd: []string{"nzn", "version"},
+			out: versionOut,
+		},
+	}
+	if err := s.exec(); err != nil {
+		t.Error(err)
 	}
 }

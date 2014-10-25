@@ -79,19 +79,6 @@ func (c *Command) Invoke(ui UI, args []string) error {
 
 type CommandFunc interface{}
 
-var Commands = []*Command{
-	cmdAlias,
-	cmdClone,
-	cmdHelp,
-	cmdInit,
-	cmdLayer,
-	cmdLink,
-	cmdSubrepo,
-	cmdUpdate,
-	cmdVCS,
-	cmdVersion,
-}
-
 type CommandError struct {
 	Name string
 	List []string
@@ -147,7 +134,7 @@ L:
 	return
 }
 
-func sortCommands(commands []*Command) []*Command {
+func SortCommands(commands []*Command) []*Command {
 	list := make(commandByName, len(commands))
 	for i, c := range commands {
 		list[i] = c

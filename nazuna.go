@@ -63,22 +63,22 @@ type Link struct {
 	Dst  string   `json:"dst"`
 }
 
-type linkByDst []*Link
+type LinkByDst []*Link
 
-func (s linkByDst) Len() int           { return len(s) }
-func (s linkByDst) Less(i, j int) bool { return s[i].Dst < s[j].Dst }
-func (s linkByDst) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s LinkByDst) Len() int           { return len(s) }
+func (s LinkByDst) Less(i, j int) bool { return s[i].Dst < s[j].Dst }
+func (s LinkByDst) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 type Subrepo struct {
 	Src  string `json:"src"`
 	Name string `json:"name,omitempty"`
 }
 
-type subrepoBySrc []*Subrepo
+type SubrepoBySrc []*Subrepo
 
-func (s subrepoBySrc) Len() int           { return len(s) }
-func (s subrepoBySrc) Less(i, j int) bool { return s[i].Src < s[j].Src }
-func (s subrepoBySrc) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s SubrepoBySrc) Len() int           { return len(s) }
+func (s SubrepoBySrc) Less(i, j int) bool { return s[i].Src < s[j].Src }
+func (s SubrepoBySrc) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 
 type State struct {
 	Layers map[string]string `json:"layers,omitempty"`

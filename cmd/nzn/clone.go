@@ -1,5 +1,5 @@
 //
-// nazuna :: init.go
+// nzn :: clone.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,24 +24,26 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/hattya/nazuna"
 )
 
-var cmdInit = &Command{
-	Names: []string{"init"},
+var cmdClone = &nazuna.Command{
+	Names: []string{"clone"},
 	Usage: []string{
-		"init --vcs <type> [<path>]",
+		"clone --vcs <type> <repository> [<path>]",
 	},
 	Help: `
-create a new repository in the specified directory
+create a copy of an existing repository
 
-  Create a new repository in <path>. If <path> does not exist, it will be
-  created.
+  Create a copy of an existing repository in <path>. If <path> does not exist,
+  it will be created.
 
   If <path> is not specified, the current working diretory is used.
 
@@ -51,44 +53,38 @@ options:
 `,
 }
 
-var initVCS string
+var cloneVCS string
 
 func init() {
-	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
+	cmdClone.Flag.StringVar(&cloneVCS, "vcs", "", "")
 
-	cmdInit.Run = runInit
+	cmdClone.Run = runClone
 }
 
-func runInit(ui UI, args []string) error {
+func runClone(ui nazuna.UI, args []string) error {
+	if len(args) == 0 {
+		return nazuna.ErrArg
+	}
+	src := args[0]
+
 	root := "."
-	if 0 < len(args) {
-		root = args[0]
+	if 1 < len(args) {
+		root = args[1]
 	}
 	nzndir := filepath.Join(root, ".nzn")
-	if !isEmptyDir(nzndir) {
+	if !nazuna.IsEmptyDir(nzndir) {
 		return fmt.Errorf("repository '%s' already exists!", root)
 	}
 
-	if initVCS == "" {
-		return FlagError("flag --vcs is required")
+	if cloneVCS == "" {
+		return nazuna.FlagError("flag --vcs is required")
 	}
-	vcs, err := FindVCS(ui, initVCS, "")
+	vcs, err := nazuna.FindVCS(ui, cloneVCS, "")
 	if err != nil {
 		return err
 	}
 	if err := os.MkdirAll(nzndir, 0777); err != nil {
 		return err
 	}
-	if err := vcs.Init(filepath.Join(nzndir, "r")); err != nil {
-		return err
-	}
-
-	repo, err := OpenRepository(ui, root)
-	if err != nil {
-		return err
-	}
-	if err := repo.Flush(); err != nil {
-		return err
-	}
-	return repo.Add(".")
+	return vcs.Clone(src, filepath.Join(nzndir, "r"))
 }

@@ -34,25 +34,6 @@ import (
 	"sync"
 )
 
-var cmdVCS = &Command{
-	Names: []string{"vcs"},
-	Usage: []string{
-		"vcs [args]",
-	},
-	Help: `
-  run the vcs command inside the repository
-`,
-	CustomFlags: true,
-}
-
-func init() {
-	cmdVCS.Run = runVCS
-}
-
-func runVCS(ui UI, repo *Repository, args []string) error {
-	return repo.Command(args...)
-}
-
 type VCS interface {
 	String() string
 	Exec(...string) error
@@ -222,7 +203,7 @@ func VCSFor(ui UI, dir string) (VCS, error) {
 	defer mu.RUnlock()
 
 	for _, v := range vcses {
-		if isDir(filepath.Join(dir, v.ctrlDir)) {
+		if IsDir(filepath.Join(dir, v.ctrlDir)) {
 			vcs := v.new(ui, dir)
 			return vcs, nil
 		}

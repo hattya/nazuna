@@ -1,5 +1,5 @@
 //
-// nazuna :: version_test.go
+// testutil :: testutil.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,27 +24,23 @@
 //   SOFTWARE.
 //
 
-package nazuna_test
+package testutil
 
 import (
-	"testing"
-
-	"github.com/hattya/nazuna"
+	"crypto/tls"
+	"net"
+	"net/http"
 )
 
-const versionOut = `nazuna, version ` + nazuna.Version + `
-
-Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
-`
-
-func TestVersion(t *testing.T) {
-	s := script{
-		{
-			cmd: []string{"nzn", "version"},
-			out: versionOut,
+func NewHTTPClient(addr string) *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			Dial: func(network, _ string) (net.Conn, error) {
+				return net.Dial(network, addr)
+			},
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
 		},
-	}
-	if err := s.exec(); err != nil {
-		t.Error(err)
 	}
 }

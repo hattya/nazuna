@@ -36,6 +36,7 @@ import (
 )
 
 type CLI struct {
+	Cmds []*Command
 	Flag flag.FlagSet
 
 	args []string
@@ -120,7 +121,7 @@ func (c *CLI) Run() int {
 		}
 	}
 
-	cmd, err := FindCommand(Commands, args[0])
+	cmd, err := FindCommand(c.Cmds, args[0])
 	if err != nil {
 		return c.usage(1, nil, err)
 	}
@@ -165,7 +166,8 @@ func (c *CLI) usage(rc int, cmd *Command, err error) int {
 	if cmd != nil {
 		args = append(args, cmd.Name())
 	}
-	cmdHelp.Invoke(c, args)
+	help, _ := FindCommand(c.Cmds, "help")
+	help.Invoke(c, args)
 	return rc
 }
 

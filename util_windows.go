@@ -162,8 +162,8 @@ func link(src, dst string) error {
 		}
 	}
 
-	if isDir(src) {
-		if isDir(dst) {
+	if IsDir(src) {
+		if IsDir(dst) {
 			return linkError(syscall.ERROR_ALREADY_EXISTS)
 		}
 		if err := os.MkdirAll(dst, 0777); err != nil {

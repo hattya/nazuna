@@ -1,5 +1,5 @@
 //
-// nazuna :: clone.go
+// nzn :: help.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,65 +24,67 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
+	"strings"
+	"unicode"
+
+	"github.com/hattya/nazuna"
 )
 
-var cmdClone = &Command{
-	Names: []string{"clone"},
+var cmdHelp = &nazuna.Command{
+	Names: []string{"help"},
 	Usage: []string{
-		"clone --vcs <type> <repository> [<path>]",
+		"help [options] [--] [<command>]",
 	},
 	Help: `
-create a copy of an existing repository
+display help information about nazuna
 
-  Create a copy of an existing repository in <path>. If <path> does not exist,
-  it will be created.
+  Display help information for <command>.
 
-  If <path> is not specified, the current working diretory is used.
-
-options:
-
-      --vcs <type>    vcs type
+  If <command> is not specified, display a list of commands with short help
+  informations.
 `,
 }
 
-var cloneVCS string
-
 func init() {
-	cmdClone.Flag.StringVar(&cloneVCS, "vcs", "", "")
-
-	cmdClone.Run = runClone
+	cmdHelp.Run = runHelp
 }
 
-func runClone(ui UI, args []string) error {
-	if len(args) == 0 {
-		return ErrArg
-	}
-	src := args[0]
-
-	root := "."
-	if 1 < len(args) {
-		root = args[1]
-	}
-	nzndir := filepath.Join(root, ".nzn")
-	if !isEmptyDir(nzndir) {
-		return fmt.Errorf("repository '%s' already exists!", root)
+func runHelp(ui nazuna.UI, args []string) (err error) {
+	var cmd *nazuna.Command
+	if 0 < len(args) {
+		cmd, err = nazuna.FindCommand(cmds, args[0])
+		if err != nil {
+			return
+		}
 	}
 
-	if cloneVCS == "" {
-		return FlagError("flag --vcs is required")
+	switch {
+	case cmd == nil:
+		ui.Print("nazuna - A layered dotfiles management\n\n")
+		ui.Print("list of commands:\n\n")
+		width := 0
+		for _, cmd := range cmds {
+			if w := len(cmd.Name()); width < w {
+				width = w
+			}
+		}
+		for _, cmd := range nazuna.SortCommands(cmds) {
+			ui.Printf("  %-*s    %s\n", width, cmd.Name(), strings.SplitN(strings.TrimSpace(cmd.Help), "\n", 2)[0])
+		}
+		ui.Println()
+	case 0 < len(cmd.Usage):
+		name := ui.Args()[0]
+		label := "usage"
+		for _, u := range cmd.Usage {
+			ui.Printf("%s: %s %s\n", label, name, u)
+			label = "   or"
+		}
+		for _, l := range strings.Split(cmd.Help, "\n") {
+			ui.Println(strings.TrimRightFunc(l, unicode.IsSpace))
+		}
 	}
-	vcs, err := FindVCS(ui, cloneVCS, "")
-	if err != nil {
-		return err
-	}
-	if err := os.MkdirAll(nzndir, 0777); err != nil {
-		return err
-	}
-	return vcs.Clone(src, filepath.Join(nzndir, "r"))
+	return
 }

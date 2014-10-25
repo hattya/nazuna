@@ -1,5 +1,5 @@
 //
-// nazuna :: update.go
+// nzn :: update.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,14 +24,16 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
 import (
 	"fmt"
 	"path/filepath"
+
+	"github.com/hattya/nazuna"
 )
 
-var cmdUpdate = &Command{
+var cmdUpdate = &nazuna.Command{
 	Names: []string{"update"},
 	Usage: []string{
 		"update",
@@ -47,7 +49,7 @@ func init() {
 	cmdUpdate.Run = runUpdate
 }
 
-func runUpdate(ui UI, repo *Repository, args []string) error {
+func runUpdate(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err
@@ -100,7 +102,7 @@ func runUpdate(ui UI, repo *Repository, args []string) error {
 			origin = e.Origin
 		case "subrepo":
 			origin = repo.SubrepoFor(e.Origin)
-			if !isDir(origin) {
+			if !nazuna.IsDir(origin) {
 				continue
 			}
 		default:
@@ -131,7 +133,7 @@ func runUpdate(ui UI, repo *Repository, args []string) error {
 		return err
 	}
 	if 0 < failed {
-		return SystemExit(1)
+		return nazuna.SystemExit(1)
 	}
 	return nil
 }

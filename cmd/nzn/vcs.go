@@ -1,5 +1,5 @@
 //
-// nazuna :: nazuna_test.go
+// nzn :: vcs.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,38 +24,25 @@
 //   SOFTWARE.
 //
 
-package nazuna_test
+package main
 
-import (
-	"io/ioutil"
-	"os"
+import "github.com/hattya/nazuna"
 
-	"github.com/hattya/nazuna"
-)
+var cmdVCS = &nazuna.Command{
+	Names: []string{"vcs"},
+	Usage: []string{
+		"vcs [args]",
+	},
+	Help: `
+  run the vcs command inside the repository
+`,
+	CustomFlags: true,
+}
 
 func init() {
-	nazuna.Discover(false)
+	cmdVCS.Run = runVCS
 }
 
-func pushd(path string) (func() error, error) {
-	wd, err := os.Getwd()
-	popd := func() error {
-		if err == nil {
-			return os.Chdir(wd)
-		}
-		return err
-	}
-	return popd, os.Chdir(path)
-}
-
-func tempDir() (string, error) {
-	return ioutil.TempDir("", "nazuna.test")
-}
-
-func mkdir(path string) error {
-	return os.MkdirAll(path, 0777)
-}
-
-func touch(path string) error {
-	return ioutil.WriteFile(path, []byte{}, 0666)
+func runVCS(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+	return repo.Command(args...)
 }

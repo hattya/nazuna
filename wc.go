@@ -150,7 +150,7 @@ func (w *WC) Unlink(path string) error {
 		return err
 	}
 	for p := filepath.Dir(path); p != w.dir; p = filepath.Dir(p) {
-		if isLink(p) || !isEmptyDir(p) {
+		if isLink(p) || !IsEmptyDir(p) {
 			break
 		}
 		if err := os.Remove(p); err != nil {

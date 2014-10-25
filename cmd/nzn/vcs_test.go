@@ -1,5 +1,5 @@
 //
-// nazuna :: version.go
+// nzn :: vcs_test.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,24 +24,48 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
-var cmdVersion = &Command{
-	Names: []string{"version"},
-	Usage: []string{
-		"version",
-	},
-	Help: `
-output version and copyright information
+import "testing"
+
+func TestVCS(t *testing.T) {
+	s := script{
+		{
+			cmd: []string{"setup"},
+		},
+		{
+			cmd: []string{"cd", "w"},
+		},
+		{
+			cmd: []string{"nzn", "init", "--vcs", "git"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "--version"},
+			out: `git version \d.* (re)
 `,
+		},
+	}
+	if err := s.exec(); err != nil {
+		t.Error(err)
+	}
 }
 
-func init() {
-	cmdVersion.Run = runVersion
-}
-
-func runVersion(ui UI, args []string) error {
-	ui.Printf("nazuna, version %s\n\n", Version)
-	ui.Println("Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>")
-	return nil
+func TestVCSError(t *testing.T) {
+	s := script{
+		{
+			cmd: []string{"setup"},
+		},
+		{
+			cmd: []string{"cd", "w"},
+		},
+		{
+			cmd: []string{"nzn", "vcs", "--version"},
+			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+[1]
+`,
+		},
+	}
+	if err := s.exec(); err != nil {
+		t.Error(err)
+	}
 }

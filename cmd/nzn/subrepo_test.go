@@ -1,5 +1,5 @@
 //
-// nazuna :: subrepo_test.go
+// nzn :: subrepo_test.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,7 +24,7 @@
 //   SOFTWARE.
 //
 
-package nazuna_test
+package main
 
 import (
 	"fmt"
@@ -33,6 +33,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/hattya/nazuna/testutil"
 )
 
 func TestSubrepo(t *testing.T) {
@@ -54,7 +56,7 @@ func TestSubrepo(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(ts.Listener.Addr().String())
+	http.DefaultClient = testutil.NewHTTPClient(ts.Listener.Addr().String())
 
 	sh.gitconfig["merge.stat"] = "false"
 	sh.gitconfig["http.sslVerify"] = "false"
@@ -389,7 +391,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(ts.Listener.Addr().String())
+	http.DefaultClient = testutil.NewHTTPClient(ts.Listener.Addr().String())
 
 	sh.gitconfig["http.sslVerify"] = "false"
 	sh.gitconfig["url."+ts.URL+"/vim-pathogen/.git.insteadOf"] = "https://github.com/tpope/vim-pathogen"

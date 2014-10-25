@@ -39,6 +39,12 @@ import (
 // disable repository discovery in tests
 var discover = true
 
+func Discover(b bool) bool {
+	old := discover
+	discover = b
+	return old
+}
+
 type Repository struct {
 	Layers []*Layer
 
@@ -54,7 +60,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	for !isDir(filepath.Join(root, ".nzn")) {
+	for !IsDir(filepath.Join(root, ".nzn")) {
 		p := root
 		root = filepath.Dir(root)
 		if !discover || root == p {
@@ -119,7 +125,7 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 	switch _, err := r.LayerOf(name); {
 	case err != nil && !strings.Contains(err.Error(), "not exist"):
 		return nil, err
-	case err == nil || !isEmptyDir(filepath.Join(r.rdir, name)):
+	case err == nil || !IsEmptyDir(filepath.Join(r.rdir, name)):
 		return nil, fmt.Errorf("layer '%s' already exists!", name)
 	}
 
@@ -193,7 +199,7 @@ func (r *Repository) Find(layer *Layer, path string) (typ string) {
 		}
 	}
 
-	dir, name := splitPath(path)
+	dir, name := SplitPath(path)
 	for _, l := range layer.Links[dir] {
 		if l.Dst == name {
 			return "link"

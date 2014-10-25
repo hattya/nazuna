@@ -35,48 +35,6 @@ import (
 	"github.com/hattya/nazuna"
 )
 
-func TestVCS(t *testing.T) {
-	s := script{
-		{
-			cmd: []string{"setup"},
-		},
-		{
-			cmd: []string{"cd", "w"},
-		},
-		{
-			cmd: []string{"nzn", "init", "--vcs", "git"},
-		},
-		{
-			cmd: []string{"nzn", "vcs", "--version"},
-			out: `git version \d.* (re)
-`,
-		},
-	}
-	if err := s.exec(); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestVCSError(t *testing.T) {
-	s := script{
-		{
-			cmd: []string{"setup"},
-		},
-		{
-			cmd: []string{"cd", "w"},
-		},
-		{
-			cmd: []string{"nzn", "vcs", "--version"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
-		},
-	}
-	if err := s.exec(); err != nil {
-		t.Error(err)
-	}
-}
-
 type testVCS struct {
 	nazuna.BaseVCS
 }
@@ -156,7 +114,7 @@ func TestFindVCS(t *testing.T) {
 }
 
 func TestVCSFor(t *testing.T) {
-	dir, err := mkdtemp()
+	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,7 +198,7 @@ func TestBaseVCS(t *testing.T) {
 }
 
 func TestGitVCS(t *testing.T) {
-	dir, err := mkdtemp()
+	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -310,7 +268,7 @@ func TestGitVCS(t *testing.T) {
 }
 
 func TestMercurialVCS(t *testing.T) {
-	dir, err := mkdtemp()
+	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
 	}

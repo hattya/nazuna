@@ -37,7 +37,7 @@ import (
 )
 
 func TestWC(t *testing.T) {
-	dir, err := mkdtemp()
+	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func TestWC(t *testing.T) {
 }
 
 func TestWCError(t *testing.T) {
-	dir, err := mkdtemp()
+	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
 	}

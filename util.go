@@ -40,12 +40,12 @@ import (
 	"unicode/utf8"
 )
 
-func isDir(path string) bool {
+func IsDir(path string) bool {
 	fi, err := os.Stat(path)
 	return err == nil && fi.IsDir()
 }
 
-func isEmptyDir(path string) bool {
+func IsEmptyDir(path string) bool {
 	f, err := os.Open(path)
 	if err != nil {
 		return true
@@ -55,7 +55,7 @@ func isEmptyDir(path string) bool {
 	return err == io.EOF
 }
 
-func splitPath(path string) (string, string) {
+func SplitPath(path string) (string, string) {
 	dir, name := filepath.Split(path)
 	dir = strings.TrimRightFunc(dir, func(r rune) bool {
 		return r < utf8.RuneSelf && os.IsPathSeparator(uint8(r))

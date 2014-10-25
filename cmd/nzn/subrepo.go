@@ -1,5 +1,5 @@
 //
-// nazuna :: subrepo.go
+// nzn :: subrepo.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,16 +24,18 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/hattya/nazuna"
 )
 
-var cmdSubrepo = &Command{
+var cmdSubrepo = &nazuna.Command{
 	Names: []string{"subrepo"},
 	Usage: []string{
 		"subrepo -l <layer> -a <repository> <path>",
@@ -76,7 +78,7 @@ func init() {
 	cmdSubrepo.Run = runSubrepo
 }
 
-func runSubrepo(ui UI, repo *Repository, args []string) error {
+func runSubrepo(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 	wc, err := repo.WC()
 	if err != nil {
 		return err
@@ -86,9 +88,9 @@ func runSubrepo(ui UI, repo *Repository, args []string) error {
 	case subrepoA:
 		switch {
 		case subrepoL == "":
-			return FlagError("flag --layer is required")
+			return nazuna.FlagError("flag --layer is required")
 		case len(args) != 2:
-			return ErrArg
+			return nazuna.ErrArg
 		}
 		l, err := repo.LayerOf(subrepoL)
 		switch {
@@ -106,7 +108,7 @@ func runSubrepo(ui UI, repo *Repository, args []string) error {
 		if 0 < len(args[1]) && os.IsPathSeparator(args[1][len(args[1])-1]) {
 			dst = path + "/" + filepath.Base(src)
 		} else {
-			path, name = splitPath(path)
+			path, name = nazuna.SplitPath(path)
 			dst = path + "/" + name
 			if name == filepath.Base(src) {
 				name = ""
@@ -120,13 +122,13 @@ func runSubrepo(ui UI, repo *Repository, args []string) error {
 			return fmt.Errorf("%s '%s' already exists!", typ, dst)
 		}
 		if l.Subrepos == nil {
-			l.Subrepos = make(map[string][]*Subrepo)
+			l.Subrepos = make(map[string][]*nazuna.Subrepo)
 		}
-		l.Subrepos[path] = append(l.Subrepos[path], &Subrepo{
+		l.Subrepos[path] = append(l.Subrepos[path], &nazuna.Subrepo{
 			Src:  src,
 			Name: name,
 		})
-		sort.Sort(subrepoBySrc(l.Subrepos[path]))
+		sort.Sort(nazuna.SubrepoBySrc(l.Subrepos[path]))
 		return repo.Flush()
 	case subrepoU:
 		_, err := wc.MergeLayers()
@@ -138,12 +140,12 @@ func runSubrepo(ui UI, repo *Repository, args []string) error {
 				continue
 			}
 			ui.Printf("* %s\n", e.Origin)
-			r, err := NewRemote(ui, e.Origin)
+			r, err := nazuna.NewRemote(ui, e.Origin)
 			if err != nil {
 				return err
 			}
 			dst := repo.SubrepoFor(r.Root)
-			if isEmptyDir(dst) {
+			if nazuna.IsEmptyDir(dst) {
 				dst, _ = wc.Rel('.', dst)
 				err = r.Clone(wc.PathFor("/"), dst)
 			} else {

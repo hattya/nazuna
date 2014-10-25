@@ -1,5 +1,5 @@
 //
-// nazuna :: init_test.go
+// nzn :: init.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,50 +24,22 @@
 //   SOFTWARE.
 //
 
-package nazuna_test
+package main
 
-import "testing"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
 
-func TestInit(t *testing.T) {
-	s := script{
-		{
-			cmd: []string{"setup"},
-		},
-		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
-		},
-		{
-			cmd: []string{"ls", "w/.nzn"},
-			out: `r/
-`,
-		},
-		{
-			cmd: []string{"ls", "w/.nzn/r"},
-			out: `.git/
-nazuna.json
-`,
-		},
-		{
-			cmd: []string{"cat", "w/.nzn/r/nazuna.json"},
-			out: `[]
-`,
-		},
-	}
-	if err := s.exec(); err != nil {
-		t.Error(err)
-	}
-}
+	"github.com/hattya/nazuna"
+)
 
-func TestInitError(t *testing.T) {
-	s := script{
-		{
-			cmd: []string{"setup"},
-		},
-		{
-			cmd: []string{"nzn", "init", "w"},
-			out: `nzn init: flag --vcs is required
-usage: nzn init --vcs <type> [<path>]
-
+var cmdInit = &nazuna.Command{
+	Names: []string{"init"},
+	Usage: []string{
+		"init --vcs <type> [<path>]",
+	},
+	Help: `
 create a new repository in the specified directory
 
   Create a new repository in <path>. If <path> does not exist, it will be
@@ -78,27 +50,47 @@ create a new repository in the specified directory
 options:
 
       --vcs <type>    vcs type
+`,
+}
 
-[2]
-`,
-		},
-		{
-			cmd: []string{"nzn", "init", "--vcs", "cvs", "w"},
-			out: `nzn: unknown vcs 'cvs'
-[1]
-`,
-		},
-		{
-			cmd: []string{"mkdir", "w/.nzn/r"},
-		},
-		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
-			out: `nzn: repository '.*' already exists! (re)
-[1]
-`,
-		},
+var initVCS string
+
+func init() {
+	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
+
+	cmdInit.Run = runInit
+}
+
+func runInit(ui nazuna.UI, args []string) error {
+	root := "."
+	if 0 < len(args) {
+		root = args[0]
 	}
-	if err := s.exec(); err != nil {
-		t.Error(err)
+	nzndir := filepath.Join(root, ".nzn")
+	if !nazuna.IsEmptyDir(nzndir) {
+		return fmt.Errorf("repository '%s' already exists!", root)
 	}
+
+	if initVCS == "" {
+		return nazuna.FlagError("flag --vcs is required")
+	}
+	vcs, err := nazuna.FindVCS(ui, initVCS, "")
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(nzndir, 0777); err != nil {
+		return err
+	}
+	if err := vcs.Init(filepath.Join(nzndir, "r")); err != nil {
+		return err
+	}
+
+	repo, err := nazuna.OpenRepository(ui, root)
+	if err != nil {
+		return err
+	}
+	if err := repo.Flush(); err != nil {
+		return err
+	}
+	return repo.Add(".")
 }

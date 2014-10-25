@@ -1,5 +1,5 @@
 //
-// nazuna :: export_test.go
+// nzn :: version.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -24,15 +24,26 @@
 //   SOFTWARE.
 //
 
-package nazuna
+package main
 
-var (
-	SortCommands = sortCommands
-	Ln           = link
-)
+import "github.com/hattya/nazuna"
 
-func SetDiscover(b bool) bool {
-	old := discover
-	discover = b
-	return old
+var cmdVersion = &nazuna.Command{
+	Names: []string{"version"},
+	Usage: []string{
+		"version",
+	},
+	Help: `
+output version and copyright information
+`,
+}
+
+func init() {
+	cmdVersion.Run = runVersion
+}
+
+func runVersion(ui nazuna.UI, args []string) error {
+	ui.Printf("nazuna, version %s\n\n", nazuna.Version)
+	ui.Println("Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>")
+	return nil
 }

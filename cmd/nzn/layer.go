@@ -1,5 +1,5 @@
 //
-// nzn :: nzn.go
+// nzn :: layer.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -26,40 +26,69 @@
 
 package main
 
-import (
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
+import "github.com/hattya/nazuna"
 
-	"github.com/hattya/nazuna"
-)
+var cmdLayer = &nazuna.Command{
+	Names: []string{"layer"},
+	Usage: []string{
+		"layer [<name>]",
+		"layer -c <name>",
+	},
+	Help: `
+  manage repository layers
 
-var cmds = []*nazuna.Command{
-	cmdAlias,
-	cmdClone,
-	cmdHelp,
-	cmdInit,
-	cmdLayer,
-	cmdLink,
-	cmdSubrepo,
-	cmdUpdate,
-	cmdVCS,
-	cmdVersion,
+options:
+
+  -c, --create    create a new layer
+`,
 }
 
-func main() {
-	args := make([]string, len(os.Args))
-	copy(args, os.Args)
-	args[0] = filepath.Base(args[0])
-	switch runtime.GOOS {
-	case "windows":
-		if strings.HasSuffix(args[0], ".exe") {
-			args[0] = args[0][:len(args[0])-4]
-		}
-	}
+var layerC bool
 
-	c := nazuna.NewCLI(args)
-	c.Cmds = cmds
-	os.Exit(c.Run())
+func init() {
+	cmdLayer.Flag.BoolVar(&layerC, "c", false, "")
+	cmdLayer.Flag.BoolVar(&layerC, "create", false, "")
+
+	cmdLayer.Run = runLayer
+}
+
+func runLayer(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+	switch {
+	case layerC:
+		if len(args) != 1 {
+			return nazuna.ErrArg
+		}
+		if _, err := repo.NewLayer(args[0]); err != nil {
+			return err
+		}
+		return repo.Flush()
+	case 0 < len(args):
+		if len(args) != 1 {
+			return nazuna.ErrArg
+		}
+		wc, err := repo.WC()
+		if err != nil {
+			return err
+		}
+		if err := wc.SelectLayer(args[0]); err != nil {
+			return err
+		}
+		return wc.Flush()
+	default:
+		wc, err := repo.WC()
+		if err != nil {
+			return err
+		}
+		for _, l := range repo.Layers {
+			ui.Println(l.Name)
+			for _, ll := range l.Layers {
+				var s string
+				if wl, err := wc.LayerFor(l.Name); err == nil && wl.Name == ll.Name {
+					s = "*"
+				}
+				ui.Printf("    %s%s\n", ll.Name, s)
+			}
+		}
+		return nil
+	}
 }

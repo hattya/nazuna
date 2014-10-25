@@ -27,29 +27,15 @@
 package nazuna_test
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/hattya/nazuna"
+	"github.com/hattya/nazuna/testutil"
 )
-
-func newHTTPClient(addr string) *http.Client {
-	return &http.Client{
-		Transport: &http.Transport{
-			Dial: func(network, _ string) (net.Conn, error) {
-				return net.Dial(network, addr)
-			},
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
-}
 
 func TestRemote(t *testing.T) {
 	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +48,7 @@ func TestRemote(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
+	http.DefaultClient = testutil.NewHTTPClient(s.Listener.Addr().String())
 
 	r, err := nazuna.NewRemote(nil, "github.com/kien/ctrlp.vim")
 	if err != nil {
@@ -134,7 +120,7 @@ func TestRemoteError(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = newHTTPClient(s.Listener.Addr().String())
+	http.DefaultClient = testutil.NewHTTPClient(s.Listener.Addr().String())
 
 	switch _, err := nazuna.NewRemote(nil, "github.com/hattya"); {
 	case err == nil:

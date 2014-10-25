@@ -1,7 +1,7 @@
 //
-// nazuna :: help_test.go
+// nzn :: help_test.go
 //
-//   Copyright (c) 2013 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -24,7 +24,7 @@
 //   SOFTWARE.
 //
 
-package nazuna_test
+package main
 
 import (
 	"fmt"
@@ -63,12 +63,36 @@ list of commands:
 func TestHelp(t *testing.T) {
 	s := script{
 		{
+			cmd: []string{"nzn", "--help"},
+			out: helpOut,
+		},
+		{
 			cmd: []string{"nzn", "help"},
 			out: helpOut,
 		},
 		{
+			cmd: []string{"nzn"},
+			out: fmt.Sprintf("%s[1]\n", helpOut),
+		},
+		{
+			cmd: []string{"nzn", "--nazuna"},
+			out: fmt.Sprintf("nzn: flag .* not defined: -*nazuna (re)\n%s[2]\n", helpOut),
+		},
+		{
+			cmd: []string{"nzn", "nazuna"},
+			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%s[1]\n", helpOut),
+		},
+		{
 			cmd: []string{"nzn", "help", "help"},
 			out: helpUsage,
+		},
+		{
+			cmd: []string{"nzn", "help", "--help"},
+			out: helpUsage,
+		},
+		{
+			cmd: []string{"nzn", "help", "--nazuna"},
+			out: fmt.Sprintf("nzn help: flag .* not defined: -*nazuna (re)\n%s[2]\n", helpUsage),
 		},
 	}
 	if err := s.exec(); err != nil {
