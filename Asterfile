@@ -1,0 +1,63 @@
+var proj = os.getwd().split(/[/\\]+/).slice(-1);
+
+// go
+aster.watch(/.+\.go$/, function(files) {
+  var pkgs = {};
+  files.forEach(function(f) {
+    var pkg = './' + f.split(/[/\\]+/).slice(0, -1).join('/');
+    pkgs[pkg] = true;
+  });
+  for (var pkg in pkgs) {
+    if (go('vet', pkg)) {
+      // return;
+    }
+    if (go('get', '-t', '-v', pkg)) {
+      return;
+    }
+    var cover_out = 'cover.out';
+    var coverage_html = 'coverage.html';
+    if (2 < pkg.length) {
+      cover_out = pkg + '/' + cover_out;
+      coverage_html = pkg + '/' + coverage_html;
+    }
+    if (go('test', '-v', '-covermode', 'count', '-coverprofile', cover_out, pkg)) {
+      return;
+    }
+    cover('-func', cover_out);
+    cover('-html', cover_out, '-o', coverage_html);
+  }
+});
+
+function go() {
+  var args = ['go'].concat(Array.prototype.slice.call(arguments));
+  var cmd = args[1] == 'get' ? 'bulid' : args[1];
+  var rv = system(args);
+  if (rv) {
+    aster.notify('failure', proj + ': ' + cmd, cmd + ' failed');
+  } else {
+    aster.notify('success', proj + ': ' + cmd, cmd + ' passed');
+  }
+  return rv;
+}
+
+function cover() {
+  return system(['go', 'tool', 'cover'].concat(Array.prototype.slice.call(arguments)));
+}
+
+// rst
+aster.watch(/.+\.rst$/, function(files) {
+  if (os.whence('rst2html.py') !== undefined) {
+    files.forEach(rst2html);
+    aster.notify('success', proj + ': rst2html.py', files.join('\n'));
+  }
+});
+
+function rst2html(rst) {
+  return system(['rst2html.py', rst, rst.slice(0, -4) + '.html']);
+}
+
+// system
+function system(args) {
+  console.log('+ ' + args.join(' '));
+  return os.system(args);
+}
