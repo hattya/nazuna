@@ -42,6 +42,8 @@ import (
 )
 
 func init() {
+	nazuna.Discover(false)
+
 	app.Name = "nzn"
 	app.Version = nazuna.Version
 	app.Prepare = prepare
@@ -107,8 +109,6 @@ func (sh *shell) run(s script) error {
 		return err
 	}
 	defer os.Chdir(wd)
-	// disable repository discovery
-	nazuna.Discover(false)
 
 	i := 1
 	for _, c := range s {
@@ -121,7 +121,7 @@ func (sh *shell) run(s script) error {
 			out, rc = f(args...)
 		}
 		if diff := sh.verify(c.out, out, rc); diff != "" {
-			return fmt.Errorf("script:%d:\n$ %s\n%s", i, strings.Join(c.cmd, " "), diff)
+			return fmt.Errorf("script:%d:\n$ %v\n%v", i, strings.Join(c.cmd, " "), diff)
 		}
 		i++
 	}
@@ -159,30 +159,30 @@ func (sh shell) verify(aout, bout string, rc int) string {
 	}
 	a := strings.Split(strings.TrimSuffix(aout, "\n"), "\n")
 	b := strings.Split(strings.TrimSuffix(bout, "\n"), "\n")
-	buf := new(bytes.Buffer)
-	printf := func(sign string, lines []string, i, j int) {
+	var buf bytes.Buffer
+	format := func(sign string, lines []string, i, j int) {
 		for ; i < j; i++ {
-			fmt.Fprintf(buf, "%s%s\n", sign, lines[i])
+			fmt.Fprintf(&buf, "%v%v\n", sign, lines[i])
 		}
 	}
 	switch {
 	case aout == "":
 		if bout != "" {
-			printf("+", b, 0, len(b))
+			format("+", b, 0, len(b))
 		}
 	case bout == "":
-		printf("-", a, 0, len(a))
+		format("-", a, 0, len(a))
 	default:
 		cl := diff.Diff(len(a), len(b), &lines{a, b})
 		if 0 < len(cl) {
 			lno := 0
 			for _, c := range cl {
-				printf(" ", a, lno, c.A)
-				printf("-", a, c.A, c.A+c.Del)
-				printf("+", b, c.B, c.B+c.Ins)
+				format(" ", a, lno, c.A)
+				format("-", a, c.A, c.A+c.Del)
+				format("+", b, c.B, c.B+c.Ins)
 				lno = c.A + c.Del
 			}
-			printf(" ", a, lno, len(a))
+			format(" ", a, lno, len(a))
 		}
 	}
 	return strings.TrimSuffix(buf.String(), "\n")
@@ -276,7 +276,7 @@ func (sh *shell) ls(args ...string) (string, int) {
 			s = ">"
 			rc = 1
 		}
-		fmt.Fprintf(b, "%s%s\n", fi.Name(), s)
+		fmt.Fprintf(b, "%v%v\n", fi.Name(), s)
 	}
 	return b.String(), rc
 }

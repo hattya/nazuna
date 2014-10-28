@@ -45,11 +45,11 @@ type ResolveError struct {
 }
 
 func (e *ResolveError) Error() string {
-	s := fmt.Sprintf("cannot resolve layer '%s'", e.Name)
+	s := fmt.Sprintf("cannot resolve layer '%v'", e.Name)
 	if len(e.List) == 0 {
 		return s
 	}
-	return fmt.Sprintf("%s:\n    %s", s, strings.Join(e.List, "\n    "))
+	return fmt.Sprintf("%v:\n    %v", s, strings.Join(e.List, "\n    "))
 }
 
 type WC struct {
@@ -108,7 +108,7 @@ func (w *WC) Rel(base rune, path string) (string, error) {
 	}
 	rel, err := filepath.Rel(w.dir, abs)
 	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf("'%s' is not under root", path)
+		return "", fmt.Errorf("'%v' is not under root", path)
 	}
 	return filepath.ToSlash(rel), nil
 }
@@ -166,14 +166,14 @@ func (w *WC) SelectLayer(name string) error {
 	case err != nil:
 		return err
 	case 0 < len(l.Layers):
-		return fmt.Errorf("layer '%s' is abstract", name)
+		return fmt.Errorf("layer '%v' is abstract", name)
 	case l.abstract == nil:
-		return fmt.Errorf("layer '%s' is not abstract", name)
+		return fmt.Errorf("layer '%v' is not abstract", name)
 	}
 	for k, v := range w.State.Layers {
 		if k == l.abstract.Name {
 			if v == l.Name {
-				return fmt.Errorf("layer '%s' is already '%s'", k, v)
+				return fmt.Errorf("layer '%v' is already '%v'", k, v)
 			}
 			w.State.Layers[k] = l.Name
 			return nil
@@ -257,12 +257,12 @@ func (w *WC) Errorf(err error) error {
 		if r, err := w.Rel('/', v.New); err == nil {
 			v.New = filepath.ToSlash(r)
 		}
-		return fmt.Errorf("%s: %s", v.New, v.Err)
+		return fmt.Errorf("%v: %v", v.New, v.Err)
 	case *os.PathError:
 		if r, err := w.Rel('/', v.Path); err == nil {
 			v.Path = filepath.ToSlash(r)
 		}
-		return fmt.Errorf("%s: %s", v.Path, v.Err)
+		return fmt.Errorf("%v: %v", v.Path, v.Err)
 	}
 	return err
 }
@@ -351,7 +351,7 @@ func (b *wcBuilder) link() error {
 		}
 		dst, err = b.alias(dst)
 		if err != nil {
-			return false, fmt.Errorf("link %s", err)
+			return false, fmt.Errorf("link %v", err)
 		}
 		switch list, ok := b.wc[dst]; {
 		case !ok:
@@ -364,7 +364,7 @@ func (b *wcBuilder) link() error {
 				Type:   "link",
 			})
 		case list[0].Layer == b.layer && list[0].Type != "link":
-			b.w.ui.Errorf("warning: link: '%s' exists in the repository\n", dst)
+			b.w.ui.Errorf("warning: link: '%v' exists in the repository\n", dst)
 		}
 		return true, nil
 	}
@@ -403,7 +403,7 @@ func (b *wcBuilder) subrepo() error {
 			}
 			dst, err := b.alias(filepath.ToSlash(filepath.Join(dir, name)))
 			if err != nil {
-				return fmt.Errorf("subrepo %s", err)
+				return fmt.Errorf("subrepo %v", err)
 			}
 			switch list, ok := b.wc[dst]; {
 			case !ok:
@@ -415,7 +415,7 @@ func (b *wcBuilder) subrepo() error {
 					Type:   "subrepo",
 				})
 			case list[0].Layer == b.layer && list[0].Type != "subrepo":
-				b.w.ui.Errorf("warning: subrepo: '%s' exists in the repository\n", dst)
+				b.w.ui.Errorf("warning: subrepo: '%v' exists in the repository\n", dst)
 			}
 		}
 	}

@@ -69,7 +69,7 @@ func clone(ctx *cli.Context) error {
 	}
 	nzndir := filepath.Join(root, ".nzn")
 	if !nazuna.IsEmptyDir(nzndir) {
-		return fmt.Errorf("repository '%s' already exists!", root)
+		return fmt.Errorf("repository '%v' already exists!", root)
 	}
 
 	if ctx.String("vcs") == "" {

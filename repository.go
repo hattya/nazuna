@@ -29,7 +29,6 @@ package nazuna
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -64,7 +63,7 @@ func OpenRepository(ui UI, path string) (*Repository, error) {
 		p := root
 		root = filepath.Dir(root)
 		if !discover || root == p {
-			return nil, fmt.Errorf("no repository found in '%s' (.nzn not found)!", path)
+			return nil, fmt.Errorf("no repository found in '%v' (.nzn not found)!", path)
 		}
 	}
 
@@ -108,7 +107,7 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 			case len(n) == 1:
 				return l, nil
 			case len(l.Layers) == 0:
-				return nil, fmt.Errorf("layer '%s' is not abstract", n[0])
+				return nil, fmt.Errorf("layer '%v' is not abstract", n[0])
 			}
 			for _, ll := range l.Layers {
 				if n[1] == ll.Name {
@@ -118,7 +117,7 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("layer '%s' does not exist!", name)
+	return nil, fmt.Errorf("layer '%v' does not exist!", name)
 }
 
 func (r *Repository) NewLayer(name string) (*Layer, error) {
@@ -126,7 +125,7 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 	case err != nil && !strings.Contains(err.Error(), "not exist"):
 		return nil, err
 	case err == nil || !IsEmptyDir(filepath.Join(r.rdir, name)):
-		return nil, fmt.Errorf("layer '%s' already exists!", name)
+		return nil, fmt.Errorf("layer '%v' already exists!", name)
 	}
 
 	var l *Layer
@@ -160,7 +159,7 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 func (r *Repository) splitLayer(name string) ([]string, error) {
 	n := strings.Split(name, "/")
 	if 2 < len(n) || strings.TrimSpace(n[0]) == "" || (1 < len(n) && strings.TrimSpace(n[1]) == "") {
-		return nil, fmt.Errorf("invalid layer '%s'", name)
+		return nil, fmt.Errorf("invalid layer '%v'", name)
 	}
 	return n, nil
 }
@@ -225,21 +224,15 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	}
 	defer cmd.Wait()
 	defer cmd.Process.Kill()
-	br := bufio.NewReader(out)
-	for {
-		l, err := br.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return err
-		}
-		l = strings.TrimRight(l, "\n\r")
+	scanner := bufio.NewScanner(out)
+	for scanner.Scan() {
+		l := scanner.Text()
 		fi, err := os.Stat(filepath.Join(r.rdir, l))
 		if err = walk(l, fi, err); err != nil {
 			return err
 		}
 	}
+	return scanner.Err()
 }
 
 func (r *Repository) Add(paths ...string) error {

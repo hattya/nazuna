@@ -104,7 +104,7 @@ func httpGet(uri string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s: %s", uri, resp.Status)
+		return nil, fmt.Errorf("%v: %v", uri, resp.Status)
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

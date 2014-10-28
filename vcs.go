@@ -183,7 +183,7 @@ func RegisterVCS(cmd, ctrlDir string, new NewVCS) {
 		panic("NewVCS is nil")
 	}
 	if _, dup := vcses[cmd]; dup {
-		panic(fmt.Sprintf("vcs '%s' already registered", cmd))
+		panic(fmt.Sprintf("vcs '%v' already registered", cmd))
 	}
 	vcses[cmd] = &vcsType{ctrlDir, new}
 }
@@ -195,7 +195,7 @@ func FindVCS(ui UI, cmd, dir string) (VCS, error) {
 	if v, ok := vcses[cmd]; ok {
 		return v.new(ui, dir), nil
 	}
-	return nil, fmt.Errorf("unknown vcs '%s'", cmd)
+	return nil, fmt.Errorf("unknown vcs '%v'", cmd)
 }
 
 func VCSFor(ui UI, dir string) (VCS, error) {
@@ -208,5 +208,5 @@ func VCSFor(ui UI, dir string) (VCS, error) {
 			return vcs, nil
 		}
 	}
-	return nil, fmt.Errorf("unknown vcs for directory '%s'", dir)
+	return nil, fmt.Errorf("unknown vcs for directory '%v'", dir)
 }

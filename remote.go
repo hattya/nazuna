@@ -85,7 +85,7 @@ func NewRemote(ui UI, src string) (*Remote, error) {
 func (r *Remote) Clone(base, dst string) error {
 	vcs, err := FindVCS(r.ui, r.VCS, base)
 	if err != nil {
-		return fmt.Errorf("cannot detect remote vcs for %s", r.src)
+		return fmt.Errorf("cannot detect remote vcs for %v", r.src)
 	}
 	return vcs.Clone(r.URI, dst)
 }
@@ -139,7 +139,7 @@ func bitbucket(m map[string]string) error {
 		return err
 	}
 	if err = json.Unmarshal(data, &resp); err != nil {
-		return fmt.Errorf("%s: %v", uri, err)
+		return fmt.Errorf("%v: %v", uri, err)
 	}
 	m["vcs"] = resp.SCM
 	if resp.SCM == "git" {

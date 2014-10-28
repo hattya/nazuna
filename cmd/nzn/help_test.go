@@ -72,15 +72,15 @@ func TestHelp(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn"},
-			out: fmt.Sprintf("%s[1]\n", helpOut),
+			out: fmt.Sprintf("%v[1]\n", helpOut),
 		},
 		{
 			cmd: []string{"nzn", "--nazuna"},
-			out: fmt.Sprintf("nzn: flag .* not defined: -*nazuna (re)\n%s[2]\n", helpOut),
+			out: fmt.Sprintf("nzn: flag .* not defined: -*nazuna (re)\n%v[2]\n", helpOut),
 		},
 		{
 			cmd: []string{"nzn", "nazuna"},
-			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%s[1]\n", helpOut),
+			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%v[1]\n", helpOut),
 		},
 		{
 			cmd: []string{"nzn", "help", "help"},
@@ -92,7 +92,7 @@ func TestHelp(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "help", "--nazuna"},
-			out: fmt.Sprintf("nzn help: flag .* not defined: -*nazuna (re)\n%s[2]\n", helpUsage),
+			out: fmt.Sprintf("nzn help: flag .* not defined: -*nazuna (re)\n%v[2]\n", helpUsage),
 		},
 	}
 	if err := s.exec(); err != nil {

@@ -47,7 +47,7 @@ func TestSubrepo(t *testing.T) {
 	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "r")))
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, "/1.0/repositories/") {
-			fmt.Fprintf(w, `{"owner":"%s","scm":"git"}`, strings.Split(r.RequestURI[18:], "/")[0])
+			fmt.Fprintf(w, `{"owner":"%v","scm":"git"}`, strings.Split(r.RequestURI[18:], "/")[0])
 		} else {
 			fs.ServeHTTP(w, r)
 		}
