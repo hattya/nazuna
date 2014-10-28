@@ -149,7 +149,7 @@ func (v *Mercurial) Add(paths ...string) error {
 }
 
 func (v *Mercurial) List(paths ...string) *exec.Cmd {
-	return v.Command(append([]string{"status", "-madcn"}, paths...)...)
+	return v.Command(append([]string{"status", "-madcn", "--config", "ui.slash=True"}, paths...)...)
 }
 
 func (v *Mercurial) Update() error {
