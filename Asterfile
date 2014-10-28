@@ -9,7 +9,7 @@ aster.watch(/.+\.go$/, function(files) {
   });
   for (var pkg in pkgs) {
     if (go('vet', pkg)) {
-      // return;
+      return;
     }
     if (go('get', '-t', '-v', pkg)) {
       return;
