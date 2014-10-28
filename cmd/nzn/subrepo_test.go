@@ -246,9 +246,9 @@ manage subrepositories
 
 options:
 
-  -l, --layer     a layer
-  -a, --add       add <repository> to <path>
-  -u, --update    clone or update repositories
+  -a, --add              add <repository> to <path>
+  -l, --layer <layer>    layer name
+  -u, --update           clone or update repositories
 
 [2]
 `,

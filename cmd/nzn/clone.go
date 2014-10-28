@@ -30,56 +30,53 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var cmdClone = &nazuna.Command{
-	Names: []string{"clone"},
-	Usage: []string{
-		"clone --vcs <type> <repository> [<path>]",
-	},
-	Help: `
+func init() {
+	flags := cli.NewFlagSet()
+	flags.String("vcs", "", "vcs type")
+	flags.MetaVar("vcs", " <type>")
+
+	app.Add(&cli.Command{
+		Name:  []string{"clone"},
+		Usage: "--vcs <type> <repository> [<path>]",
+		Desc: strings.TrimSpace(`
 create a copy of an existing repository
 
   Create a copy of an existing repository in <path>. If <path> does not exist,
   it will be created.
 
   If <path> is not specified, the current working diretory is used.
-
-options:
-
-      --vcs <type>    vcs type
-`,
+`),
+		Flags:  flags,
+		Action: clone,
+	})
 }
 
-var cloneVCS string
-
-func init() {
-	cmdClone.Flag.StringVar(&cloneVCS, "vcs", "", "")
-
-	cmdClone.Run = runClone
-}
-
-func runClone(ui nazuna.UI, args []string) error {
-	if len(args) == 0 {
-		return nazuna.ErrArg
+func clone(ctx *cli.Context) error {
+	if len(ctx.Args) == 0 {
+		return cli.ErrArgs
 	}
-	src := args[0]
+	src := ctx.Args[0]
 
 	root := "."
-	if 1 < len(args) {
-		root = args[1]
+	if 1 < len(ctx.Args) {
+		root = ctx.Args[1]
 	}
 	nzndir := filepath.Join(root, ".nzn")
 	if !nazuna.IsEmptyDir(nzndir) {
 		return fmt.Errorf("repository '%s' already exists!", root)
 	}
 
-	if cloneVCS == "" {
-		return nazuna.FlagError("flag --vcs is required")
+	if ctx.String("vcs") == "" {
+		return cli.FlagError("flag --vcs is required")
 	}
-	vcs, err := nazuna.FindVCS(ui, cloneVCS, "")
+	ui := newUI()
+	vcs, err := nazuna.FindVCS(ui, ctx.String("vcs"), "")
 	if err != nil {
 		return err
 	}

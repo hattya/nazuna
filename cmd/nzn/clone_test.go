@@ -105,7 +105,7 @@ create a copy of an existing repository
 
 options:
 
-      --vcs <type>    vcs type
+  --vcs <type>    vcs type
 
 [2]
 `,

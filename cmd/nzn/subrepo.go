@@ -31,17 +31,25 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var cmdSubrepo = &nazuna.Command{
-	Names: []string{"subrepo"},
-	Usage: []string{
-		"subrepo -l <layer> -a <repository> <path>",
-		"subrepo -u",
-	},
-	Help: `
+func init() {
+	flags := cli.NewFlagSet()
+	flags.String("l, layer", "", "layer name")
+	flags.Bool("a, add", false, "add <repository> to <path>")
+	flags.Bool("u, update", false, "clone or update repositories")
+
+	app.Add(&cli.Command{
+		Name: []string{"subrepo"},
+		Usage: []string{
+			"-l <layer> -a <repository> <path>",
+			"-u",
+		},
+		Desc: strings.TrimSpace(`
 manage subrepositories
 
   subrepo is used to manage external repositories.
@@ -52,60 +60,42 @@ manage subrepositories
 
   subrepo can clone or update the repositories in the working copy by flag
   --update.
-
-options:
-
-  -l, --layer     a layer
-  -a, --add       add <repository> to <path>
-  -u, --update    clone or update repositories
-`,
+`),
+		Flags:  flags,
+		Action: subrepo,
+		Data:   true,
+	})
 }
 
-var (
-	subrepoL string
-	subrepoA bool
-	subrepoU bool
-)
-
-func init() {
-	cmdSubrepo.Flag.StringVar(&subrepoL, "l", "", "")
-	cmdSubrepo.Flag.StringVar(&subrepoL, "layer", "", "")
-	cmdSubrepo.Flag.BoolVar(&subrepoA, "a", false, "")
-	cmdSubrepo.Flag.BoolVar(&subrepoA, "add", false, "")
-	cmdSubrepo.Flag.BoolVar(&subrepoU, "u", false, "")
-	cmdSubrepo.Flag.BoolVar(&subrepoU, "update", false, "")
-
-	cmdSubrepo.Run = runSubrepo
-}
-
-func runSubrepo(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+func subrepo(ctx *cli.Context) error {
+	repo := ctx.Data.(*nazuna.Repository)
 	wc, err := repo.WC()
 	if err != nil {
 		return err
 	}
 
 	switch {
-	case subrepoA:
+	case ctx.Bool("add"):
 		switch {
-		case subrepoL == "":
-			return nazuna.FlagError("flag --layer is required")
-		case len(args) != 2:
-			return nazuna.ErrArg
+		case ctx.String("layer") == "":
+			return cli.FlagError("flag --layer is required")
+		case len(ctx.Args) != 2:
+			return cli.ErrArgs
 		}
-		l, err := repo.LayerOf(subrepoL)
+		l, err := repo.LayerOf(ctx.String("layer"))
 		switch {
 		case err != nil:
 			return err
 		case 0 < len(l.Layers):
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
-		src := args[0]
-		path, err := wc.Rel('.', args[1])
+		src := ctx.Args[0]
+		path, err := wc.Rel('.', ctx.Args[1])
 		if err != nil {
 			return err
 		}
 		var name, dst string
-		if 0 < len(args[1]) && os.IsPathSeparator(args[1][len(args[1])-1]) {
+		if 0 < len(ctx.Args[1]) && os.IsPathSeparator(ctx.Args[1][len(ctx.Args[1])-1]) {
 			dst = path + "/" + filepath.Base(src)
 		} else {
 			path, name = nazuna.SplitPath(path)
@@ -130,16 +120,17 @@ func runSubrepo(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 		})
 		sort.Sort(nazuna.SubrepoBySrc(l.Subrepos[path]))
 		return repo.Flush()
-	case subrepoU:
+	case ctx.Bool("update"):
 		_, err := wc.MergeLayers()
 		if err != nil {
 			return err
 		}
+		ui := newUI()
 		for _, e := range wc.State.WC {
 			if e.Type != "subrepo" {
 				continue
 			}
-			ui.Printf("* %s\n", e.Origin)
+			app.Printf("* %v\n", e.Origin)
 			r, err := nazuna.NewRemote(ui, e.Origin)
 			if err != nil {
 				return err

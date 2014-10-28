@@ -26,24 +26,15 @@
 
 package main
 
-import "github.com/hattya/nazuna"
-
-var cmdVersion = &nazuna.Command{
-	Names: []string{"version"},
-	Usage: []string{
-		"version",
-	},
-	Help: `
-output version and copyright information
-`,
-}
+import "github.com/hattya/go.cli"
 
 func init() {
-	cmdVersion.Run = runVersion
+	cli.Version = showVersion
+
+	app.Add(cli.NewVersionCommand())
 }
 
-func runVersion(ui nazuna.UI, args []string) error {
-	ui.Printf("nazuna, version %s\n\n", nazuna.Version)
-	ui.Println("Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>")
+func showVersion(ctx *cli.Context) error {
+	ctx.CLI.Printf("nazuna, version %v\n", ctx.CLI.Version)
 	return nil
 }

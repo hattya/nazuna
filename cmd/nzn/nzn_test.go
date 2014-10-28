@@ -28,7 +28,6 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -37,9 +36,17 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/go.diff"
 	"github.com/hattya/nazuna"
 )
+
+func init() {
+	app.Name = "nzn"
+	app.Version = nazuna.Version
+	app.Prepare = prepare
+	app.ErrorHandler = errorHandler
+}
 
 type shell struct {
 	dir         string
@@ -279,17 +286,33 @@ func (sh *shell) mkdir(args ...string) (string, int) {
 }
 
 func (sh *shell) nzn(args ...string) (string, int) {
-	for _, c := range cmds {
-		c.Flag.Visit(func(f *flag.Flag) {
-			c.Flag.Set(f.Name, f.DefValue)
+	reset := func(fs *cli.FlagSet) {
+		fs.VisitAll(func(f *cli.Flag) {
+			fs.Set(f.Name[0], f.Default)
 		})
 	}
+	reset(app.Flags)
+	for _, cmd := range app.Cmds {
+		if cmd.Flags != nil {
+			reset(cmd.Flags)
+		}
+	}
+
 	b := new(bytes.Buffer)
-	nzn := nazuna.NewCLI(append([]string{"nzn"}, args...))
-	nzn.Cmds = cmds
-	nzn.SetOut(b)
-	nzn.SetErr(b)
-	rc := nzn.Run()
+	app.Stdout = b
+	app.Stderr = b
+
+	rc := 0
+	if err := app.Run(args); err != nil {
+		switch err := err.(type) {
+		case cli.FlagError:
+			rc = 2
+		case SystemExit:
+			rc = int(err)
+		default:
+			rc = 1
+		}
+	}
 	return b.String(), rc
 }
 

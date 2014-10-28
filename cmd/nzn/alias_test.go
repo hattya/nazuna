@@ -206,7 +206,7 @@ create an alias for the specified path
 
 options:
 
-  -l, --layer    a layer
+  -l, --layer <layer>    layer name
 
 [2]
 `,

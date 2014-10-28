@@ -1,5 +1,5 @@
 //
-// nzn :: nzn.go
+// nzn :: util.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //
@@ -28,61 +28,25 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"runtime"
+	"os/exec"
 
 	"github.com/hattya/go.cli"
-	"github.com/hattya/nazuna"
 )
 
-var app = cli.NewCLI()
-
-func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	app.Version = nazuna.Version
-	app.Prepare = prepare
-	app.ErrorHandler = errorHandler
-
-	if err := app.Run(os.Args[1:]); err != nil {
-		switch err := err.(type) {
-		case cli.FlagError:
-			os.Exit(2)
-		case SystemExit:
-			os.Exit(int(err))
-		}
-		os.Exit(1)
-	}
+type UI struct {
+	*cli.CLI
 }
 
-func prepare(ctx *cli.Context, cmd *cli.Command) error {
-	if v, ok := cmd.Data.(bool); ok && v {
-		wd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		repo, err := nazuna.OpenRepository(newUI(), wd)
-		if err != nil {
-			return err
-		}
-		ctx.Data = repo
-	}
-	return nil
+func newUI() *UI {
+	return &UI{app}
 }
 
-func errorHandler(ctx *cli.Context, err error) error {
-	switch err.(type) {
-	case cli.FlagError:
-	case SystemExit:
-		return err
-	default:
-		ctx.Stack = nil
+func (ui *UI) Exec(cmd *exec.Cmd) (err error) {
+	cmd.Stdin = ui.Stdin
+	cmd.Stdout = ui.Stdout
+	cmd.Stderr = ui.Stderr
+	if err = cmd.Run(); err != nil {
+		err = fmt.Errorf("%v: %v", cmd.Args[0], err)
 	}
-	return cli.ErrorHandler(ctx, err)
-}
-
-type SystemExit int
-
-func (e SystemExit) Error() string {
-	return fmt.Sprintf("exit status %d", e)
+	return err
 }

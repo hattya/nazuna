@@ -114,7 +114,6 @@ func (e *Entry) Format(format string) string {
 }
 
 type UI interface {
-	Args() []string
 	Print(...interface{}) (int, error)
 	Printf(string, ...interface{}) (int, error)
 	Println(...interface{}) (int, error)
@@ -122,10 +121,4 @@ type UI interface {
 	Errorf(string, ...interface{}) (int, error)
 	Errorln(...interface{}) (int, error)
 	Exec(*exec.Cmd) error
-}
-
-type SystemExit int
-
-func (e SystemExit) Error() string {
-	return fmt.Sprintf("exit status %d", e)
 }

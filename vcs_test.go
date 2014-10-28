@@ -29,6 +29,7 @@ package nazuna_test
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -50,6 +51,23 @@ func newTest(ui nazuna.UI, dir string) nazuna.VCS {
 
 func init() {
 	nazuna.RegisterVCS("test", ".test", newTest)
+}
+
+type testUI struct {
+	bytes.Buffer
+}
+
+func (*testUI) Print(...interface{}) (int, error)          { return 0, nil }
+func (*testUI) Printf(string, ...interface{}) (int, error) { return 0, nil }
+func (*testUI) Println(...interface{}) (int, error)        { return 0, nil }
+func (*testUI) Error(...interface{}) (int, error)          { return 0, nil }
+func (*testUI) Errorf(string, ...interface{}) (int, error) { return 0, nil }
+func (*testUI) Errorln(...interface{}) (int, error)        { return 0, nil }
+
+func (ui *testUI) Exec(cmd *exec.Cmd) error {
+	cmd.Stdout = ui
+	cmd.Stderr = ui
+	return cmd.Run()
 }
 
 func TestRegisterVCSPanic(t *testing.T) {
@@ -209,10 +227,7 @@ func TestGitVCS(t *testing.T) {
 	}
 	defer popd()
 
-	b := new(bytes.Buffer)
-	ui := nazuna.NewCLI([]string{"nazuna.test"})
-	ui.SetOut(b)
-	ui.SetErr(b)
+	ui := &testUI{}
 	vcs, err := nazuna.FindVCS(ui, "git", "")
 	if err != nil {
 		t.Fatal(err)
@@ -248,21 +263,21 @@ func TestGitVCS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b.Reset()
+	ui.Reset()
 	if err := ui.Exec(vcs.List(".")); err != nil {
 		t.Fatal(err)
 	}
-	if g, e := b.String(), ""; g != e {
+	if g, e := ui.String(), ""; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if err := vcs.Update(); err != nil {
 		t.Fatal(err)
 	}
-	b.Reset()
+	ui.Reset()
 	if err := ui.Exec(vcs.List(".")); err != nil {
 		t.Fatal(err)
 	}
-	if g, e := b.String(), "dir/file\nfile\n"; g != e {
+	if g, e := ui.String(), "dir/file\nfile\n"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 }
@@ -279,10 +294,7 @@ func TestMercurialVCS(t *testing.T) {
 	}
 	defer popd()
 
-	b := new(bytes.Buffer)
-	ui := nazuna.NewCLI([]string{"nazuna.test"})
-	ui.SetOut(b)
-	ui.SetErr(b)
+	ui := &testUI{}
 	vcs, err := nazuna.FindVCS(ui, "hg", "")
 	if err != nil {
 		t.Fatal(err)
@@ -318,21 +330,21 @@ func TestMercurialVCS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b.Reset()
+	ui.Reset()
 	if err := ui.Exec(vcs.List(".")); err != nil {
 		t.Fatal(err)
 	}
-	if g, e := b.String(), ""; g != e {
+	if g, e := ui.String(), ""; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	if err := vcs.Update(); err != nil {
 		t.Fatal(err)
 	}
-	b.Reset()
+	ui.Reset()
 	if err := ui.Exec(vcs.List(".")); err != nil {
 		t.Fatal(err)
 	}
-	if g, e := b.String(), "dir/file\nfile\n"; g != e {
+	if g, e := ui.String(), "dir/file\nfile\n"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 }

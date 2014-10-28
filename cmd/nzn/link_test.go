@@ -152,8 +152,8 @@ create a link for the specified path
 
 options:
 
-  -l, --layer    a layer
-  -p, --path     a list of directories to search <src>
+  -l, --layer <layer>    layer name
+  -p, --path <path>      list of directories to search <src>
 
 [2]
 `,

@@ -26,51 +26,52 @@
 
 package main
 
-import "github.com/hattya/nazuna"
+import (
+	"strings"
 
-var cmdLayer = &nazuna.Command{
-	Names: []string{"layer"},
-	Usage: []string{
-		"layer [<name>]",
-		"layer -c <name>",
-	},
-	Help: `
-  manage repository layers
-
-options:
-
-  -c, --create    create a new layer
-`,
-}
-
-var layerC bool
+	"github.com/hattya/go.cli"
+	"github.com/hattya/nazuna"
+)
 
 func init() {
-	cmdLayer.Flag.BoolVar(&layerC, "c", false, "")
-	cmdLayer.Flag.BoolVar(&layerC, "create", false, "")
+	flags := cli.NewFlagSet()
+	flags.Bool("c, create", false, "create a new layer")
 
-	cmdLayer.Run = runLayer
+	app.Add(&cli.Command{
+		Name: []string{"layer"},
+		Usage: []string{
+			"[<name>]",
+			"-c <name>",
+		},
+		Desc: strings.TrimSpace(`
+manage repository layers
+`),
+		Flags:  flags,
+		Action: layer,
+		Data:   true,
+	})
 }
 
-func runLayer(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+func layer(ctx *cli.Context) error {
+	repo := ctx.Data.(*nazuna.Repository)
 	switch {
-	case layerC:
-		if len(args) != 1 {
-			return nazuna.ErrArg
+	case ctx.Bool("create"):
+		if len(ctx.Args) != 1 {
+			return cli.ErrArgs
 		}
-		if _, err := repo.NewLayer(args[0]); err != nil {
+		if _, err := repo.NewLayer(ctx.Args[0]); err != nil {
 			return err
 		}
 		return repo.Flush()
-	case 0 < len(args):
-		if len(args) != 1 {
-			return nazuna.ErrArg
+	case 0 < len(ctx.Args):
+		if len(ctx.Args) != 1 {
+			return cli.ErrArgs
 		}
 		wc, err := repo.WC()
 		if err != nil {
 			return err
 		}
-		if err := wc.SelectLayer(args[0]); err != nil {
+		if err := wc.SelectLayer(ctx.Args[0]); err != nil {
 			return err
 		}
 		return wc.Flush()
@@ -80,13 +81,13 @@ func runLayer(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 			return err
 		}
 		for _, l := range repo.Layers {
-			ui.Println(l.Name)
+			app.Println(l.Name)
 			for _, ll := range l.Layers {
 				var s string
 				if wl, err := wc.LayerFor(l.Name); err == nil && wl.Name == ll.Name {
 					s = "*"
 				}
-				ui.Printf("    %s%s\n", ll.Name, s)
+				app.Printf("    %v%v\n", ll.Name, s)
 			}
 		}
 		return nil

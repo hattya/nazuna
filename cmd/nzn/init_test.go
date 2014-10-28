@@ -77,7 +77,7 @@ create a new repository in the specified directory
 
 options:
 
-      --vcs <type>    vcs type
+  --vcs <type>    vcs type
 
 [2]
 `,

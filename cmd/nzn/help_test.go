@@ -32,30 +32,30 @@ import (
 )
 
 const (
-	helpUsage = `usage: nzn help [options] [--] [<command>]
+	helpUsage = `usage: nzn help [<command>]
 
-display help information about nazuna
-
-  Display help information for <command>.
-
-  If <command> is not specified, display a list of commands with short help
-  informations.
+show help for a specified command
 
 `
 	helpOut = `nazuna - A layered dotfiles management
 
-list of commands:
+commands:
 
   alias      create an alias for the specified path
   clone      create a copy of an existing repository
-  help       display help information about nazuna
+  help       show help for a specified command
   init       create a new repository in the specified directory
   layer      manage repository layers
   link       create a link for the specified path
   subrepo    manage subrepositories
   update     update working copy
   vcs        run the vcs command inside the repository
-  version    output version and copyright information
+  version    show version information
+
+options:
+
+  -h, --help    show help
+  --version     show version information
 
 `
 )
@@ -104,7 +104,10 @@ func TestHelpError(t *testing.T) {
 	s := script{
 		{
 			cmd: []string{"nzn", "help", "nazuna"},
-			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%s[1]\n", helpOut),
+			out: `nzn: unknown command 'nazuna'
+type 'nzn help' for usage
+[1]
+`,
 		},
 	}
 	if err := s.exec(); err != nil {

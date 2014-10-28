@@ -26,23 +26,26 @@
 
 package main
 
-import "github.com/hattya/nazuna"
+import (
+	"strings"
 
-var cmdVCS = &nazuna.Command{
-	Names: []string{"vcs"},
-	Usage: []string{
-		"vcs [args]",
-	},
-	Help: `
-  run the vcs command inside the repository
-`,
-	CustomFlags: true,
-}
+	"github.com/hattya/go.cli"
+	"github.com/hattya/nazuna"
+)
 
 func init() {
-	cmdVCS.Run = runVCS
+	app.Add(&cli.Command{
+		Name:  []string{"vcs"},
+		Usage: "[<args>]",
+		Desc: strings.TrimSpace(`
+run the vcs command inside the repository
+`),
+		Action: vcs,
+		Data:   true,
+	})
 }
 
-func runVCS(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
-	return repo.Command(args...)
+func vcs(ctx *cli.Context) error {
+	repo := ctx.Data.(*nazuna.Repository)
+	return repo.Command(ctx.Args...)
 }

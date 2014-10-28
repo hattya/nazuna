@@ -30,16 +30,21 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var cmdLink = &nazuna.Command{
-	Names: []string{"link"},
-	Usage: []string{
-		"link -l <layer> [-p <path>] <src> <dst>",
-	},
-	Help: `
+func init() {
+	flags := cli.NewFlagSet()
+	flags.String("l, layer", "", "layer name")
+	flags.String("p, path", "", "list of directories to search <src>")
+
+	app.Add(&cli.Command{
+		Name:  []string{"link"},
+		Usage: "-l <layer> [-p <path>] <src> <dst>",
+		Desc: strings.TrimSpace(`
 create a link for the specified path
 
   link is used to create a link of <src> to <dst>, and will be managed by
@@ -50,49 +55,35 @@ create a link for the specified path
 
   You can refer environment variables in <path> and <src>. Supported formats
   are ${var} and $var.
-
-options:
-
-  -l, --layer    a layer
-  -p, --path     a list of directories to search <src>
-`,
+`),
+		Flags:  flags,
+		Action: link,
+		Data:   true,
+	})
 }
 
-var (
-	linkL string
-	linkP string
-)
-
-func init() {
-	cmdLink.Flag.StringVar(&linkL, "l", "", "")
-	cmdLink.Flag.StringVar(&linkL, "layer", "", "")
-	cmdLink.Flag.StringVar(&linkP, "p", "", "")
-	cmdLink.Flag.StringVar(&linkP, "path", "", "")
-
-	cmdLink.Run = runLink
-}
-
-func runLink(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+func link(ctx *cli.Context) error {
+	repo := ctx.Data.(*nazuna.Repository)
 	wc, err := repo.WC()
 	if err != nil {
 		return err
 	}
 
 	switch {
-	case linkL == "":
-		return nazuna.FlagError("flag --layer is required")
+	case ctx.String("layer") == "":
+		return cli.FlagError("flag --layer is required")
 	default:
-		if len(args) != 2 {
-			return nazuna.ErrArg
+		if len(ctx.Args) != 2 {
+			return cli.ErrArgs
 		}
-		l, err := repo.LayerOf(linkL)
+		l, err := repo.LayerOf(ctx.String("layer"))
 		switch {
 		case err != nil:
 			return err
 		case 0 < len(l.Layers):
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
-		dst, err := wc.Rel('.', args[1])
+		dst, err := wc.Rel('.', ctx.Args[1])
 		if err != nil {
 			return err
 		}
@@ -103,11 +94,11 @@ func runLink(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 		default:
 			return fmt.Errorf("%s '%s' already exists!", typ, dst)
 		}
-		path := filepath.SplitList(linkP)
+		path := filepath.SplitList(ctx.String("path"))
 		for i, p := range path {
 			path[i] = filepath.ToSlash(filepath.Clean(p))
 		}
-		src := filepath.ToSlash(filepath.Clean(args[0]))
+		src := filepath.ToSlash(filepath.Clean(ctx.Args[0]))
 		dir, dst := nazuna.SplitPath(dst)
 		if l.Links == nil {
 			l.Links = make(map[string][]*nazuna.Link)

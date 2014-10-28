@@ -30,51 +30,48 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var cmdInit = &nazuna.Command{
-	Names: []string{"init"},
-	Usage: []string{
-		"init --vcs <type> [<path>]",
-	},
-	Help: `
+func init() {
+	flags := cli.NewFlagSet()
+	flags.String("vcs", "", "vcs type")
+	flags.MetaVar("vcs", " <type>")
+
+	app.Add(&cli.Command{
+		Name:  []string{"init"},
+		Usage: "--vcs <type> [<path>]",
+		Desc: strings.TrimSpace(`
 create a new repository in the specified directory
 
   Create a new repository in <path>. If <path> does not exist, it will be
   created.
 
   If <path> is not specified, the current working diretory is used.
-
-options:
-
-      --vcs <type>    vcs type
-`,
+`),
+		Flags:  flags,
+		Action: init_,
+	})
 }
 
-var initVCS string
-
-func init() {
-	cmdInit.Flag.StringVar(&initVCS, "vcs", "", "")
-
-	cmdInit.Run = runInit
-}
-
-func runInit(ui nazuna.UI, args []string) error {
+func init_(ctx *cli.Context) error {
 	root := "."
-	if 0 < len(args) {
-		root = args[0]
+	if 0 < len(ctx.Args) {
+		root = ctx.Args[0]
 	}
 	nzndir := filepath.Join(root, ".nzn")
 	if !nazuna.IsEmptyDir(nzndir) {
 		return fmt.Errorf("repository '%s' already exists!", root)
 	}
 
-	if initVCS == "" {
-		return nazuna.FlagError("flag --vcs is required")
+	if ctx.String("vcs") == "" {
+		return cli.FlagError("flag --vcs is required")
 	}
-	vcs, err := nazuna.FindVCS(ui, initVCS, "")
+	ui := newUI()
+	vcs, err := nazuna.FindVCS(ui, ctx.String("vcs"), "")
 	if err != nil {
 		return err
 	}

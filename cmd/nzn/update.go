@@ -29,27 +29,31 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var cmdUpdate = &nazuna.Command{
-	Names: []string{"update"},
-	Usage: []string{
-		"update",
-	},
-	Help: `
+func init() {
+	flags := cli.NewFlagSet()
+
+	app.Add(&cli.Command{
+		Name:  []string{"update"},
+		Usage: "update",
+		Desc: strings.TrimSpace(`
 update working copy
 
   Update links in the working copy to match with the repository configuration.
-`,
+`),
+		Flags:  flags,
+		Action: update,
+		Data:   true,
+	})
 }
 
-func init() {
-	cmdUpdate.Run = runUpdate
-}
-
-func runUpdate(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+func update(ctx *cli.Context) error {
+	repo := ctx.Data.(*nazuna.Repository)
 	wc, err := repo.WC()
 	if err != nil {
 		return err
@@ -65,17 +69,17 @@ func runUpdate(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 		case !wc.Exists(e.Path):
 			continue
 		case !wc.IsLink(e.Path):
-			return fmt.Errorf("%s: not tracked", e.Path)
+			return fmt.Errorf("%v: not tracked", e.Path)
 		}
-		ui.Println(e.Format("unlink %s -/- %s"))
+		app.Println(e.Format("unlink %v -/- %v"))
 		switch e.Type {
 		case "link":
 			if !wc.LinksTo(e.Path, e.Origin) {
-				return fmt.Errorf("not linked to '%s'", e.Origin)
+				return fmt.Errorf("not linked to '%v'", e.Origin)
 			}
 		case "subrepo":
 			if !wc.LinksTo(e.Path, repo.SubrepoFor(e.Origin)) {
-				return fmt.Errorf("not linked to '%s'", e.Origin)
+				return fmt.Errorf("not linked to '%v'", e.Origin)
 			}
 		default:
 			var origin string
@@ -85,7 +89,7 @@ func runUpdate(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 				origin = e.Path
 			}
 			if !wc.LinksTo(e.Path, repo.PathFor(nil, filepath.Join(e.Layer, origin))) {
-				return fmt.Errorf("not linked to layer '%s'", e.Layer)
+				return fmt.Errorf("not linked to layer '%v'", e.Layer)
 			}
 		}
 		if err := wc.Unlink(e.Path); err != nil {
@@ -116,9 +120,9 @@ func runUpdate(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 		if wc.LinksTo(e.Path, origin) {
 			continue
 		}
-		ui.Println(e.Format("link %s --> %s"))
+		app.Println(e.Format("link %v --> %v"))
 		if err := wc.Link(origin, e.Path); err != nil {
-			ui.Errorln("error:", wc.Errorf(err))
+			app.Errorln("error:", wc.Errorf(err))
 			copy(wc.State.WC[i:], wc.State.WC[i+1:])
 			wc.State.WC = wc.State.WC[:len(wc.State.WC)-1]
 			i--
@@ -128,12 +132,12 @@ func runUpdate(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
 		}
 	}
 
-	ui.Printf("%d updated, %d removed, %d failed\n", updated, removed, failed)
+	app.Printf("%d updated, %d removed, %d failed\n", updated, removed, failed)
 	if err := wc.Flush(); err != nil {
 		return err
 	}
 	if 0 < failed {
-		return nazuna.SystemExit(1)
+		return SystemExit(1)
 	}
 	return nil
 }

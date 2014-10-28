@@ -28,16 +28,20 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var cmdAlias = &nazuna.Command{
-	Names: []string{"alias"},
-	Usage: []string{
-		"alias -l <layer> <src> <dst>",
-	},
-	Help: `
+func init() {
+	flags := cli.NewFlagSet()
+	flags.String("l, layer", "", "layer name")
+
+	app.Add(&cli.Command{
+		Name:  []string{"alias"},
+		Usage: "-l <layer> <src> <dst>",
+		Desc: strings.TrimSpace(`
 create an alias for the specified path
 
   Change the location of <src> to <dst>. <src> should be existed in the lower layer
@@ -46,47 +50,39 @@ create an alias for the specified path
 
   You can refer environment variables in <dst>. Supported formats are ${var}
   and $var.
-
-options:
-
-  -l, --layer    a layer
-`,
+`),
+		Flags:  flags,
+		Action: alias,
+		Data:   true,
+	})
 }
 
-var aliasL string
-
-func init() {
-	cmdAlias.Flag.StringVar(&aliasL, "l", "", "")
-	cmdAlias.Flag.StringVar(&aliasL, "layer", "", "")
-
-	cmdAlias.Run = runAlias
-}
-
-func runAlias(ui nazuna.UI, repo *nazuna.Repository, args []string) error {
+func alias(ctx *cli.Context) error {
+	repo := ctx.Data.(*nazuna.Repository)
 	wc, err := repo.WC()
 	if err != nil {
 		return err
 	}
 
 	switch {
-	case aliasL == "":
-		return nazuna.FlagError("flag --layer is required")
+	case ctx.String("layer") == "":
+		return cli.FlagError("flag --layer is required")
 	default:
-		if len(args) != 2 {
-			return nazuna.ErrArg
+		if len(ctx.Args) != 2 {
+			return cli.ErrArgs
 		}
-		l, err := repo.LayerOf(aliasL)
+		l, err := repo.LayerOf(ctx.String("layer"))
 		switch {
 		case err != nil:
 			return err
 		case 0 < len(l.Layers):
 			return fmt.Errorf("layer '%s' is abstract", l.Path())
 		}
-		src, err := wc.Rel('/', args[0])
+		src, err := wc.Rel('/', ctx.Args[0])
 		if err != nil {
 			return err
 		}
-		dst, err := wc.Rel('.', args[1])
+		dst, err := wc.Rel('.', ctx.Args[1])
 		switch {
 		case err != nil:
 			return err

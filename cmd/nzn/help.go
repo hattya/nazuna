@@ -26,65 +26,17 @@
 
 package main
 
-import (
-	"strings"
-	"unicode"
-
-	"github.com/hattya/nazuna"
-)
-
-var cmdHelp = &nazuna.Command{
-	Names: []string{"help"},
-	Usage: []string{
-		"help [options] [--] [<command>]",
-	},
-	Help: `
-display help information about nazuna
-
-  Display help information for <command>.
-
-  If <command> is not specified, display a list of commands with short help
-  informations.
-`,
-}
+import "github.com/hattya/go.cli"
 
 func init() {
-	cmdHelp.Run = runHelp
+	cli.Usage = formatUsage
+
+	app.Add(cli.NewHelpCommand())
 }
 
-func runHelp(ui nazuna.UI, args []string) (err error) {
-	var cmd *nazuna.Command
-	if 0 < len(args) {
-		cmd, err = nazuna.FindCommand(cmds, args[0])
-		if err != nil {
-			return
-		}
+func formatUsage(ctx *cli.Context) []string {
+	if len(ctx.Stack) == 0 {
+		return []string{"nazuna - A layered dotfiles management"}
 	}
-
-	switch {
-	case cmd == nil:
-		ui.Print("nazuna - A layered dotfiles management\n\n")
-		ui.Print("list of commands:\n\n")
-		width := 0
-		for _, cmd := range cmds {
-			if w := len(cmd.Name()); width < w {
-				width = w
-			}
-		}
-		for _, cmd := range nazuna.SortCommands(cmds) {
-			ui.Printf("  %-*s    %s\n", width, cmd.Name(), strings.SplitN(strings.TrimSpace(cmd.Help), "\n", 2)[0])
-		}
-		ui.Println()
-	case 0 < len(cmd.Usage):
-		name := ui.Args()[0]
-		label := "usage"
-		for _, u := range cmd.Usage {
-			ui.Printf("%s: %s %s\n", label, name, u)
-			label = "   or"
-		}
-		for _, l := range strings.Split(cmd.Help, "\n") {
-			ui.Println(strings.TrimRightFunc(l, unicode.IsSpace))
-		}
-	}
-	return
+	return cli.FormatUsage(ctx)
 }
