@@ -57,32 +57,28 @@ type WC struct {
 
 	ui   UI
 	repo *Repository
-	dir  string
 }
 
 func openWC(ui UI, repo *Repository) (*WC, error) {
 	w := &WC{
 		ui:   ui,
 		repo: repo,
-		dir:  filepath.Dir(repo.nzndir),
 	}
-	p := filepath.Join(repo.nzndir, "state.json")
-	if _, err := os.Stat(p); err == nil {
-		if err := unmarshal(p, &w.State); err != nil {
-			return nil, err
-		}
-	} else {
+	if err := unmarshal(repo, filepath.Join(repo.nzndir, "state.json"), &w.State); err != nil {
+		return nil, err
+	}
+	if w.State.WC == nil {
 		w.State.WC = []*Entry{}
 	}
 	return w, nil
 }
 
 func (w *WC) Flush() error {
-	return marshal(filepath.Join(w.repo.nzndir, "state.json"), &w.State)
+	return marshal(w.repo, filepath.Join(w.repo.nzndir, "state.json"), &w.State)
 }
 
 func (w *WC) PathFor(path string) string {
-	return filepath.Join(w.dir, path)
+	return filepath.Join(w.repo.root, path)
 }
 
 func (w *WC) Rel(base rune, path string) (string, error) {
@@ -97,7 +93,7 @@ func (w *WC) Rel(base rune, path string) (string, error) {
 		if filepath.IsAbs(path) {
 			abs = path
 		} else {
-			abs = filepath.Join(w.dir, path)
+			abs = filepath.Join(w.repo.root, path)
 		}
 	case '.':
 		if abs, err = filepath.Abs(path); err != nil {
@@ -106,7 +102,7 @@ func (w *WC) Rel(base rune, path string) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown base '%c'", base)
 	}
-	rel, err := filepath.Rel(w.dir, abs)
+	rel, err := filepath.Rel(w.repo.root, abs)
 	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 		return "", fmt.Errorf("'%v' is not under root", path)
 	}
@@ -127,7 +123,7 @@ func (w *WC) LinksTo(path, origin string) bool {
 }
 
 func (w *WC) Link(src, dst string) error {
-	for p := filepath.Dir(w.PathFor(dst)); p != w.dir; p = filepath.Dir(p) {
+	for p := filepath.Dir(w.PathFor(dst)); p != w.repo.root; p = filepath.Dir(p) {
 		if isLink(p) {
 			return &os.PathError{
 				Op:   "link",
@@ -149,7 +145,7 @@ func (w *WC) Unlink(path string) error {
 	if err := unlink(path); err != nil {
 		return err
 	}
-	for p := filepath.Dir(path); p != w.dir; p = filepath.Dir(p) {
+	for p := filepath.Dir(path); p != w.repo.root; p = filepath.Dir(p) {
 		if isLink(p) || !IsEmptyDir(p) {
 			break
 		}

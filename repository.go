@@ -49,6 +49,7 @@ type Repository struct {
 
 	ui      UI
 	vcs     VCS
+	root    string
 	nzndir  string
 	rdir    string
 	subroot string
@@ -76,24 +77,23 @@ func Open(ui UI, path string) (*Repository, error) {
 	r := &Repository{
 		ui:      ui,
 		vcs:     vcs,
+		root:    root,
 		nzndir:  nzndir,
 		rdir:    rdir,
 		subroot: filepath.Join(nzndir, "sub"),
 	}
 
-	path = filepath.Join(r.rdir, "nazuna.json")
-	if _, err := os.Stat(path); err == nil {
-		if err := unmarshal(path, &r.Layers); err != nil {
-			return nil, err
-		}
-	} else {
+	if err := unmarshal(r, filepath.Join(r.rdir, "nazuna.json"), &r.Layers); err != nil {
+		return nil, err
+	}
+	if r.Layers == nil {
 		r.Layers = []*Layer{}
 	}
 	return r, nil
 }
 
 func (r *Repository) Flush() error {
-	return marshal(filepath.Join(r.rdir, "nazuna.json"), r.Layers)
+	return marshal(r, filepath.Join(r.rdir, "nazuna.json"), r.Layers)
 }
 
 func (r *Repository) LayerOf(name string) (*Layer, error) {

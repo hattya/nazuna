@@ -183,7 +183,7 @@ func TestAliasError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "alias"},
-			out: `nzn: unexpected end of JSON input
+			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
 [1]
 `,
 		},

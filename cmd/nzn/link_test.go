@@ -127,7 +127,7 @@ func TestLinkError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "link"},
-			out: `nzn: unexpected end of JSON input
+			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
 [1]
 `,
 		},

@@ -80,21 +80,36 @@ func sortKeys(i interface{}) []string {
 	return list
 }
 
-func marshal(path string, v interface{}) error {
-	data, err := json.MarshalIndent(v, "", "    ")
+func marshal(repo *Repository, path string, v interface{}) error {
+	rel, err := filepath.Rel(repo.root, path)
 	if err != nil {
 		return err
 	}
-	data = append(data, '\n')
-	return ioutil.WriteFile(path, data, 0666)
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("%v: %v", rel, err)
+	}
+	if err := ioutil.WriteFile(path, append(data, '\n'), 0666); err != nil {
+		return fmt.Errorf("cannot write '%v'", rel)
+	}
+	return nil
 }
 
-func unmarshal(path string, v interface{}) error {
-	data, err := ioutil.ReadFile(path)
+func unmarshal(repo *Repository, path string, v interface{}) error {
+	rel, err := filepath.Rel(repo.root, path)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, v)
+	if _, err := os.Stat(path); err == nil {
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("cannot read '%v'", rel)
+		}
+		if err := json.Unmarshal(data, v); err != nil {
+			return fmt.Errorf("%v: %v", rel, err)
+		}
+	}
+	return nil
 }
 
 func httpGet(uri string) ([]byte, error) {

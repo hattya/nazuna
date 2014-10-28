@@ -132,13 +132,7 @@ func TestLayerError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `nzn: unexpected end of JSON input
-[1]
-`,
-		},
-		{
-			cmd: []string{"nzn", "layer", "a"},
-			out: `nzn: unexpected end of JSON input
+			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
 [1]
 `,
 		},
