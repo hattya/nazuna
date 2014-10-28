@@ -37,8 +37,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hattya/go.diff"
 	"github.com/hattya/nazuna"
-	"github.com/mb0/diff"
 )
 
 type shell struct {
