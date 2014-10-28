@@ -54,7 +54,7 @@ type Repository struct {
 	subroot string
 }
 
-func OpenRepository(ui UI, path string) (*Repository, error) {
+func Open(ui UI, path string) (*Repository, error) {
 	root, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err

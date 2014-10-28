@@ -48,7 +48,7 @@ func TestRepository(t *testing.T) {
 	}
 	defer popd()
 
-	switch _, err := nazuna.OpenRepository(nil, "."); {
+	switch _, err := nazuna.Open(nil, "."); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasPrefix(err.Error(), "no repository found "):
@@ -58,7 +58,7 @@ func TestRepository(t *testing.T) {
 	if err := mkdir(".nzn/r"); err != nil {
 		t.Fatal(err)
 	}
-	switch _, err = nazuna.OpenRepository(nil, "."); {
+	switch _, err = nazuna.Open(nil, "."); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasPrefix(err.Error(), "unknown vcs for directory "):
@@ -73,14 +73,14 @@ func TestRepository(t *testing.T) {
 	if err := mkdir(path); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = nazuna.OpenRepository(nil, "."); err == nil {
+	if _, err = nazuna.Open(nil, "."); err == nil {
 		t.Error("expected error")
 	}
 	if err := os.Remove(path); err != nil {
 		t.Fatal(err)
 	}
 
-	repo, err := nazuna.OpenRepository(nil, ".")
+	repo, err := nazuna.Open(nil, ".")
 	if err != nil {
 		t.Fatal(err)
 	}

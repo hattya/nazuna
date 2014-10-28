@@ -51,7 +51,7 @@ func TestWC(t *testing.T) {
 	if err := mkdir(".nzn/r/.git"); err != nil {
 		t.Fatal(err)
 	}
-	repo, err := nazuna.OpenRepository(nil, ".")
+	repo, err := nazuna.Open(nil, ".")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestWCError(t *testing.T) {
 	if err := mkdir(".nzn/r/.git"); err != nil {
 		t.Fatal(err)
 	}
-	repo, err := nazuna.OpenRepository(nil, ".")
+	repo, err := nazuna.Open(nil, ".")
 	if err != nil {
 		t.Fatal(err)
 	}

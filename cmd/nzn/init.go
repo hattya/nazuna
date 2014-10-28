@@ -82,7 +82,7 @@ func init_(ctx *cli.Context) error {
 		return err
 	}
 
-	repo, err := nazuna.OpenRepository(ui, root)
+	repo, err := nazuna.Open(ui, root)
 	if err != nil {
 		return err
 	}

@@ -61,7 +61,7 @@ func prepare(ctx *cli.Context, cmd *cli.Command) error {
 		if err != nil {
 			return err
 		}
-		repo, err := nazuna.OpenRepository(newUI(), wd)
+		repo, err := nazuna.Open(newUI(), wd)
 		if err != nil {
 			return err
 		}
