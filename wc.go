@@ -60,28 +60,28 @@ type WC struct {
 }
 
 func openWC(ui UI, repo *Repository) (*WC, error) {
-	w := &WC{
+	wc := &WC{
 		ui:   ui,
 		repo: repo,
 	}
-	if err := unmarshal(repo, filepath.Join(repo.nzndir, "state.json"), &w.State); err != nil {
+	if err := unmarshal(repo, filepath.Join(repo.nzndir, "state.json"), &wc.State); err != nil {
 		return nil, err
 	}
-	if w.State.WC == nil {
-		w.State.WC = []*Entry{}
+	if wc.State.WC == nil {
+		wc.State.WC = []*Entry{}
 	}
-	return w, nil
+	return wc, nil
 }
 
-func (w *WC) Flush() error {
-	return marshal(w.repo, filepath.Join(w.repo.nzndir, "state.json"), &w.State)
+func (wc *WC) Flush() error {
+	return marshal(wc.repo, filepath.Join(wc.repo.nzndir, "state.json"), &wc.State)
 }
 
-func (w *WC) PathFor(path string) string {
-	return filepath.Join(w.repo.root, path)
+func (wc *WC) PathFor(path string) string {
+	return filepath.Join(wc.repo.root, path)
 }
 
-func (w *WC) Rel(base rune, path string) (string, error) {
+func (wc *WC) Rel(base rune, path string) (string, error) {
 	if strings.HasPrefix(path, "$") {
 		return filepath.ToSlash(path), nil
 	}
@@ -93,7 +93,7 @@ func (w *WC) Rel(base rune, path string) (string, error) {
 		if filepath.IsAbs(path) {
 			abs = path
 		} else {
-			abs = filepath.Join(w.repo.root, path)
+			abs = filepath.Join(wc.repo.root, path)
 		}
 	case '.':
 		if abs, err = filepath.Abs(path); err != nil {
@@ -102,28 +102,28 @@ func (w *WC) Rel(base rune, path string) (string, error) {
 	default:
 		return "", fmt.Errorf("unknown base '%c'", base)
 	}
-	rel, err := filepath.Rel(w.repo.root, abs)
+	rel, err := filepath.Rel(wc.repo.root, abs)
 	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 		return "", fmt.Errorf("'%v' is not under root", path)
 	}
 	return filepath.ToSlash(rel), nil
 }
 
-func (w *WC) Exists(path string) bool {
-	_, err := os.Lstat(w.PathFor(path))
+func (wc *WC) Exists(path string) bool {
+	_, err := os.Lstat(wc.PathFor(path))
 	return err == nil
 }
 
-func (w *WC) IsLink(path string) bool {
-	return isLink(w.PathFor(path))
+func (wc *WC) IsLink(path string) bool {
+	return isLink(wc.PathFor(path))
 }
 
-func (w *WC) LinksTo(path, origin string) bool {
-	return linksTo(w.PathFor(path), origin)
+func (wc *WC) LinksTo(path, origin string) bool {
+	return linksTo(wc.PathFor(path), origin)
 }
 
-func (w *WC) Link(src, dst string) error {
-	for p := filepath.Dir(w.PathFor(dst)); p != w.repo.root; p = filepath.Dir(p) {
+func (wc *WC) Link(src, dst string) error {
+	for p := filepath.Dir(wc.PathFor(dst)); p != wc.repo.root; p = filepath.Dir(p) {
 		if isLink(p) {
 			return &os.PathError{
 				Op:   "link",
@@ -132,20 +132,20 @@ func (w *WC) Link(src, dst string) error {
 			}
 		}
 	}
-	if dir := filepath.Dir(dst); !w.Exists(dir) {
+	if dir := filepath.Dir(dst); !wc.Exists(dir) {
 		if err := os.MkdirAll(dir, 0777); err != nil {
 			return err
 		}
 	}
-	return link(src, w.PathFor(dst))
+	return link(src, wc.PathFor(dst))
 }
 
-func (w *WC) Unlink(path string) error {
-	path = w.PathFor(path)
+func (wc *WC) Unlink(path string) error {
+	path = wc.PathFor(path)
 	if err := unlink(path); err != nil {
 		return err
 	}
-	for p := filepath.Dir(path); p != w.repo.root; p = filepath.Dir(p) {
+	for p := filepath.Dir(path); p != wc.repo.root; p = filepath.Dir(p) {
 		if isLink(p) || !IsEmptyDir(p) {
 			break
 		}
@@ -156,8 +156,8 @@ func (w *WC) Unlink(path string) error {
 	return nil
 }
 
-func (w *WC) SelectLayer(name string) error {
-	l, err := w.repo.LayerOf(name)
+func (wc *WC) SelectLayer(name string) error {
+	l, err := wc.repo.LayerOf(name)
 	switch {
 	case err != nil:
 		return err
@@ -166,36 +166,36 @@ func (w *WC) SelectLayer(name string) error {
 	case l.abstract == nil:
 		return fmt.Errorf("layer '%v' is not abstract", name)
 	}
-	for k, v := range w.State.Layers {
+	for k, v := range wc.State.Layers {
 		if k == l.abstract.Name {
 			if v == l.Name {
 				return fmt.Errorf("layer '%v' is already '%v'", k, v)
 			}
-			w.State.Layers[k] = l.Name
+			wc.State.Layers[k] = l.Name
 			return nil
 		}
 	}
-	if w.State.Layers == nil {
-		w.State.Layers = make(map[string]string)
+	if wc.State.Layers == nil {
+		wc.State.Layers = make(map[string]string)
 	}
-	w.State.Layers[l.abstract.Name] = l.Name
+	wc.State.Layers[l.abstract.Name] = l.Name
 	return nil
 }
 
-func (w *WC) LayerFor(name string) (*Layer, error) {
-	for k, v := range w.State.Layers {
+func (wc *WC) LayerFor(name string) (*Layer, error) {
+	for k, v := range wc.State.Layers {
 		if name == k {
-			return w.repo.LayerOf(k + "/" + v)
+			return wc.repo.LayerOf(k + "/" + v)
 		}
 	}
 	return nil, &ResolveError{Name: name}
 }
 
-func (w *WC) Layers() ([]*Layer, error) {
-	list := make([]*Layer, len(w.repo.Layers))
-	for i, l := range w.repo.Layers {
+func (wc *WC) Layers() ([]*Layer, error) {
+	list := make([]*Layer, len(wc.repo.Layers))
+	for i, l := range wc.repo.Layers {
 		if 0 < len(l.Layers) {
-			wl, err := w.LayerFor(l.Name)
+			wl, err := wc.LayerFor(l.Name)
 			if err != nil {
 				list := make([]string, len(l.Layers))
 				for i, ll := range l.Layers {
@@ -210,13 +210,13 @@ func (w *WC) Layers() ([]*Layer, error) {
 	return list, nil
 }
 
-func (w *WC) MergeLayers() ([]*Entry, error) {
-	b := wcBuilder{w: w}
+func (wc *WC) MergeLayers() ([]*Entry, error) {
+	b := wcBuilder{w: wc}
 	if err := b.build(); err != nil {
 		return nil, err
 	}
 
-	w.State.WC = w.State.WC[:0]
+	wc.State.WC = wc.State.WC[:0]
 	dir := ""
 	for _, p := range sortKeys(b.wc) {
 		switch {
@@ -226,7 +226,7 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 			if e.Type == unlinkableType {
 				continue
 			}
-			w.State.WC = append(w.State.WC, e)
+			wc.State.WC = append(wc.State.WC, e)
 			if e.IsDir {
 				dir = p + "/"
 			} else {
@@ -247,15 +247,15 @@ func (w *WC) MergeLayers() ([]*Entry, error) {
 	return ul, nil
 }
 
-func (w *WC) Errorf(err error) error {
+func (wc *WC) Errorf(err error) error {
 	switch v := err.(type) {
 	case *os.LinkError:
-		if r, err := w.Rel('/', v.New); err == nil {
+		if r, err := wc.Rel('/', v.New); err == nil {
 			v.New = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%v: %v", v.New, v.Err)
 	case *os.PathError:
-		if r, err := w.Rel('/', v.Path); err == nil {
+		if r, err := wc.Rel('/', v.Path); err == nil {
 			v.Path = filepath.ToSlash(r)
 		}
 		return fmt.Errorf("%v: %v", v.Path, v.Err)

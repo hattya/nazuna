@@ -63,21 +63,21 @@ func isLink(path string) bool {
 		return false
 	}
 	defer syscall.CloseHandle(h)
-
+	// hardlink
 	var fi syscall.ByHandleFileInformation
 	if err := syscall.GetFileInformationByHandle(h, &fi); err == nil && 1 < fi.NumberOfLinks {
 		return true
 	}
-
+	// junction
 	if fi.FileAttributes&_FILE_ATTRIBUTE_REPARSE_POINT == 0 {
 		return false
 	}
-	buf := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+	b := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 	var retlen uint32
-	if err := deviceIoControl(h, _FSCTL_GET_REPARSE_POINT, nil, buf, &retlen, nil); err != nil {
+	if err := deviceIoControl(h, _FSCTL_GET_REPARSE_POINT, nil, b, &retlen, nil); err != nil {
 		return false
 	}
-	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&buf[0])); rdb.ReparseTag {
+	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&b[0])); rdb.ReparseTag {
 	case _IO_REPARSE_TAG_MOUNT_POINT:
 	case _IO_REPARSE_TAG_SYMLINK:
 	default:
@@ -92,7 +92,7 @@ func linksTo(path, origin string) bool {
 		return false
 	}
 	defer syscall.CloseHandle(h)
-
+	// hardlink
 	var fi syscall.ByHandleFileInformation
 	switch err := syscall.GetFileInformationByHandle(h, &fi); {
 	case err != nil:
@@ -110,7 +110,7 @@ func linksTo(path, origin string) bool {
 		}
 		return fi.VolumeSerialNumber == ofi.VolumeSerialNumber && fi.FileIndexHigh == ofi.FileIndexHigh && fi.FileIndexLow == ofi.FileIndexLow
 	}
-
+	// junction
 	if fi.FileAttributes&_FILE_ATTRIBUTE_REPARSE_POINT == 0 {
 		return false
 	}
@@ -122,12 +122,12 @@ func linksTo(path, origin string) bool {
 	if err != nil {
 		return false
 	}
-	buf := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+	b := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 	var retlen uint32
-	if err := deviceIoControl(h, _FSCTL_GET_REPARSE_POINT, nil, buf, &retlen, nil); err != nil {
+	if err := deviceIoControl(h, _FSCTL_GET_REPARSE_POINT, nil, b, &retlen, nil); err != nil {
 		return false
 	}
-	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&buf[0])); rdb.ReparseTag {
+	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&b[0])); rdb.ReparseTag {
 	case _IO_REPARSE_TAG_MOUNT_POINT:
 		rb := (*mountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
 		start := rb.SubstituteNameOffset / 2
@@ -186,9 +186,9 @@ func link(src, dst string) error {
 		}
 		p = append(p, 0)
 
-		buf := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+		b := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 		var retlen uint32
-		rdb := (*reparseDataBuffer)(unsafe.Pointer(&buf[0]))
+		rdb := (*reparseDataBuffer)(unsafe.Pointer(&b[0]))
 		rdb.ReparseTag = _IO_REPARSE_TAG_MOUNT_POINT
 		rdb.Reserved = 0
 		rb := (*mountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
@@ -198,7 +198,7 @@ func link(src, dst string) error {
 		rb.PrintNameLength = 0
 		copy((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[:], p)
 		rdb.ReparseDataLength = 8 + rb.PrintNameOffset + rb.PrintNameLength + 2
-		if err := deviceIoControl(h, _FSCTL_SET_REPARSE_POINT, buf[:rdb.ReparseDataLength+8], nil, &retlen, nil); err != nil {
+		if err := deviceIoControl(h, _FSCTL_SET_REPARSE_POINT, b[:rdb.ReparseDataLength+8], nil, &retlen, nil); err != nil {
 			return linkError(err)
 		}
 	} else {

@@ -35,7 +35,6 @@ import (
 	"strings"
 )
 
-// disable repository discovery in tests
 var discover = true
 
 func Discover(b bool) bool {

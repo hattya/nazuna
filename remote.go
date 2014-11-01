@@ -47,18 +47,18 @@ type Remote struct {
 }
 
 func NewRemote(ui UI, src string) (*Remote, error) {
-	for _, rh := range RemoteHandlers {
+	for _, rh := range remoteHandlers {
 		if !strings.HasPrefix(src, rh.Prefix) {
 			continue
 		}
-		m := rh.re.FindStringSubmatch(src)
+		m := rh.rx.FindStringSubmatch(src)
 		if m == nil {
 			continue
 		}
 		g := map[string]string{
 			"vcs": rh.VCS,
 		}
-		for i, n := range rh.re.SubexpNames() {
+		for i, n := range rh.rx.SubexpNames() {
 			if n != "" && g[n] == "" {
 				g[n] = m[i]
 			}
@@ -105,10 +105,10 @@ type RemoteHandler struct {
 	Scheme string
 	Check  func(map[string]string) error
 
-	re *regexp.Regexp
+	rx *regexp.Regexp
 }
 
-var RemoteHandlers = []*RemoteHandler{
+var remoteHandlers = []*RemoteHandler{
 	{
 		Prefix: "github.com/",
 		Expr:   `^(?P<root>github\.com/[^/]+/[^/]+)(?P<path>.*)$`,
@@ -124,8 +124,8 @@ var RemoteHandlers = []*RemoteHandler{
 }
 
 func init() {
-	for _, r := range RemoteHandlers {
-		r.re = regexp.MustCompile(r.Expr)
+	for _, r := range remoteHandlers {
+		r.rx = regexp.MustCompile(r.Expr)
 	}
 }
 
