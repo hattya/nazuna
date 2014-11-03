@@ -163,7 +163,7 @@ func link(src, dst string) error {
 	}
 
 	if IsDir(src) {
-		if IsDir(dst) {
+		if _, err := os.Stat(dst); err == nil {
 			return linkError(syscall.ERROR_ALREADY_EXISTS)
 		}
 		if err := os.MkdirAll(dst, 0777); err != nil {
@@ -179,24 +179,18 @@ func link(src, dst string) error {
 		if err != nil {
 			return err
 		}
-		path = `\??\` + path
-		p, err := syscall.UTF16FromString(path)
-		if err != nil {
-			return linkError(err)
-		}
-		p = append(p, 0)
+		sn, _ := syscall.UTF16FromString(`\??\` + path)
+		pn, _ := syscall.UTF16FromString(path)
 
 		b := make([]byte, _MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 		var retlen uint32
 		rdb := (*reparseDataBuffer)(unsafe.Pointer(&b[0]))
 		rdb.ReparseTag = _IO_REPARSE_TAG_MOUNT_POINT
-		rdb.Reserved = 0
 		rb := (*mountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer[0]))
-		rb.SubstituteNameOffset = 0
-		rb.SubstituteNameLength = uint16((len(p) - 2) * 2)
+		rb.SubstituteNameLength = uint16((len(sn) - 1) * 2)
 		rb.PrintNameOffset = rb.SubstituteNameLength + 2
-		rb.PrintNameLength = 0
-		copy((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[:], p)
+		rb.PrintNameLength = uint16((len(pn) - 1) * 2)
+		copy((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[:], append(sn, pn...))
 		rdb.ReparseDataLength = 8 + rb.PrintNameOffset + rb.PrintNameLength + 2
 		if err := deviceIoControl(h, _FSCTL_SET_REPARSE_POINT, b[:rdb.ReparseDataLength+8], nil, &retlen, nil); err != nil {
 			return linkError(err)
