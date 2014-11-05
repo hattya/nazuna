@@ -115,16 +115,16 @@ func (wc *WC) Exists(path string) bool {
 }
 
 func (wc *WC) IsLink(path string) bool {
-	return isLink(wc.PathFor(path))
+	return IsLink(wc.PathFor(path))
 }
 
 func (wc *WC) LinksTo(path, origin string) bool {
-	return linksTo(wc.PathFor(path), origin)
+	return LinksTo(wc.PathFor(path), origin)
 }
 
 func (wc *WC) Link(src, dst string) error {
 	for p := filepath.Dir(wc.PathFor(dst)); p != wc.repo.root; p = filepath.Dir(p) {
-		if isLink(p) {
+		if IsLink(p) {
 			return &os.PathError{
 				Op:   "link",
 				Path: p,
@@ -137,16 +137,16 @@ func (wc *WC) Link(src, dst string) error {
 			return err
 		}
 	}
-	return link(src, wc.PathFor(dst))
+	return CreateLink(src, wc.PathFor(dst))
 }
 
 func (wc *WC) Unlink(path string) error {
 	path = wc.PathFor(path)
-	if err := unlink(path); err != nil {
+	if err := Unlink(path); err != nil {
 		return err
 	}
 	for p := filepath.Dir(path); p != wc.repo.root; p = filepath.Dir(p) {
-		if isLink(p) || !IsEmptyDir(p) {
+		if IsLink(p) || !IsEmptyDir(p) {
 			break
 		}
 		if err := os.Remove(p); err != nil {

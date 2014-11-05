@@ -242,15 +242,7 @@ func (sh *shell) ln(args ...string) (string, int) {
 	if len(args) != 3 || args[0] != "-s" {
 		return sh.report(fmt.Errorf("invalid arguments"))
 	}
-	repo, err := nazuna.Open(nil, ".")
-	if err != nil {
-		return sh.report(err)
-	}
-	wc, err := repo.WC()
-	if err != nil {
-		return sh.report(err)
-	}
-	return sh.report(wc.Link(args[1], args[2]))
+	return sh.report(nazuna.CreateLink(args[1], args[2]))
 }
 
 func (sh *shell) ls(args ...string) (string, int) {

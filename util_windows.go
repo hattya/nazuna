@@ -57,7 +57,7 @@ func RemoveAll(path string) error {
 	return os.RemoveAll(path)
 }
 
-func isLink(path string) bool {
+func IsLink(path string) bool {
 	h, err := createFile(path, 0)
 	if err != nil {
 		return false
@@ -86,7 +86,7 @@ func isLink(path string) bool {
 	return true
 }
 
-func linksTo(path, origin string) bool {
+func LinksTo(path, origin string) bool {
 	h, err := createFile(path, 0)
 	if err != nil {
 		return false
@@ -152,7 +152,7 @@ func linksTo(path, origin string) bool {
 	return path == origin
 }
 
-func link(src, dst string) error {
+func CreateLink(src, dst string) error {
 	linkError := func(err error) error {
 		return &os.LinkError{
 			Op:  "link",
@@ -211,8 +211,8 @@ func link(src, dst string) error {
 	return nil
 }
 
-func unlink(path string) error {
-	if !isLink(path) {
+func Unlink(path string) error {
+	if !IsLink(path) {
 		return &os.PathError{
 			Op:   "unlink",
 			Path: path,

@@ -1,7 +1,7 @@
 //
-// nazuna :: util_unix.go
+// nazuna :: util_unix_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,46 +26,54 @@
 
 // +build !plan9,!windows
 
-package nazuna
+package nazuna_test
 
 import (
-	"os"
-	"path/filepath"
+	"testing"
+
+	"github.com/hattya/nazuna"
 )
 
-var RemoveAll = os.RemoveAll
-
-func IsLink(path string) bool {
-	fi, err := os.Lstat(path)
-	return err == nil && fi.Mode()&os.ModeSymlink != 0
-}
-
-func LinksTo(path, origin string) bool {
-	if !IsLink(path) {
-		return false
-	}
-	r, err := os.Readlink(path)
+func TestCreateLink(t *testing.T) {
+	dir, err := tempDir()
 	if err != nil {
-		return false
+		t.Fatal(dir)
 	}
-	return filepath.Join(filepath.Dir(path), r) == origin
-}
-
-func CreateLink(src, dst string) error {
-	rel, err := filepath.Rel(filepath.Dir(dst), src)
+	defer nazuna.RemoveAll(dir)
+	popd, err := pushd(dir)
 	if err != nil {
-		rel = src
+		t.Fatal(err)
 	}
-	return os.Symlink(rel, dst)
-}
+	defer popd()
 
-func Unlink(path string) error {
-	if !IsLink(path) {
-		return &os.PathError{
-			Op:   "unlink",
-			Path: path,
-			Err:  ErrNotLink,
-		}
+	if err := touch("src"); err != nil {
+		t.Error(err)
 	}
-	return os.Remove(path)
+
+	if g, e := nazuna.IsLink("src"), false; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if err := nazuna.CreateLink("src", "dst"); err != nil {
+		t.Error(err)
+	}
+	if g, e := nazuna.IsLink("dst"), true; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+
+	if g, e := nazuna.LinksTo("dst", "src"), true; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := nazuna.LinksTo("dst", "_"), false; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := nazuna.LinksTo("src", "dst"), false; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+
+	if err := nazuna.Unlink("dst"); err != nil {
+		t.Error(err)
+	}
+	if err := nazuna.Unlink("src"); err == nil {
+		t.Error("expected error")
+	}
 }
