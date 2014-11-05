@@ -31,7 +31,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -110,7 +109,7 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 			}
 			for _, ll := range l.Layers {
 				if n[1] == ll.Name {
-					ll.abstract = l
+					ll.abst = l
 					return ll, nil
 				}
 			}
@@ -144,11 +143,11 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 			l = newLayer(n[0])
 		}
 		ll := &Layer{
-			Name:     n[1],
-			abstract: l,
+			Name: n[1],
+			abst: l,
 		}
 		l.Layers = append(l.Layers, ll)
-		sort.Sort(layerByName(l.Layers))
+		layerSlice(l.Layers).Sort()
 		l = ll
 	}
 	os.MkdirAll(r.PathFor(l, "/"), 0777)

@@ -163,11 +163,11 @@ func (wc *WC) SelectLayer(name string) error {
 		return err
 	case 0 < len(l.Layers):
 		return fmt.Errorf("layer '%v' is abstract", name)
-	case l.abstract == nil:
+	case l.abst == nil:
 		return fmt.Errorf("layer '%v' is not abstract", name)
 	}
 	for k, v := range wc.State.Layers {
-		if k == l.abstract.Name {
+		if k == l.abst.Name {
 			if v == l.Name {
 				return fmt.Errorf("layer '%v' is already '%v'", k, v)
 			}
@@ -178,7 +178,7 @@ func (wc *WC) SelectLayer(name string) error {
 	if wc.State.Layers == nil {
 		wc.State.Layers = make(map[string]string)
 	}
-	wc.State.Layers[l.abstract.Name] = l.Name
+	wc.State.Layers[l.abst.Name] = l.Name
 	return nil
 }
 

@@ -34,29 +34,6 @@ import (
 
 const Version = "0.3+"
 
-type Layer struct {
-	Name     string                `json:"name"`
-	Layers   []*Layer              `json:"layers,omitempty"`
-	Aliases  map[string]string     `json:"aliases,omitempty"`
-	Links    map[string][]*Link    `json:"links,omitempty"`
-	Subrepos map[string][]*Subrepo `json:"subrepos,omitempty"`
-
-	abstract *Layer
-}
-
-func (l *Layer) Path() string {
-	if l.abstract != nil {
-		return l.abstract.Name + "/" + l.Name
-	}
-	return l.Name
-}
-
-type layerByName []*Layer
-
-func (s layerByName) Len() int           { return len(s) }
-func (s layerByName) Less(i, j int) bool { return s[i].Name < s[j].Name }
-func (s layerByName) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-
 type Link struct {
 	Path []string `json:"path,omitempty"`
 	Src  string   `json:"src"`
