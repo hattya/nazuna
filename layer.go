@@ -52,3 +52,17 @@ func (p layerSlice) Less(i, j int) bool { return p[i].Name < p[j].Name }
 func (p layerSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func (p layerSlice) Sort() { sort.Sort(p) }
+
+type Link struct {
+	Path []string `json:"path,omitempty"`
+	Src  string   `json:"src"`
+	Dst  string   `json:"dst"`
+}
+
+type LinkSlice []*Link
+
+func (p LinkSlice) Len() int           { return len(p) }
+func (p LinkSlice) Less(i, j int) bool { return p[i].Dst < p[j].Dst }
+func (p LinkSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func (p LinkSlice) Sort() { sort.Sort(p) }

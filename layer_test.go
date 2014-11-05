@@ -57,3 +57,17 @@ func TestSortLayers(t *testing.T) {
 		t.Errorf("expected %v, got %v", e, g)
 	}
 }
+
+func TestSortLinks(t *testing.T) {
+	links := []*nazuna.Link{
+		{Dst: "b"},
+		{Dst: "a"},
+	}
+	nazuna.LinkSlice(links).Sort()
+	if g, e := links[0].Dst, "a"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := links[1].Dst, "b"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+}

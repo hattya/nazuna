@@ -29,7 +29,6 @@ package main
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/hattya/go.cli"
@@ -108,7 +107,7 @@ func link(ctx *cli.Context) error {
 			Src:  src,
 			Dst:  dst,
 		})
-		sort.Sort(nazuna.LinkByDst(l.Links[dir]))
+		nazuna.LinkSlice(l.Links[dir]).Sort()
 	}
 	return repo.Flush()
 }
