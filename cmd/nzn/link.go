@@ -76,11 +76,8 @@ func link(ctx *cli.Context) error {
 			return cli.ErrArgs
 		}
 		l, err := repo.LayerOf(ctx.String("layer"))
-		switch {
-		case err != nil:
+		if err != nil {
 			return err
-		case 0 < len(l.Layers):
-			return fmt.Errorf("layer '%v' is abstract", l.Path())
 		}
 		dst, err := wc.Rel('.', ctx.Args[1])
 		if err != nil {
@@ -93,21 +90,9 @@ func link(ctx *cli.Context) error {
 		default:
 			return fmt.Errorf("%v '%v' already exists!", typ, dst)
 		}
-		path := filepath.SplitList(ctx.String("path"))
-		for i, p := range path {
-			path[i] = filepath.ToSlash(filepath.Clean(p))
+		if _, err = l.NewLink(filepath.SplitList(ctx.String("path")), ctx.Args[0], dst); err != nil {
+			return err
 		}
-		src := filepath.ToSlash(filepath.Clean(ctx.Args[0]))
-		dir, dst := nazuna.SplitPath(dst)
-		if l.Links == nil {
-			l.Links = make(map[string][]*nazuna.Link)
-		}
-		l.Links[dir] = append(l.Links[dir], &nazuna.Link{
-			Path: path,
-			Src:  src,
-			Dst:  dst,
-		})
-		nazuna.LinkSlice(l.Links[dir]).Sort()
 	}
 	return repo.Flush()
 }

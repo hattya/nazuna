@@ -44,6 +44,26 @@ func TestLayer(t *testing.T) {
 	}
 }
 
+func TestLayerNewLink(t *testing.T) {
+	l := &nazuna.Layer{Name: "abst"}
+	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})
+	if _, err := l.NewLink([]string{}, "src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l = &nazuna.Layer{Name: "layer"}
+	lnk, err := l.NewLink([]string{"path"}, "src", "dst")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := lnk.Src, "src"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := lnk.Dst, "dst"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+}
+
 func TestSortLayers(t *testing.T) {
 	layers := []*nazuna.Layer{
 		{Name: "b"},
@@ -63,7 +83,7 @@ func TestSortLinks(t *testing.T) {
 		{Dst: "b"},
 		{Dst: "a"},
 	}
-	nazuna.LinkSlice(links).Sort()
+	nazuna.SortLinks(links)
 	if g, e := links[0].Dst, "a"; g != e {
 		t.Errorf("expected %v, got %v", e, g)
 	}

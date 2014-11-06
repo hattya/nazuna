@@ -26,7 +26,11 @@
 
 package nazuna
 
-import "sort"
+import (
+	"fmt"
+	"path/filepath"
+	"sort"
+)
 
 type Layer struct {
 	Name     string                `json:"name"`
@@ -45,6 +49,36 @@ func (l *Layer) Path() string {
 	return l.Name
 }
 
+func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
+	if err := l.check(); err != nil {
+		return nil, err
+	}
+
+	for i, p := range path {
+		path[i] = filepath.ToSlash(filepath.Clean(p))
+	}
+	src = filepath.ToSlash(filepath.Clean(src))
+	dir, dst := SplitPath(dst)
+	lnk := &Link{
+		Path: path,
+		Src:  src,
+		Dst:  dst,
+	}
+	if l.Links == nil {
+		l.Links = make(map[string][]*Link)
+	}
+	l.Links[dir] = append(l.Links[dir], lnk)
+	linkSlice(l.Links[dir]).Sort()
+	return lnk, nil
+}
+
+func (l *Layer) check() error {
+	if 0 < len(l.Layers) {
+		return fmt.Errorf("layer '%v' is abstract", l.Path())
+	}
+	return nil
+}
+
 type layerSlice []*Layer
 
 func (p layerSlice) Len() int           { return len(p) }
@@ -59,10 +93,10 @@ type Link struct {
 	Dst  string   `json:"dst"`
 }
 
-type LinkSlice []*Link
+type linkSlice []*Link
 
-func (p LinkSlice) Len() int           { return len(p) }
-func (p LinkSlice) Less(i, j int) bool { return p[i].Dst < p[j].Dst }
-func (p LinkSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p linkSlice) Len() int           { return len(p) }
+func (p linkSlice) Less(i, j int) bool { return p[i].Dst < p[j].Dst }
+func (p linkSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func (p LinkSlice) Sort() { sort.Sort(p) }
+func (p linkSlice) Sort() { sort.Sort(p) }

@@ -34,3 +34,8 @@ func SortLayers(layers []*Layer) []*Layer {
 	layerSlice(layers).Sort()
 	return layers
 }
+
+func SortLinks(links []*Link) []*Link {
+	linkSlice(links).Sort()
+	return links
+}
