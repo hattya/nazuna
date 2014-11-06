@@ -107,3 +107,17 @@ func TestSortLinks(t *testing.T) {
 		t.Errorf("expected %v, got %v", e, g)
 	}
 }
+
+func TestSortSubrepos(t *testing.T) {
+	subrepos := []*nazuna.Subrepo{
+		{Src: "b"},
+		{Src: "a"},
+	}
+	nazuna.SubrepoSlice(subrepos).Sort()
+	if g, e := subrepos[0].Src, "a"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := subrepos[1].Src, "b"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+}

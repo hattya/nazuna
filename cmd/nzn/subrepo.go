@@ -30,7 +30,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/hattya/go.cli"
@@ -118,7 +117,7 @@ func subrepo(ctx *cli.Context) error {
 			Src:  src,
 			Name: name,
 		})
-		sort.Sort(nazuna.SubrepoBySrc(l.Subrepos[path]))
+		nazuna.SubrepoSlice(l.Subrepos[path]).Sort()
 		return repo.Flush()
 	case ctx.Bool("update"):
 		_, err := wc.MergeLayers()

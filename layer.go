@@ -115,3 +115,16 @@ func (p linkSlice) Less(i, j int) bool { return p[i].Dst < p[j].Dst }
 func (p linkSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func (p linkSlice) Sort() { sort.Sort(p) }
+
+type Subrepo struct {
+	Src  string `json:"src"`
+	Name string `json:"name,omitempty"`
+}
+
+type SubrepoSlice []*Subrepo
+
+func (p SubrepoSlice) Len() int           { return len(p) }
+func (p SubrepoSlice) Less(i, j int) bool { return p[i].Src < p[j].Src }
+func (p SubrepoSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func (p SubrepoSlice) Sort() { sort.Sort(p) }

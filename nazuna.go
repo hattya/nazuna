@@ -34,17 +34,6 @@ import (
 
 const Version = "0.3+"
 
-type Subrepo struct {
-	Src  string `json:"src"`
-	Name string `json:"name,omitempty"`
-}
-
-type SubrepoBySrc []*Subrepo
-
-func (s SubrepoBySrc) Len() int           { return len(s) }
-func (s SubrepoBySrc) Less(i, j int) bool { return s[i].Src < s[j].Src }
-func (s SubrepoBySrc) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-
 type State struct {
 	Layers map[string]string `json:"layers,omitempty"`
 	WC     []*Entry          `json:"wc,omitempty"`
