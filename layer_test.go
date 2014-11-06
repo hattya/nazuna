@@ -27,6 +27,7 @@
 package nazuna_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -80,6 +81,40 @@ func TestLayerNewLink(t *testing.T) {
 	}
 }
 
+func TestLayerNewSubrepo(t *testing.T) {
+	src := "github.com/hattya/nazuna"
+
+	l := &nazuna.Layer{Name: "abst"}
+	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})
+	if _, err := l.NewSubrepo(src, "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l = &nazuna.Layer{Name: "layer"}
+	sub, err := l.NewSubrepo(src, "dst")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := sub.Src, src; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := sub.Name, "dst"; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+
+	l.Subrepos = nil
+	sub, err = l.NewSubrepo(src, filepath.Base(src))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := sub.Src, src; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+	if g, e := sub.Name, ""; g != e {
+		t.Errorf("expected %v, got %v", e, g)
+	}
+}
+
 func TestSortLayers(t *testing.T) {
 	layers := []*nazuna.Layer{
 		{Name: "b"},
@@ -113,7 +148,7 @@ func TestSortSubrepos(t *testing.T) {
 		{Src: "b"},
 		{Src: "a"},
 	}
-	nazuna.SubrepoSlice(subrepos).Sort()
+	nazuna.SortSubrepos(subrepos)
 	if g, e := subrepos[0].Src, "a"; g != e {
 		t.Errorf("expected %v, got %v", e, g)
 	}

@@ -39,3 +39,8 @@ func SortLinks(links []*Link) []*Link {
 	linkSlice(links).Sort()
 	return links
 }
+
+func SortSubrepos(subrepos []*Subrepo) []*Subrepo {
+	subrepoSlice(subrepos).Sort()
+	return subrepos
+}

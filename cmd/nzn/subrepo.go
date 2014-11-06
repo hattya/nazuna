@@ -82,26 +82,19 @@ func subrepo(ctx *cli.Context) error {
 			return cli.ErrArgs
 		}
 		l, err := repo.LayerOf(ctx.String("layer"))
-		switch {
-		case err != nil:
-			return err
-		case 0 < len(l.Layers):
-			return fmt.Errorf("layer '%v' is abstract", l.Path())
-		}
-		src := ctx.Args[0]
-		path, err := wc.Rel('.', ctx.Args[1])
 		if err != nil {
 			return err
 		}
-		var name, dst string
-		if 0 < len(ctx.Args[1]) && os.IsPathSeparator(ctx.Args[1][len(ctx.Args[1])-1]) {
-			dst = path + "/" + filepath.Base(src)
+		src := ctx.Args[0]
+		dst := ctx.Args[1]
+		rel, err := wc.Rel('.', dst)
+		if err != nil {
+			return err
+		}
+		if 0 < len(dst) && os.IsPathSeparator(dst[len(dst)-1]) {
+			dst = rel + "/" + filepath.Base(src)
 		} else {
-			path, name = nazuna.SplitPath(path)
-			dst = path + "/" + name
-			if name == filepath.Base(src) {
-				name = ""
-			}
+			dst = rel
 		}
 		switch typ := repo.Find(l, dst); typ {
 		case "":
@@ -110,14 +103,9 @@ func subrepo(ctx *cli.Context) error {
 		default:
 			return fmt.Errorf("%v '%v' already exists!", typ, dst)
 		}
-		if l.Subrepos == nil {
-			l.Subrepos = make(map[string][]*nazuna.Subrepo)
+		if _, err := l.NewSubrepo(src, dst); err != nil {
+			return err
 		}
-		l.Subrepos[path] = append(l.Subrepos[path], &nazuna.Subrepo{
-			Src:  src,
-			Name: name,
-		})
-		nazuna.SubrepoSlice(l.Subrepos[path]).Sort()
 		return repo.Flush()
 	case ctx.Bool("update"):
 		_, err := wc.MergeLayers()

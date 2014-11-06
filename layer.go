@@ -87,6 +87,27 @@ func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
 	return lnk, nil
 }
 
+func (l *Layer) NewSubrepo(src, dst string) (*Subrepo, error) {
+	if err := l.check(); err != nil {
+		return nil, err
+	}
+
+	dir, name := SplitPath(dst)
+	if name == filepath.Base(src) {
+		name = ""
+	}
+	sub := &Subrepo{
+		Src:  src,
+		Name: name,
+	}
+	if l.Subrepos == nil {
+		l.Subrepos = make(map[string][]*Subrepo)
+	}
+	l.Subrepos[dir] = append(l.Subrepos[dir], sub)
+	subrepoSlice(l.Subrepos[dir]).Sort()
+	return sub, nil
+}
+
 func (l *Layer) check() error {
 	if 0 < len(l.Layers) {
 		return fmt.Errorf("layer '%v' is abstract", l.Path())
@@ -121,10 +142,10 @@ type Subrepo struct {
 	Name string `json:"name,omitempty"`
 }
 
-type SubrepoSlice []*Subrepo
+type subrepoSlice []*Subrepo
 
-func (p SubrepoSlice) Len() int           { return len(p) }
-func (p SubrepoSlice) Less(i, j int) bool { return p[i].Src < p[j].Src }
-func (p SubrepoSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p subrepoSlice) Len() int           { return len(p) }
+func (p subrepoSlice) Less(i, j int) bool { return p[i].Src < p[j].Src }
+func (p subrepoSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func (p SubrepoSlice) Sort() { sort.Sort(p) }
+func (p subrepoSlice) Sort() { sort.Sort(p) }
