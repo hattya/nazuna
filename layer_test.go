@@ -44,6 +44,22 @@ func TestLayer(t *testing.T) {
 	}
 }
 
+func TestLayerNewAlias(t *testing.T) {
+	l := &nazuna.Layer{Name: "abst"}
+	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})
+	if err := l.NewAlias("src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l = &nazuna.Layer{Name: "layer"}
+	if err := l.NewAlias("src", "src"); err == nil {
+		t.Error("expected error")
+	}
+	if err := l.NewAlias("src", "dst"); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestLayerNewLink(t *testing.T) {
 	l := &nazuna.Layer{Name: "abst"}
 	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})

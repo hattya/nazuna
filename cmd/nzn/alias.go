@@ -72,22 +72,16 @@ func alias(ctx *cli.Context) error {
 			return cli.ErrArgs
 		}
 		l, err := repo.LayerOf(ctx.String("layer"))
-		switch {
-		case err != nil:
+		if err != nil {
 			return err
-		case 0 < len(l.Layers):
-			return fmt.Errorf("layer '%v' is abstract", l.Path())
 		}
 		src, err := wc.Rel('/', ctx.Args[0])
 		if err != nil {
 			return err
 		}
 		dst, err := wc.Rel('.', ctx.Args[1])
-		switch {
-		case err != nil:
+		if err != nil {
 			return err
-		case src == dst:
-			return fmt.Errorf("'%v' and '%v' are the same file", src, dst)
 		}
 		switch typ := repo.Find(l, dst); typ {
 		case "", "dir":
@@ -96,10 +90,9 @@ func alias(ctx *cli.Context) error {
 		default:
 			return fmt.Errorf("%v '%v' already exists!", typ, dst)
 		}
-		if l.Aliases == nil {
-			l.Aliases = make(map[string]string)
+		if err := l.NewAlias(src, dst); err != nil {
+			return err
 		}
-		l.Aliases[src] = dst
 	}
 	return repo.Flush()
 }

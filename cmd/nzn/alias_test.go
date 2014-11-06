@@ -243,7 +243,7 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "src"},
-			out: `nzn: 'src' and 'src' are the same file
+			out: `nzn: 'src' and 'src' are the same path
 [1]
 `,
 		},

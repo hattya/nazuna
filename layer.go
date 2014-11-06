@@ -49,6 +49,21 @@ func (l *Layer) Path() string {
 	return l.Name
 }
 
+func (l *Layer) NewAlias(src, dst string) error {
+	if err := l.check(); err != nil {
+		return err
+	}
+	if src == dst {
+		return fmt.Errorf("'%v' and '%v' are the same path", src, dst)
+	}
+
+	if l.Aliases == nil {
+		l.Aliases = make(map[string]string)
+	}
+	l.Aliases[src] = dst
+	return nil
+}
+
 func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
 	if err := l.check(); err != nil {
 		return nil, err
