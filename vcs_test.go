@@ -27,9 +27,7 @@
 package nazuna_test
 
 import (
-	"bytes"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 
@@ -51,23 +49,6 @@ func newTest(ui nazuna.UI, dir string) nazuna.VCS {
 
 func init() {
 	nazuna.RegisterVCS("test", ".test", newTest)
-}
-
-type testUI struct {
-	bytes.Buffer
-}
-
-func (*testUI) Print(...interface{}) (int, error)          { return 0, nil }
-func (*testUI) Printf(string, ...interface{}) (int, error) { return 0, nil }
-func (*testUI) Println(...interface{}) (int, error)        { return 0, nil }
-func (*testUI) Error(...interface{}) (int, error)          { return 0, nil }
-func (*testUI) Errorf(string, ...interface{}) (int, error) { return 0, nil }
-func (*testUI) Errorln(...interface{}) (int, error)        { return 0, nil }
-
-func (ui *testUI) Exec(cmd *exec.Cmd) error {
-	cmd.Stdout = ui
-	cmd.Stderr = ui
-	return cmd.Run()
 }
 
 func TestRegisterVCSPanic(t *testing.T) {

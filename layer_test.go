@@ -27,6 +27,7 @@
 package nazuna_test
 
 import (
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -46,15 +47,66 @@ func TestLayer(t *testing.T) {
 }
 
 func TestLayerNewAlias(t *testing.T) {
-	l := &nazuna.Layer{Name: "abst"}
-	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})
+	dir, err := tempDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nazuna.RemoveAll(dir)
+	repo, err := create(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := repo.NewLayer("abst/layer"); err != nil {
+		t.Fatal(err)
+	}
+
+	l, err := repo.LayerOf("abst")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := l.NewAlias("src", "dst"); err == nil {
 		t.Error("expected error")
 	}
 
-	l = &nazuna.Layer{Name: "layer"}
+	l, err = repo.LayerOf("abst/layer")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := l.NewAlias("src", "src"); err == nil {
 		t.Error("expected error")
+	}
+	if err := l.NewAlias("src", "dst"); err != nil {
+		t.Error(err)
+	}
+
+	if err := l.NewAlias("src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Aliases = nil
+	if err := touch(repo.PathFor(l, "dst")); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Command("add", "."); err != nil {
+		t.Fatal(err)
+	}
+	if err := l.NewAlias("src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Aliases = nil
+	if err := repo.Command("rm", "-rf", "."); err != nil {
+		t.Fatal(err)
+	}
+	if err := mkdir(repo.PathFor(l, "dst")); err != nil {
+		t.Fatal(err)
+	}
+	if err := touch(repo.PathFor(l, filepath.Join("dst", "file"))); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Command("add", "."); err != nil {
+		t.Fatal(err)
 	}
 	if err := l.NewAlias("src", "dst"); err != nil {
 		t.Error(err)
@@ -62,13 +114,32 @@ func TestLayerNewAlias(t *testing.T) {
 }
 
 func TestLayerNewLink(t *testing.T) {
-	l := &nazuna.Layer{Name: "abst"}
-	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})
+	dir, err := tempDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nazuna.RemoveAll(dir)
+	repo, err := create(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := repo.NewLayer("abst/layer"); err != nil {
+		t.Fatal(err)
+	}
+
+	l, err := repo.LayerOf("abst")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err := l.NewLink([]string{}, "src", "dst"); err == nil {
 		t.Error("expected error")
 	}
 
-	l = &nazuna.Layer{Name: "layer"}
+	l, err = repo.LayerOf("abst/layer")
+	if err != nil {
+		t.Fatal(err)
+	}
 	lnk, err := l.NewLink([]string{"path"}, "src", "dst")
 	if err != nil {
 		t.Fatal(err)
@@ -79,18 +150,68 @@ func TestLayerNewLink(t *testing.T) {
 	if g, e := lnk.Dst, "dst"; g != e {
 		t.Errorf("expected %v, got %v", e, g)
 	}
+
+	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Links = nil
+	if err := touch(repo.PathFor(l, "dst")); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Command("add", "."); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Links = nil
+	if err := repo.Command("rm", "-rf", "."); err != nil {
+		t.Fatal(err)
+	}
+	if err := mkdir(repo.PathFor(l, "dst")); err != nil {
+		t.Fatal(err)
+	}
+	if err := touch(repo.PathFor(l, filepath.Join("dst", "file"))); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Command("add", "."); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
+		t.Error("expected error")
+	}
 }
 
 func TestLayerNewSubrepo(t *testing.T) {
+	dir, err := tempDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nazuna.RemoveAll(dir)
+	repo, err := create(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := repo.NewLayer("abst/layer"); err != nil {
+		t.Fatal(err)
+	}
 	src := "github.com/hattya/nazuna"
 
-	l := &nazuna.Layer{Name: "abst"}
-	l.Layers = append(l.Layers, &nazuna.Layer{Name: "layer"})
+	l, err := repo.LayerOf("abst")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err := l.NewSubrepo(src, "dst"); err == nil {
 		t.Error("expected error")
 	}
 
-	l = &nazuna.Layer{Name: "layer"}
+	l, err = repo.LayerOf("abst/layer")
+	if err != nil {
+		t.Fatal(err)
+	}
 	sub, err := l.NewSubrepo(src, "dst")
 	if err != nil {
 		t.Fatal(err)
@@ -113,6 +234,51 @@ func TestLayerNewSubrepo(t *testing.T) {
 	if g, e := sub.Name, ""; g != e {
 		t.Errorf("expected %v, got %v", e, g)
 	}
+
+	if _, err := l.NewSubrepo(src, filepath.Base(src)); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Subrepos = nil
+	if err := touch(repo.PathFor(l, "dst")); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Command("add", "."); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = l.NewSubrepo(src, "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Subrepos = nil
+	if err := repo.Command("rm", "-rf", "."); err != nil {
+		t.Fatal(err)
+	}
+	if err := mkdir(repo.PathFor(l, "dst")); err != nil {
+		t.Fatal(err)
+	}
+	if err := touch(repo.PathFor(l, filepath.Join("dst", "file"))); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Command("add", "."); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = l.NewSubrepo(src, "dst"); err == nil {
+		t.Error("expected error")
+	}
+}
+
+func create(path string) (*nazuna.Repository, error) {
+	rdir := filepath.Join(path, ".nzn", "r")
+	if err := mkdir(rdir); err != nil {
+		return nil, err
+	}
+	cmd := exec.Command("git", "init", "-q")
+	cmd.Dir = rdir
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+	return nazuna.Open(&testUI{}, path)
 }
 
 func TestSortLayers(t *testing.T) {

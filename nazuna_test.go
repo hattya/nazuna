@@ -27,14 +27,33 @@
 package nazuna_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
+	"os/exec"
 
 	"github.com/hattya/nazuna"
 )
 
 func init() {
 	nazuna.Discover(false)
+}
+
+type testUI struct {
+	bytes.Buffer
+}
+
+func (*testUI) Print(...interface{}) (int, error)          { return 0, nil }
+func (*testUI) Printf(string, ...interface{}) (int, error) { return 0, nil }
+func (*testUI) Println(...interface{}) (int, error)        { return 0, nil }
+func (*testUI) Error(...interface{}) (int, error)          { return 0, nil }
+func (*testUI) Errorf(string, ...interface{}) (int, error) { return 0, nil }
+func (*testUI) Errorln(...interface{}) (int, error)        { return 0, nil }
+
+func (ui *testUI) Exec(cmd *exec.Cmd) error {
+	cmd.Stdout = ui
+	cmd.Stderr = ui
+	return cmd.Run()
 }
 
 func pushd(path string) (func() error, error) {

@@ -103,12 +103,14 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 		if n[0] == l.Name {
 			switch {
 			case len(n) == 1:
+				l.repo = r
 				return l, nil
 			case len(l.Layers) == 0:
 				return nil, fmt.Errorf("layer '%v' is not abstract", n[0])
 			}
 			for _, ll := range l.Layers {
 				if n[1] == ll.Name {
+					ll.repo = r
 					ll.abst = l
 					return ll, nil
 				}

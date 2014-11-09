@@ -27,7 +27,6 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -82,13 +81,6 @@ func link(ctx *cli.Context) error {
 		dst, err := wc.Rel('.', ctx.Args[1])
 		if err != nil {
 			return err
-		}
-		switch typ := repo.Find(l, dst); typ {
-		case "":
-		case "dir", "file":
-			return fmt.Errorf("'%v' already exists!", dst)
-		default:
-			return fmt.Errorf("%v '%v' already exists!", typ, dst)
 		}
 		if _, err = l.NewLink(filepath.SplitList(ctx.String("path")), ctx.Args[0], dst); err != nil {
 			return err

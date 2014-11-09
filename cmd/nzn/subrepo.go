@@ -27,7 +27,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -95,13 +94,6 @@ func subrepo(ctx *cli.Context) error {
 			dst = rel + "/" + filepath.Base(src)
 		} else {
 			dst = rel
-		}
-		switch typ := repo.Find(l, dst); typ {
-		case "":
-		case "dir", "file":
-			return fmt.Errorf("'%v' already exists!", dst)
-		default:
-			return fmt.Errorf("%v '%v' already exists!", typ, dst)
 		}
 		if _, err := l.NewSubrepo(src, dst); err != nil {
 			return err

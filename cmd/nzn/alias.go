@@ -27,7 +27,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hattya/go.cli"
@@ -82,13 +81,6 @@ func alias(ctx *cli.Context) error {
 		dst, err := wc.Rel('.', ctx.Args[1])
 		if err != nil {
 			return err
-		}
-		switch typ := repo.Find(l, dst); typ {
-		case "", "dir":
-		case "file":
-			return fmt.Errorf("'%v' already exists!", dst)
-		default:
-			return fmt.Errorf("%v '%v' already exists!", typ, dst)
 		}
 		if err := l.NewAlias(src, dst); err != nil {
 			return err

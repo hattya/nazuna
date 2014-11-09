@@ -39,6 +39,7 @@ type Layer struct {
 	Links    map[string][]*Link    `json:"links,omitempty"`
 	Subrepos map[string][]*Subrepo `json:"subrepos,omitempty"`
 
+	repo *Repository
 	abst *Layer
 }
 
@@ -50,11 +51,11 @@ func (l *Layer) Path() string {
 }
 
 func (l *Layer) NewAlias(src, dst string) error {
-	if err := l.check(); err != nil {
-		return err
-	}
 	if src == dst {
 		return fmt.Errorf("'%v' and '%v' are the same path", src, dst)
+	}
+	if err := l.check(dst, true); err != nil {
+		return err
 	}
 
 	if l.Aliases == nil {
@@ -65,7 +66,7 @@ func (l *Layer) NewAlias(src, dst string) error {
 }
 
 func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
-	if err := l.check(); err != nil {
+	if err := l.check(dst, false); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +89,7 @@ func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
 }
 
 func (l *Layer) NewSubrepo(src, dst string) (*Subrepo, error) {
-	if err := l.check(); err != nil {
+	if err := l.check(dst, false); err != nil {
 		return nil, err
 	}
 
@@ -108,9 +109,19 @@ func (l *Layer) NewSubrepo(src, dst string) (*Subrepo, error) {
 	return sub, nil
 }
 
-func (l *Layer) check() error {
+func (l *Layer) check(path string, dir bool) error {
 	if 0 < len(l.Layers) {
 		return fmt.Errorf("layer '%v' is abstract", l.Path())
+	}
+	switch typ := l.repo.Find(l, path); typ {
+	case "":
+	case "file", "dir":
+		if dir && typ == "dir" {
+			break
+		}
+		return fmt.Errorf("'%v' already exists!", path)
+	default:
+		return fmt.Errorf("%v '%v' already exists!", typ, path)
 	}
 	return nil
 }
