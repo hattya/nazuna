@@ -1,19 +1,39 @@
 var proj = os.getwd().split(/[/\\]+/).slice(-1);
+var rdeps = {
+  './': [
+    './cmd/nzn'
+  ],
+  './testutil': [
+    './',
+    './cmd/nzn'
+  ],
+};
 
 // go
 aster.watch(/.+\.go$/, function(files) {
+  if (go('get', '-t', '-v', './...')) {
+    return;
+  }
+  if (go('vet', './...')) {
+    return;
+  }
   var pkgs = {};
   files.forEach(function(f) {
     var pkg = './' + f.split(/[/\\]+/).slice(0, -1).join('/');
     pkgs[pkg] = true;
   });
+  var order = [];
   for (var pkg in pkgs) {
-    if (go('vet', pkg)) {
-      return;
+    order.push(pkg);
+    if (pkg in rdeps) {
+      rdeps[pkg].forEach(function(dep) {
+        if (order.indexOf(dep) === -1) {
+          order.push(dep);
+        }
+      });
     }
-    if (go('get', '-t', '-v', pkg)) {
-      return;
-    }
+  }
+  order.forEach(function(pkg) {
     var cover_out = 'cover.out';
     var coverage_html = 'coverage.html';
     if (2 < pkg.length) {
@@ -25,7 +45,7 @@ aster.watch(/.+\.go$/, function(files) {
     }
     cover('-func', cover_out);
     cover('-html', cover_out, '-o', coverage_html);
-  }
+  });
 });
 
 function go() {
