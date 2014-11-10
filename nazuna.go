@@ -32,7 +32,7 @@ import (
 	"path/filepath"
 )
 
-const Version = "0.3+"
+const Version = "0.4"
 
 type State struct {
 	Layers map[string]string `json:"layers,omitempty"`
