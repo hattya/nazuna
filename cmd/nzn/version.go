@@ -35,6 +35,6 @@ func init() {
 }
 
 func showVersion(ctx *cli.Context) error {
-	ctx.UI.Printf("nazuna, version %v\n", ctx.UI.Version)
+	ctx.UI.Printf("nazuna version %v\n", ctx.UI.Version)
 	return nil
 }

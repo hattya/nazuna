@@ -65,7 +65,7 @@ func TestInitError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "init", "w"},
-			out: `nzn init: flag --vcs is required
+			out: `nzn init: --vcs flag is required
 usage: nzn init --vcs <type> [<path>]
 
 create a new repository in the specified directory

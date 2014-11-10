@@ -73,7 +73,7 @@ func clone(ctx *cli.Context) error {
 	}
 
 	if ctx.String("vcs") == "" {
-		return cli.FlagError("flag --vcs is required")
+		return cli.FlagError("--vcs flag is required")
 	}
 	ui := newUI()
 	vcs, err := nazuna.FindVCS(ui, ctx.String("vcs"), "")

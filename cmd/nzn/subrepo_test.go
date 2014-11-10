@@ -154,11 +154,11 @@ Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/bundle/editorconfig-vim --> bitbucket.org/editorconfig/editorconfig-vim
-link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
+			out: fmt.Sprintf(`link .vim/bundle/editorconfig-vim --> bitbucket.org/editorconfig/editorconfig-vim
+link .vim/bundle/golang/ --> .*%v (re)
 link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
 3 updated, 0 removed, 0 failed
-`,
+`, quote("/r/go/misc/vim/")),
 		},
 		{
 			cmd: []string{"cd", "../r/editorconfig-vim"},
@@ -229,7 +229,7 @@ func TestSubrepoError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-a"},
-			out: `nzn subrepo: flag --layer is required
+			out: `nzn subrepo: --layer flag is required
 usage: nzn subrepo -l <layer> -a <repository> <path>
    or: nzn subrepo -u
 
@@ -237,12 +237,12 @@ manage subrepositories
 
   subrepo is used to manage external repositories.
 
-  subrepo can associate <repository> to <path> by flag --add. If <path> ends
+  subrepo can associate <repository> to <path> by --add flag. If <path> ends
   with a path separator, it will be associated as the basename of <repository>
   under <path>.
 
-  subrepo can clone or update the repositories in the working copy by flag
-  --update.
+  subrepo can clone or update the repositories in the working copy by --update
+  flag.
 
 options:
 
@@ -441,9 +441,9 @@ func TestSubrepoUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `nzn: \w+ .*` + quote("/w/.nzn/r/a/.vimrc") + `: .* (re)
+			out: fmt.Sprintf(`nzn: \w+ .*%v: .* (re)
 [1]
-`,
+`, quote("/w/.nzn/r/a/.vimrc")),
 		},
 		{
 			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/.vimrc"},

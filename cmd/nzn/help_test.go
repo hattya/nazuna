@@ -28,6 +28,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -61,6 +62,8 @@ options:
 )
 
 func TestHelp(t *testing.T) {
+	usage := strings.TrimSuffix(helpUsage, "\n")
+	out := strings.TrimSuffix(helpOut, "\n")
 	s := script{
 		{
 			cmd: []string{"nzn", "--help"},
@@ -72,15 +75,23 @@ func TestHelp(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn"},
-			out: fmt.Sprintf("%v[1]\n", helpOut),
+			out: fmt.Sprintf(`%v
+[1]
+`, out),
 		},
 		{
 			cmd: []string{"nzn", "--nazuna"},
-			out: fmt.Sprintf("nzn: flag .* not defined: -*nazuna (re)\n%v[2]\n", helpOut),
+			out: fmt.Sprintf(`nzn: flag .* not defined: -*nazuna (re)
+%v
+[2]
+`, out),
 		},
 		{
 			cmd: []string{"nzn", "nazuna"},
-			out: fmt.Sprintf("nzn: unknown command 'nazuna'\n%v[1]\n", helpOut),
+			out: fmt.Sprintf(`nzn: unknown command 'nazuna'
+%v
+[1]
+`, out),
 		},
 		{
 			cmd: []string{"nzn", "help", "help"},
@@ -92,7 +103,10 @@ func TestHelp(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "help", "--nazuna"},
-			out: fmt.Sprintf("nzn help: flag .* not defined: -*nazuna (re)\n%v[2]\n", helpUsage),
+			out: fmt.Sprintf(`nzn help: flag .* not defined: -*nazuna (re)
+%v
+[2]
+`, usage),
 		},
 	}
 	if err := s.exec(); err != nil {

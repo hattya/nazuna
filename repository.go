@@ -72,7 +72,7 @@ func Open(ui UI, path string) (*Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := &Repository{
+	repo := &Repository{
 		ui:      ui,
 		vcs:     vcs,
 		root:    root,
@@ -81,36 +81,36 @@ func Open(ui UI, path string) (*Repository, error) {
 		subroot: filepath.Join(nzndir, "sub"),
 	}
 
-	if err := unmarshal(r, filepath.Join(r.rdir, "nazuna.json"), &r.Layers); err != nil {
+	if err := unmarshal(repo, filepath.Join(repo.rdir, "nazuna.json"), &repo.Layers); err != nil {
 		return nil, err
 	}
-	if r.Layers == nil {
-		r.Layers = []*Layer{}
+	if repo.Layers == nil {
+		repo.Layers = []*Layer{}
 	}
-	return r, nil
+	return repo, nil
 }
 
-func (r *Repository) Flush() error {
-	return marshal(r, filepath.Join(r.rdir, "nazuna.json"), r.Layers)
+func (repo *Repository) Flush() error {
+	return marshal(repo, filepath.Join(repo.rdir, "nazuna.json"), repo.Layers)
 }
 
-func (r *Repository) LayerOf(name string) (*Layer, error) {
-	n, err := r.splitLayer(name)
+func (repo *Repository) LayerOf(name string) (*Layer, error) {
+	n, err := repo.splitLayer(name)
 	if err != nil {
 		return nil, err
 	}
-	for _, l := range r.Layers {
+	for _, l := range repo.Layers {
 		if n[0] == l.Name {
 			switch {
 			case len(n) == 1:
-				l.repo = r
+				l.repo = repo
 				return l, nil
 			case len(l.Layers) == 0:
 				return nil, fmt.Errorf("layer '%v' is not abstract", n[0])
 			}
 			for _, ll := range l.Layers {
 				if n[1] == ll.Name {
-					ll.repo = r
+					ll.repo = repo
 					ll.abst = l
 					return ll, nil
 				}
@@ -120,27 +120,27 @@ func (r *Repository) LayerOf(name string) (*Layer, error) {
 	return nil, fmt.Errorf("layer '%v' does not exist!", name)
 }
 
-func (r *Repository) NewLayer(name string) (*Layer, error) {
-	switch _, err := r.LayerOf(name); {
+func (repo *Repository) NewLayer(name string) (*Layer, error) {
+	switch _, err := repo.LayerOf(name); {
 	case err != nil && !strings.Contains(err.Error(), "not exist"):
 		return nil, err
-	case err == nil || !IsEmptyDir(filepath.Join(r.rdir, name)):
+	case err == nil || !IsEmptyDir(filepath.Join(repo.rdir, name)):
 		return nil, fmt.Errorf("layer '%v' already exists!", name)
 	}
 
 	var l *Layer
 	newLayer := func(n string) *Layer {
-		r.Layers = append(r.Layers, nil)
-		copy(r.Layers[1:], r.Layers)
-		r.Layers[0] = &Layer{Name: n}
-		return r.Layers[0]
+		repo.Layers = append(repo.Layers, nil)
+		copy(repo.Layers[1:], repo.Layers)
+		repo.Layers[0] = &Layer{Name: n}
+		return repo.Layers[0]
 	}
-	switch n, _ := r.splitLayer(name); len(n) {
+	switch n, _ := repo.splitLayer(name); len(n) {
 	case 1:
 		l = newLayer(n[0])
 	default:
 		var err error
-		l, err = r.LayerOf(n[0])
+		l, err = repo.LayerOf(n[0])
 		if err != nil {
 			l = newLayer(n[0])
 		}
@@ -152,11 +152,11 @@ func (r *Repository) NewLayer(name string) (*Layer, error) {
 		layerSlice(l.Layers).Sort()
 		l = ll
 	}
-	os.MkdirAll(r.PathFor(l, "/"), 0777)
+	os.MkdirAll(repo.PathFor(l, "/"), 0777)
 	return l, nil
 }
 
-func (r *Repository) splitLayer(name string) ([]string, error) {
+func (repo *Repository) splitLayer(name string) ([]string, error) {
 	n := strings.Split(name, "/")
 	if 2 < len(n) || strings.TrimSpace(n[0]) == "" || (1 < len(n) && strings.TrimSpace(n[1]) == "") {
 		return nil, fmt.Errorf("invalid layer '%v'", name)
@@ -164,23 +164,23 @@ func (r *Repository) splitLayer(name string) ([]string, error) {
 	return n, nil
 }
 
-func (r *Repository) PathFor(layer *Layer, path string) string {
+func (repo *Repository) PathFor(layer *Layer, path string) string {
 	if layer != nil {
-		return filepath.Join(r.rdir, layer.Path(), path)
+		return filepath.Join(repo.rdir, layer.Path(), path)
 	}
-	return filepath.Join(r.rdir, path)
+	return filepath.Join(repo.rdir, path)
 }
 
-func (r *Repository) SubrepoFor(path string) string {
-	return filepath.Join(r.subroot, path)
+func (repo *Repository) SubrepoFor(path string) string {
+	return filepath.Join(repo.subroot, path)
 }
 
-func (r *Repository) WC() (*WC, error) {
-	return openWC(r.ui, r)
+func (repo *Repository) WC() (*WC, error) {
+	return openWC(repo.ui, repo)
 }
 
-func (r *Repository) Find(layer *Layer, path string) (typ string) {
-	err := r.Walk(r.PathFor(layer, path), func(p string, fi os.FileInfo, err error) error {
+func (repo *Repository) Find(layer *Layer, path string) (typ string) {
+	err := repo.Walk(repo.PathFor(layer, path), func(p string, fi os.FileInfo, err error) error {
 		if !strings.HasSuffix(p, "/"+path) {
 			typ = "dir"
 		} else {
@@ -213,8 +213,8 @@ func (r *Repository) Find(layer *Layer, path string) (typ string) {
 	return
 }
 
-func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
-	cmd := r.vcs.List(path)
+func (repo *Repository) Walk(path string, walk filepath.WalkFunc) error {
+	cmd := repo.vcs.List(path)
 	out, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -227,7 +227,7 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	scanner := bufio.NewScanner(out)
 	for scanner.Scan() {
 		l := scanner.Text()
-		fi, err := os.Stat(filepath.Join(r.rdir, l))
+		fi, err := os.Stat(filepath.Join(repo.rdir, l))
 		if err = walk(l, fi, err); err != nil {
 			return err
 		}
@@ -235,10 +235,10 @@ func (r *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	return scanner.Err()
 }
 
-func (r *Repository) Add(paths ...string) error {
-	return r.vcs.Add(paths...)
+func (repo *Repository) Add(paths ...string) error {
+	return repo.vcs.Add(paths...)
 }
 
-func (r *Repository) Command(args ...string) error {
-	return r.vcs.Exec(args...)
+func (repo *Repository) Command(args ...string) error {
+	return repo.vcs.Exec(args...)
 }

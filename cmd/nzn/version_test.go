@@ -32,7 +32,7 @@ import (
 	"github.com/hattya/nazuna"
 )
 
-const versionOut = `nazuna, version ` + nazuna.Version + `
+const versionOut = `nazuna version ` + nazuna.Version + `
 `
 
 func TestVersion(t *testing.T) {

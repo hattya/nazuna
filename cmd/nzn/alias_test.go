@@ -27,6 +27,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -192,7 +193,7 @@ func TestAliasError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "alias"},
-			out: `nzn alias: flag --layer is required
+			out: `nzn alias: --layer flag is required
 usage: nzn alias -l <layer> <src> <dst>
 
 create an alias for the specified path
@@ -291,9 +292,9 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: '` + filepath.FromSlash("../dst") + `' is not under root
+			out: fmt.Sprintf(`nzn: '%v' is not under root
 [1]
-`,
+`, filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"nzn", "layer", "b/1"},
@@ -330,27 +331,27 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: link '` + filepath.FromSlash("../dst") + `' is not under root
+			out: fmt.Sprintf(`nzn: link '%v' is not under root
 [1]
-`,
+`, filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/2"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: link '` + filepath.FromSlash("../dst") + `' is not under root
+			out: fmt.Sprintf(`nzn: link '%v' is not under root
 [1]
-`,
+`, filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/3"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: subrepo '` + filepath.FromSlash("../dst") + `' is not under root
+			out: fmt.Sprintf(`nzn: subrepo '%v' is not under root
 [1]
-`,
+`, filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"rm", "_"},

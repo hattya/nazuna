@@ -52,12 +52,12 @@ manage subrepositories
 
   subrepo is used to manage external repositories.
 
-  subrepo can associate <repository> to <path> by flag --add. If <path> ends
+  subrepo can associate <repository> to <path> by --add flag. If <path> ends
   with a path separator, it will be associated as the basename of <repository>
   under <path>.
 
-  subrepo can clone or update the repositories in the working copy by flag
-  --update.
+  subrepo can clone or update the repositories in the working copy by --update
+  flag.
 `),
 		Flags:  flags,
 		Action: subrepo,
@@ -76,7 +76,7 @@ func subrepo(ctx *cli.Context) error {
 	case ctx.Bool("add"):
 		switch {
 		case ctx.String("layer") == "":
-			return cli.FlagError("flag --layer is required")
+			return cli.FlagError("--layer flag is required")
 		case len(ctx.Args) != 2:
 			return cli.ErrArgs
 		}

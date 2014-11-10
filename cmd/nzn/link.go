@@ -48,7 +48,7 @@ create a link for the specified path
   link is used to create a link of <src> to <dst>, and will be managed by
   update. If <src> is not found on update, it will be ignored without error.
 
-  The value of flag --path is a list of directories like PATH or GOPATH
+  The value of --path flag is a list of directories like PATH or GOPATH
   environment variables, and it is used to search <src>.
 
   You can refer environment variables in <path> and <src>. Supported formats
@@ -69,7 +69,7 @@ func link(ctx *cli.Context) error {
 
 	switch {
 	case ctx.String("layer") == "":
-		return cli.FlagError("flag --layer is required")
+		return cli.FlagError("--layer flag is required")
 	default:
 		if len(ctx.Args) != 2 {
 			return cli.ErrArgs

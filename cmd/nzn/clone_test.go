@@ -27,6 +27,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -56,9 +57,9 @@ func TestClone(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "clone", "--vcs", "git", "r", "w"},
-			out: `Cloning into '` + filepath.FromSlash("w/.nzn/r") + `'...
+			out: fmt.Sprintf(`Cloning into '%v'...
 done.
-`,
+`, filepath.FromSlash("w/.nzn/r")),
 		},
 		{
 			cmd: []string{"ls", "w/.nzn"},
@@ -93,7 +94,7 @@ func TestCloneError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "clone", "r", "w"},
-			out: `nzn clone: flag -*vcs is required (re)
+			out: `nzn clone: --vcs flag is required (re)
 usage: nzn clone --vcs <type> <repository> [<path>]
 
 create a copy of an existing repository

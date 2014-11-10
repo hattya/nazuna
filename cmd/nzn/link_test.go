@@ -136,7 +136,7 @@ func TestLinkError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "link"},
-			out: `nzn link: flag -*layer is required (re)
+			out: `nzn link: --layer flag is required (re)
 usage: nzn link -l <layer> [-p <path>] <src> <dst>
 
 create a link for the specified path
@@ -144,7 +144,7 @@ create a link for the specified path
   link is used to create a link of <src> to <dst>, and will be managed by
   update. If <src> is not found on update, it will be ignored without error.
 
-  The value of flag --path is a list of directories like PATH or GOPATH
+  The value of --path flag is a list of directories like PATH or GOPATH
   environment variables, and it is used to search <src>.
 
   You can refer environment variables in <path> and <src>. Supported formats

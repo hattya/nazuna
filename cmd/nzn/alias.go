@@ -65,7 +65,7 @@ func alias(ctx *cli.Context) error {
 
 	switch {
 	case ctx.String("layer") == "":
-		return cli.FlagError("flag --layer is required")
+		return cli.FlagError("--layer flag is required")
 	default:
 		if len(ctx.Args) != 2 {
 			return cli.ErrArgs
