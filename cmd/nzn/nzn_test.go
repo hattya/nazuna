@@ -70,6 +70,7 @@ func newShell() (*shell, error) {
 		},
 		gitconfig: map[string]string{
 			"core.autocrlf": "false",
+			"user.name":     "nazuna",
 			"user.email":    "nazuna@example.com",
 		},
 	}
@@ -246,12 +247,7 @@ func (sh *shell) ln(args ...string) (string, int) {
 }
 
 func (sh *shell) ls(args ...string) (string, int) {
-	f, err := os.Open(args[0])
-	if err != nil {
-		return sh.report(err)
-	}
-	defer f.Close()
-	list, err := f.Readdir(-1)
+	list, err := ioutil.ReadDir(args[0])
 	if err != nil {
 		return sh.report(err)
 	}
