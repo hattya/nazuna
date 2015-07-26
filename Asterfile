@@ -1,4 +1,5 @@
 var proj = os.getwd().split(/[/\\]+/).slice(-1);
+var title = 'Aster ☆ ' + proj;
 var rdeps = {
   './': [
     './cmd/nzn'
@@ -6,8 +7,10 @@ var rdeps = {
   './testutil': [
     './',
     './cmd/nzn'
-  ],
+  ]
 };
+
+aster.title(title);
 
 // go
 aster.watch(/.+\.go$/, function(files) {
@@ -17,45 +20,40 @@ aster.watch(/.+\.go$/, function(files) {
   if (go('vet', './...')) {
     return;
   }
-  var pkgs = {};
-  files.forEach(function(f) {
-    var pkg = './' + f.split(/[/\\]+/).slice(0, -1).join('/');
-    pkgs[pkg] = true;
-  });
   var order = [];
-  for (var pkg in pkgs) {
+  files.map(function(f) {
+    return './' + f.split(/[/\\]+/).slice(0, -1).join('/');
+  }).filter(function(e, i, a) {
+    return a.indexOf(e) === i;
+  }).forEach(function(pkg) {
     order.push(pkg);
-    if (pkg in rdeps) {
-      rdeps[pkg].forEach(function(dep) {
-        if (order.indexOf(dep) === -1) {
-          order.push(dep);
-        }
-      });
-    }
-  }
-  order.forEach(function(pkg) {
-    var cover_out = 'cover.out';
-    var coverage_html = 'coverage.html';
+    Array.prototype.push.apply(order, rdeps[pkg]);
+  });
+  order.filter(function(e, i, a) {
+    return a.indexOf(e) === i;
+  }).forEach(function(pkg) {
+    var out = 'cover.out';
+    var html = 'coverage.html';
     if (2 < pkg.length) {
-      cover_out = pkg + '/' + cover_out;
-      coverage_html = pkg + '/' + coverage_html;
+      out = pkg + '/' + out;
+      html = pkg + '/' + html;
     }
-    if (go('test', '-v', '-covermode', 'count', '-coverprofile', cover_out, pkg)) {
+    if (go('test', '-v', '-covermode', 'count', '-coverprofile', out, pkg)) {
       return;
     }
-    cover('-func', cover_out);
-    cover('-html', cover_out, '-o', coverage_html);
+    cover('-func', out);
+    cover('-html', out, '-o', html);
   });
 });
 
 function go() {
   var args = ['go'].concat(Array.prototype.slice.call(arguments));
-  var cmd = args[1] == 'get' ? 'bulid' : args[1];
+  var cmd = args[1] === 'get' ? 'bulid' : args[1];
   var rv = system(args);
-  if (rv) {
-    aster.notify('failure', proj + ': ' + cmd, cmd + ' failed');
-  } else {
+  if (!rv) {
     aster.notify('success', proj + ': ' + cmd, cmd + ' passed');
+  } else {
+    aster.notify('failure', proj + ': ' + cmd, cmd + ' failed');
   }
   return rv;
 }
@@ -66,14 +64,25 @@ function cover() {
 
 // rst
 aster.watch(/.+\.rst$/, function(files) {
-  if (os.whence('rst2html.py') !== undefined) {
-    files.forEach(rst2html);
-    aster.notify('success', proj + ': rst2html.py', files.join('\n'));
-  }
+  files.forEach(rst2html);
 });
 
 function rst2html(rst) {
-  return system(['rst2html.py', rst, rst.slice(0, -4) + '.html']);
+  var rst2html;
+  var ok = ['rst2html.py', 'rst2html'].some(function(s) {
+    rst2html = s;
+    return os.whence(rst2html);
+  });
+  if (!ok) {
+    return true;
+  }
+  var rv = system([rst2html, '--strict', rst, rst.slice(0, -4) + '.html']);
+  if (!rv) {
+    aster.notify('success', proj + ': rst2html', rst);
+  } else {
+    aster.notify('failure', proj + ': rst2html', rst + ' failed');
+  }
+  return rv;
 }
 
 // system
