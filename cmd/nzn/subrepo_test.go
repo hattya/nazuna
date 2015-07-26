@@ -1,7 +1,7 @@
 //
 // nzn :: subrepo_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2015 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -455,6 +455,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "subrepo", "-u"},
 			out: `* github.com/tpope/vim-pathogen
 Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
+remote: 404 page not found
 fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
 nzn: git: exit status .*\d+ (re)
 [1]
@@ -497,6 +498,7 @@ Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
 			out: `* github.com/tpope/vim-pathogen
+remote: 404 page not found
 fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
 nzn: git: exit status .*\d+ (re)
 [1]
