@@ -3,8 +3,11 @@ nazuna
 
 nazuna is a layered dotfiles management tool.
 
-.. image:: https://drone.io/github.com/hattya/nazuna/status.png
-   :target: https://drone.io/github.com/hattya/nazuna/latest
+.. image:: https://semaphoreci.com/api/v1/hattya/nazuna/branches/master/badge.svg
+   :target: https://semaphoreci.com/hattya/nazuna
+
+.. image:: https://ci.appveyor.com/api/projects/status/2eg4vbro37mhsdk0/branch/master?svg=true
+   :target: https://ci.appveyor.com/project/hattya/nazuna
 
 
 Install
