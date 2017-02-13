@@ -3,4 +3,4 @@
 *.out
 *.sw?
 *.test
-nzn/nzn
+cmd/nzn/nzn
