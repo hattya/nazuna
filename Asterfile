@@ -1,49 +1,73 @@
 var proj = os.getwd().split(/[/\\]+/).slice(-1);
 var title = 'Aster ☆ ' + proj;
-var rdeps = {
-  './': [
-    './cmd/nzn'
-  ],
-  './testutil': [
-    './',
-    './cmd/nzn'
-  ]
-};
 
 aster.title(title);
 
 // go
 aster.watch(/.+\.go$/, function(files) {
+  // reversed dependencies of packages
+  var list = [];
+  if (os.system(['go', 'list', '-f', '{{.Dir}}\t{{.ImportPath}}\t{{.Imports}}', './...'], {'stdout': list})) {
+    return;
+  }
+  list = list.map(function(e) {
+    e = e.split('\t');
+    return {
+      'dir':        e[0],
+      'importPath': e[1],
+      'imports':    e[2].slice(1, -1).split(/\s+/),
+    };
+  });
+  var pkg2path = {};
+  list.forEach(function(e, i) {
+    pkg2path[e.importPath] = i === 0 ? '.' : './' + e.dir.slice(list[0].dir.length + 1);
+  });
+  var rdeps = {};
+  list.forEach(function(e) {
+    e.imports.forEach(function(i) {
+      if (i in pkg2path) {
+        var p = pkg2path[i];
+        if (!(p in rdeps)) {
+          rdeps[p] = [];
+        }
+        rdeps[p].push(pkg2path[e.importPath]);
+      }
+    });
+  });
+
   if (go('get', '-t', '-v', './...')) {
     return;
   }
   if (go('vet', './...')) {
     return;
   }
-  var order = [];
   files.map(function(f) {
-    return './' + f.split(/[/\\]+/).slice(0, -1).join('/');
+    return ('./' + f.split(/[/\\]+/).slice(0, -1).join('/')).replace(/\/+$/, '');
   }).filter(function(e, i, a) {
     return a.indexOf(e) === i;
   }).forEach(function(pkg) {
-    order.push(pkg);
-    Array.prototype.push.apply(order, rdeps[pkg]);
-  });
-  order.filter(function(e, i, a) {
-    return a.indexOf(e) === i;
-  }).forEach(function(pkg) {
-    var out = 'cover.out';
-    var html = 'coverage.html';
-    if (2 < pkg.length) {
-      out = pkg + '/' + out;
-      html = pkg + '/' + html;
+    function resolve(pkg) {
+      var deps = [pkg];
+      if (pkg in rdeps) {
+        rdeps[pkg].forEach(function(dep) {
+          Array.prototype.push.apply(deps, resolve(dep));
+        });
+      }
+      return deps;
     }
-    if (go('test', '-v', '-covermode', 'count', '-coverprofile', out, pkg)) {
-      return;
-    }
-    cover('-func', out);
-    cover('-html', out, '-o', html);
+    resolve(pkg).filter(function(e, i, a) {
+      return a.lastIndexOf(e) === i;
+    }).forEach(function(pkg) {
+      var out = pkg + '/cover.out';
+      var html = pkg + '/coverage.html';
+      if (go('test', '-v', '-covermode', 'count', '-coverprofile', out, pkg)) {
+        return;
+      }
+      cover('-func', out);
+      cover('-html', out, '-o', html);
+    });
   });
+  aster.title(title);
 });
 
 function go() {
