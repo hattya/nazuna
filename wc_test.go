@@ -1,7 +1,7 @@
 //
 // nazuna :: wc_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -41,7 +41,7 @@ func TestWC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	popd, err := pushd(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +91,7 @@ func TestWCError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	popd, err := pushd(dir)
 	if err != nil {
 		t.Fatal(err)

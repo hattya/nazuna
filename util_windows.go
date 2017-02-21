@@ -1,7 +1,7 @@
 //
 // nazuna :: util_windows.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -33,29 +33,6 @@ import (
 	"syscall"
 	"unsafe"
 )
-
-func RemoveAll(path string) error {
-	// syscall.DeleteFile cannot remove read-only files
-	err := filepath.Walk(path, func(path string, fi os.FileInfo, err error) error {
-		switch {
-		case err != nil:
-			return err
-		case fi.Mode().Perm()&0200 == 0:
-			mode := os.FileMode(0666)
-			if fi.IsDir() {
-				mode = 0777
-			}
-			if err := os.Chmod(path, mode); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return os.RemoveAll(path)
-}
 
 func IsLink(path string) bool {
 	h, err := createFile(path, 0)

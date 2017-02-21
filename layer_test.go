@@ -1,7 +1,7 @@
 //
 // nazuna :: layer_test.go
 //
-//   Copyright (c) 2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2017 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -27,6 +27,7 @@
 package nazuna_test
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -51,7 +52,7 @@ func TestLayerNewAlias(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	repo, err := create(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -118,7 +119,7 @@ func TestLayerNewLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	repo, err := create(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -189,7 +190,7 @@ func TestLayerNewSubrepo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	repo, err := create(dir)
 	if err != nil {
 		t.Fatal(err)

@@ -1,7 +1,7 @@
 //
 // nazuna :: util_unix_test.go
 //
-//   Copyright (c) 2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2017 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -29,6 +29,7 @@
 package nazuna_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -39,7 +40,7 @@ func TestCreateLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(dir)
 	}
-	defer nazuna.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	popd, err := pushd(dir)
 	if err != nil {
 		t.Fatal(err)

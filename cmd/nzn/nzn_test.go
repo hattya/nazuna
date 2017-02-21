@@ -1,7 +1,7 @@
 //
 // nzn :: nzn_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -97,7 +97,7 @@ func newShell() (*shell, error) {
 		"setup":  sh.setup,
 		"touch":  sh.touch,
 	}
-	sh.atexit(func() { nazuna.RemoveAll(sh.dir) })
+	sh.atexit(func() { os.RemoveAll(sh.dir) })
 	return sh, nil
 }
 
@@ -308,7 +308,7 @@ func (sh *shell) rm(args ...string) (string, int) {
 	var remove func(string) error
 	switch {
 	case 1 < len(args) && args[0] == "-r":
-		remove = nazuna.RemoveAll
+		remove = os.RemoveAll
 		args = args[1:]
 	default:
 		remove = os.Remove
