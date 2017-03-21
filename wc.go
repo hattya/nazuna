@@ -1,7 +1,7 @@
 //
 // nazuna :: wc.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -123,7 +123,8 @@ func (wc *WC) LinksTo(path, origin string) bool {
 }
 
 func (wc *WC) Link(src, dst string) error {
-	for p := filepath.Dir(wc.PathFor(dst)); p != wc.repo.root; p = filepath.Dir(p) {
+	dst = wc.PathFor(dst)
+	for p := filepath.Dir(dst); p != wc.repo.root; p = filepath.Dir(p) {
 		if IsLink(p) {
 			return &os.PathError{
 				Op:   "link",
@@ -132,12 +133,13 @@ func (wc *WC) Link(src, dst string) error {
 			}
 		}
 	}
-	if dir := filepath.Dir(dst); !wc.Exists(dir) {
+	dir := filepath.Dir(dst)
+	if _, err := os.Lstat(dir); err != nil {
 		if err := os.MkdirAll(dir, 0777); err != nil {
 			return err
 		}
 	}
-	return CreateLink(src, wc.PathFor(dst))
+	return CreateLink(src, dst)
 }
 
 func (wc *WC) Unlink(path string) error {
