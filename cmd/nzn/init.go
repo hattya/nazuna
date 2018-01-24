@@ -1,7 +1,7 @@
 //
-// nzn :: init.go
+// nazuna/cmd/nzn :: init.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -44,14 +44,14 @@ func init() {
 	app.Add(&cli.Command{
 		Name:  []string{"init"},
 		Usage: "--vcs <type> [<path>]",
-		Desc: strings.TrimSpace(`
-create a new repository in the specified directory
+		Desc: strings.TrimSpace(cli.Dedent(`
+			create a new repository in the specified directory
 
-  Create a new repository in <path>. If <path> does not exist, it will be
-  created.
+			  Create a new repository in <path>. If <path> does not exist, it will be
+			  created.
 
-  If <path> is not specified, the current working diretory is used.
-`),
+			  If <path> is not specified, the current working diretory is used.
+		`)),
 		Flags:  flags,
 		Action: init_,
 	})

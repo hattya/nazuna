@@ -1,7 +1,7 @@
 //
-// nzn :: nzn.go
+// nazuna/cmd/nzn :: nzn.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -40,19 +40,23 @@ var app = cli.NewCLI()
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	app.Version = nazuna.Version
-	app.Prepare = prepare
-	app.ErrorHandler = errorHandler
-
 	if err := app.Run(os.Args[1:]); err != nil {
 		switch err := err.(type) {
 		case cli.FlagError:
 			os.Exit(2)
+		case cli.Interrupt:
+			os.Exit(128 + 2)
 		case SystemExit:
 			os.Exit(int(err))
 		}
 		os.Exit(1)
 	}
+}
+
+func init() {
+	app.Version = nazuna.Version
+	app.Prepare = prepare
+	app.ErrorHandler = errorHandler
 }
 
 func prepare(ctx *cli.Context, cmd *cli.Command) error {
@@ -73,6 +77,7 @@ func prepare(ctx *cli.Context, cmd *cli.Command) error {
 func errorHandler(ctx *cli.Context, err error) error {
 	switch err.(type) {
 	case cli.FlagError:
+	case cli.Interrupt:
 	case SystemExit:
 		return err
 	default:

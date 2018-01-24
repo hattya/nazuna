@@ -1,7 +1,7 @@
 //
-// nzn :: help.go
+// nazuna/cmd/nzn :: help.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -36,7 +36,7 @@ func init() {
 
 func formatUsage(ctx *cli.Context) []string {
 	if len(ctx.Stack) == 0 {
-		return []string{"nazuna - A layered dotfiles management"}
+		return []string{"Nazuna - A layered dotfiles management"}
 	}
 	return cli.FormatUsage(ctx)
 }

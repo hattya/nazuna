@@ -1,7 +1,7 @@
 //
 // nazuna :: util_windows_test.go
 //
-//   Copyright (c) 2014-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -55,36 +55,36 @@ func TestCreateLink(t *testing.T) {
 	if err := nazuna.CreateLink("src", "dst"); err == nil {
 		t.Error("expected error")
 	}
-	if g, e := nazuna.IsLink("src\x00"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "src\x00"; nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = true, expected false", p)
 	}
-	if g, e := nazuna.IsLink("src"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "src"; nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = true, expected false", p)
 	}
-	if g, e := nazuna.LinksTo("src", "dst"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p, o := "src", "dst"; nazuna.LinksTo(p, o) {
+		t.Errorf("LinksTo(%q, %q) = true, expected false", p, o)
 	}
 
 	if err := touch("src"); err != nil {
 		t.Fatal(err)
 	}
-	if g, e := nazuna.IsLink("src"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "src\x00"; nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = true, expected false", p)
 	}
 	if err := nazuna.CreateLink("src", "dst"); err != nil {
 		t.Error(err)
 	}
-	if g, e := nazuna.IsLink("src"), true; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "src"; !nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = false, expected true", p)
 	}
-	if g, e := nazuna.IsLink("dst"), true; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "dst"; !nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = false, expected true", p)
 	}
-	if g, e := nazuna.LinksTo("dst", "src"), true; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p, o := "dst", "src"; !nazuna.LinksTo(p, o) {
+		t.Errorf("LinksTo(%q, %q) = false, expected true", p, o)
 	}
-	if g, e := nazuna.LinksTo("dst", "_"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p, o := "dst", "_"; nazuna.LinksTo(p, o) {
+		t.Errorf("LinksTo(%q, %q) = true, expected false", p, o)
 	}
 	if err := nazuna.Unlink("dst"); err != nil {
 		t.Error(err)
@@ -103,8 +103,8 @@ func TestCreateLink(t *testing.T) {
 	if err := nazuna.CreateLink("srcdir", "dstdir"); err == nil {
 		t.Error("expected error")
 	}
-	if g, e := nazuna.LinksTo("dstdir", "srcdir"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p, o := "dstdir", "srcdir"; nazuna.LinksTo(p, o) {
+		t.Errorf("LinksTo(%q, %q) = true, expected false", p, o)
 	}
 	if err := os.Remove("dstdir"); err != nil {
 		t.Fatal(err)
@@ -113,14 +113,14 @@ func TestCreateLink(t *testing.T) {
 	if err := nazuna.CreateLink("srcdir", "dstdir"); err != nil {
 		t.Error(err)
 	}
-	if g, e := nazuna.IsLink("srcdir"), false; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "srcdir"; nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = true, expected false", p)
 	}
-	if g, e := nazuna.IsLink("dstdir"), true; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p := "dstdir"; !nazuna.IsLink(p) {
+		t.Errorf("IsLink(%q) = false, expected true", p)
 	}
-	if g, e := nazuna.LinksTo("dstdir", "srcdir"), true; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+	if p, o := "dstdir", "srcdir"; !nazuna.LinksTo(p, o) {
+		t.Errorf("LinksTo(%q, %q) = false, expected true", p, o)
 	}
 	if err := nazuna.Unlink("dstdir"); err != nil {
 		t.Error(err)

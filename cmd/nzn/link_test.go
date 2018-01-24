@@ -1,7 +1,7 @@
 //
-// nzn :: link_test.go
+// nazuna/cmd/nzn :: link_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -29,6 +29,8 @@ package main
 import (
 	"os"
 	"testing"
+
+	"github.com/hattya/go.cli"
 )
 
 func TestLink(t *testing.T) {
@@ -69,35 +71,39 @@ func TestLink(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/bundle/gocode/ --> .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
-link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
-link .vimrc --> a
-3 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vim/bundle/gocode/ --> .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+				link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
+				link .vimrc --> a
+				3 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", "-r", "../r/go"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/golang/ -/- .*` + quote("/r/go/misc/vim/") + ` (re)
-0 updated, 1 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink .vim/bundle/golang/ -/- .*` + quote("/r/go/misc/vim/") + ` (re)
+				0 updated, 1 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", "-r", "../r"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/gocode/ -/- .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
-0 updated, 1 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink .vim/bundle/gocode/ -/- .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+				0 updated, 1 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"ls", "."},
-			out: `.nzn/
-.vimrc
-`,
+			out: cli.Dedent(`
+				.nzn/
+				.vimrc
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -112,9 +118,10 @@ func TestLinkError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "link"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"cd", "w"},
@@ -127,57 +134,62 @@ func TestLinkError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "link"},
-			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".nzn/state.json"},
 		},
 		{
 			cmd: []string{"nzn", "link"},
-			out: `nzn link: --layer flag is required (re)
-usage: nzn link -l <layer> [-p <path>] <src> <dst>
+			out: cli.Dedent(`
+				nzn link: --layer flag is required (re)
+				usage: nzn link -l <layer> [-p <path>] <src> <dst>
 
-create a link for the specified path
+				create a link for the specified path
 
-  link is used to create a link of <src> to <dst>, and will be managed by
-  update. If <src> is not found on update, it will be ignored without error.
+				  link is used to create a link of <src> to <dst>, and will be managed by
+				  update. If <src> is not found on update, it will be ignored without error.
 
-  The value of --path flag is a list of directories like PATH or GOPATH
-  environment variables, and it is used to search <src>.
+				  The value of --path flag is a list of directories like PATH or GOPATH
+				  environment variables, and it is used to search <src>.
 
-  You can refer environment variables in <path> and <src>. Supported formats
-  are ${var} and $var.
+				  You can refer environment variables in <path> and <src>. Supported formats
+				  are ${var} and $var.
 
-options:
+				options:
 
-  -l, --layer <layer>    layer name
-  -p, --path <path>      list of directories to search <src>
+				  -l, --layer <layer>    layer name
+				  -p, --path <path>      list of directories to search <src>
 
-[2]
-`,
+				[2]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a"},
-			out: `nzn: invalid arguments
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid arguments
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
-			out: `nzn: layer 'a' does not exist!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'a' does not exist!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "../dst"},
-			out: `nzn: '../dst' is not under root
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: '../dst' is not under root
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"touch", ".nzn/r/a/dst"},
@@ -187,9 +199,10 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
-			out: `nzn: 'dst' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: 'dst' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/dst"},
@@ -205,9 +218,10 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
-			out: `nzn: 'dst' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: 'dst' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "vcs", "rm", "-frq", "a/dst"},
@@ -217,18 +231,20 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
-			out: `nzn: link 'dst' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: link 'dst' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"touch", "src"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link dst --> src
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link dst --> src
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
@@ -247,10 +263,11 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink dst -/- src
-nzn: not linked to 'src'
-[1]
-`,
+			out: cli.Dedent(`
+				unlink dst -/- src
+				nzn: not linked to 'src'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", "dst"},
@@ -266,19 +283,21 @@ nzn: not linked to 'src'
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `warning: link: 'dst' exists in the repository
-link dst --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				warning: link: 'dst' exists in the repository
+				link dst --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/1"},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "c", "src", "dst"},
-			out: `nzn: layer 'c' is abstract
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'c' is abstract
+				[1]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {

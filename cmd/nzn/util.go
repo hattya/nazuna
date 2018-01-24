@@ -1,5 +1,5 @@
 //
-// nzn :: util.go
+// nazuna/cmd/nzn :: util.go
 //
 //   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
 //

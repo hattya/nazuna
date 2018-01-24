@@ -1,7 +1,7 @@
 //
-// nzn :: version_test.go
+// nazuna/cmd/nzn :: version_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -27,13 +27,16 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-const versionOut = `nazuna version ` + nazuna.Version + `
-`
+var versionOut = fmt.Sprintf(cli.Dedent(`
+	nzn version %v
+`), nazuna.Version)
 
 func TestVersion(t *testing.T) {
 	s := script{

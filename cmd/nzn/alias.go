@@ -1,7 +1,7 @@
 //
-// nzn :: alias.go
+// nazuna/cmd/nzn :: alias.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -40,16 +40,16 @@ func init() {
 	app.Add(&cli.Command{
 		Name:  []string{"alias"},
 		Usage: "-l <layer> <src> <dst>",
-		Desc: strings.TrimSpace(`
-create an alias for the specified path
+		Desc: strings.TrimSpace(cli.Dedent(`
+			create an alias for the specified path
 
-  Change the location of <src> to <dst>. <src> should be existed in the lower layer
-  than <dst>, and <src> is treated as <dst> in the layer <layer>. If <src> does
-  not match any locations on update, it will be ignored without error.
+			  Change the location of <src> to <dst>. <src> should be existed in the lower layer
+			  than <dst>, and <src> is treated as <dst> in the layer <layer>. If <src> does
+			  not match any locations on update, it will be ignored without error.
 
-  You can refer environment variables in <dst>. Supported formats are ${var}
-  and $var.
-`),
+			  You can refer environment variables in <dst>. Supported formats are ${var}
+			  and $var.
+		`)),
 		Flags:  flags,
 		Action: alias,
 		Data:   true,

@@ -1,7 +1,7 @@
 //
-// nzn :: init_test.go
+// nazuna/cmd/nzn :: init_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,7 +26,11 @@
 
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hattya/go.cli"
+)
 
 func TestInit(t *testing.T) {
 	s := script{
@@ -38,19 +42,22 @@ func TestInit(t *testing.T) {
 		},
 		{
 			cmd: []string{"ls", "w/.nzn"},
-			out: `r/
-`,
+			out: cli.Dedent(`
+				r/
+			`),
 		},
 		{
 			cmd: []string{"ls", "w/.nzn/r"},
-			out: `.git/
-nazuna.json
-`,
+			out: cli.Dedent(`
+				.git/
+				nazuna.json
+			`),
 		},
 		{
 			cmd: []string{"cat", "w/.nzn/r/nazuna.json"},
-			out: `[]
-`,
+			out: cli.Dedent(`
+				[]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -65,37 +72,40 @@ func TestInitError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "init", "w"},
-			out: `nzn init: --vcs flag is required
-usage: nzn init --vcs <type> [<path>]
+			out: cli.Dedent(`
+				nzn init: --vcs flag is required
+				usage: nzn init --vcs <type> [<path>]
 
-create a new repository in the specified directory
+				create a new repository in the specified directory
 
-  Create a new repository in <path>. If <path> does not exist, it will be
-  created.
+				  Create a new repository in <path>. If <path> does not exist, it will be
+				  created.
 
-  If <path> is not specified, the current working diretory is used.
+				  If <path> is not specified, the current working diretory is used.
 
-options:
+				options:
 
-  --vcs <type>    vcs type
+				  --vcs <type>    vcs type
 
-[2]
-`,
+				[2]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "cvs", "w"},
-			out: `nzn: unknown vcs 'cvs'
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: unknown vcs 'cvs'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"mkdir", "w/.nzn/r"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
-			out: `nzn: repository '.*' already exists! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: repository '.*' already exists! (re)
+				[1]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {

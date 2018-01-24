@@ -1,7 +1,7 @@
 //
 // nazuna :: vcs_test.go
 //
-//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -90,17 +90,17 @@ func TestFindVCS(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g, e := vcs.String(), "Mercurial"; g != e {
-		t.Errorf("expected %q, got %q", e, g)
+		t.Errorf("VCS.String() = %q, expected %q", g, e)
 	}
 	hg, ok := vcs.(*nazuna.Mercurial)
 	if !ok {
-		t.Fatalf("expected *nazuna.Mercurial, got %T", vcs)
+		t.Fatalf("expected *Mercurial, got %T", vcs)
 	}
 	if g, e := hg.Cmd, "hg"; g != e {
-		t.Errorf("expected %q, got %q", e, g)
+		t.Errorf("VCS.Cmd = %q, expected %q", g, e)
 	}
 	if g, e := hg.Dir, ""; g != e {
-		t.Errorf("expected %q, got %q", e, g)
+		t.Errorf("VCS.Dir = %q, expected %q", g, e)
 	}
 
 	vcs, err = nazuna.FindVCS(nil, "test", "")
@@ -136,17 +136,17 @@ func TestVCSFor(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g, e := vcs.String(), "Git"; g != e {
-		t.Errorf("expected %q, got %q", e, g)
+		t.Errorf("VCS.String() = %q, expected %q", g, e)
 	}
 	git, ok := vcs.(*nazuna.Git)
 	if !ok {
-		t.Fatalf("expected *nazuna.Git, got %T", vcs)
+		t.Fatalf("expected *Git, got %T", vcs)
 	}
 	if g, e := git.Cmd, "git"; g != e {
-		t.Errorf("expected %q, got %q", e, g)
+		t.Errorf("VCS.Cmd = %q, expected %q", g, e)
 	}
 	if g, e := git.Dir, dir; g != e {
-		t.Errorf("expected %q, got %q", e, g)
+		t.Errorf("VCS.Dir = %q, expected %q", g, e)
 	}
 
 	if err := os.Rename(".git", ".test"); err != nil {

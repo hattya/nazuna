@@ -1,7 +1,7 @@
 //
-// nzn :: nzn_test.go
+// nazuna/cmd/nzn :: nzn_test.go
 //
-//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -45,9 +45,6 @@ func init() {
 	nazuna.Discover(false)
 
 	app.Name = "nzn"
-	app.Version = nazuna.Version
-	app.Prepare = prepare
-	app.ErrorHandler = errorHandler
 }
 
 type shell struct {
@@ -274,15 +271,10 @@ func (sh *shell) mkdir(args ...string) (string, int) {
 }
 
 func (sh *shell) nzn(args ...string) (string, int) {
-	reset := func(fs *cli.FlagSet) {
-		fs.VisitAll(func(f *cli.Flag) {
-			fs.Set(f.Name[0], f.Default)
-		})
-	}
-	reset(app.Flags)
+	app.Flags.Reset()
 	for _, cmd := range app.Cmds {
 		if cmd.Flags != nil {
-			reset(cmd.Flags)
+			cmd.Flags.Reset()
 		}
 	}
 
@@ -295,6 +287,8 @@ func (sh *shell) nzn(args ...string) (string, int) {
 		switch err := err.(type) {
 		case cli.FlagError:
 			rc = 2
+		case cli.Interrupt:
+			rc = 128 + 2
 		case SystemExit:
 			rc = int(err)
 		default:
@@ -306,11 +300,10 @@ func (sh *shell) nzn(args ...string) (string, int) {
 
 func (sh *shell) rm(args ...string) (string, int) {
 	var remove func(string) error
-	switch {
-	case 1 < len(args) && args[0] == "-r":
+	if 1 < len(args) && args[0] == "-r" {
 		remove = os.RemoveAll
 		args = args[1:]
-	default:
+	} else {
 		remove = os.Remove
 	}
 	return sh.report(remove(args[0]))

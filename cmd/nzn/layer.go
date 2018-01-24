@@ -1,7 +1,7 @@
 //
-// nzn :: layer.go
+// nazuna/cmd/nzn :: layer.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -43,9 +43,9 @@ func init() {
 			"[<name>]",
 			"-c <name>",
 		},
-		Desc: strings.TrimSpace(`
-manage repository layers
-`),
+		Desc: strings.TrimSpace(cli.Dedent(`
+			manage repository layers
+		`)),
 		Flags:  flags,
 		Action: layer,
 		Data:   true,

@@ -1,7 +1,7 @@
 //
-// nzn :: update.go
+// nazuna/cmd/nzn :: update.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -41,11 +41,11 @@ func init() {
 	app.Add(&cli.Command{
 		Name:  []string{"update"},
 		Usage: "update",
-		Desc: strings.TrimSpace(`
-update working copy
+		Desc: strings.TrimSpace(cli.Dedent(`
+			update working copy
 
-  Update links in the working copy to match with the repository configuration.
-`),
+			  Update links in the working copy to match with the repository configuration.
+		`)),
 		Flags:  flags,
 		Action: update,
 		Data:   true,

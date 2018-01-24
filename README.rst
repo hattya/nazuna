@@ -1,7 +1,7 @@
-nazuna
+Nazuna
 ======
 
-nazuna is a layered dotfiles management tool.
+Nazuna is a layered dotfiles management tool.
 
 .. image:: https://semaphoreci.com/api/v1/hattya/nazuna/branches/master/badge.svg
    :target: https://semaphoreci.com/hattya/nazuna
@@ -46,4 +46,4 @@ Usage
 License
 -------
 
-nazuna is distributed under the terms of the MIT License.
+Nazuna is distributed under the terms of the MIT License.

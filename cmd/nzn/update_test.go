@@ -1,7 +1,7 @@
 //
-// nzn :: update_test.go
+// nazuna/cmd/nzn :: update_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,7 +26,11 @@
 
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hattya/go.cli"
+)
 
 func TestUpdate(t *testing.T) {
 	s := script{
@@ -59,11 +63,12 @@ func TestUpdate(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .gitconfig --> a
-link .vim/ --> a
-link .vimrc --> a
-3 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .gitconfig --> a
+				link .vim/ --> a
+				link .vimrc --> a
+				3 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
@@ -82,13 +87,14 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/ -/- a
-unlink .vimrc -/- a
-link .vim/syntax/go.vim --> b
-link .vim/syntax/vim.vim --> a
-link .vimrc --> b
-3 updated, 2 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink .vim/ -/- a
+				unlink .vimrc -/- a
+				link .vim/syntax/go.vim --> b
+				link .vim/syntax/vim.vim --> a
+				link .vimrc --> b
+				3 updated, 2 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/1"},
@@ -110,19 +116,21 @@ link .vimrc --> b
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .screenrc --> c/1
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .screenrc --> c/1
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/2"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .screenrc -/- c/1
-link .tmux.conf --> c/2
-1 updated, 1 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink .screenrc -/- c/1
+				link .tmux.conf --> c/2
+				1 updated, 1 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"mkdir", ".nzn/r/b/.vim/autoload/go"},
@@ -135,9 +143,10 @@ link .tmux.conf --> c/2
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/autoload/ --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vim/autoload/ --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vim/autoload"},
@@ -147,9 +156,10 @@ link .tmux.conf --> c/2
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/autoload/go/ --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vim/autoload/go/ --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vim/autoload/go"},
@@ -159,20 +169,22 @@ link .tmux.conf --> c/2
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/autoload/go/complete.vim --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vim/autoload/go/complete.vim --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", "-r", ".vim"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/autoload/ --> b
-link .vim/syntax/go.vim --> b
-link .vim/syntax/vim.vim --> a
-3 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vim/autoload/ --> b
+				link .vim/syntax/go.vim --> b
+				link .vim/syntax/vim.vim --> a
+				3 updated, 0 removed, 0 failed
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -190,9 +202,10 @@ func TestUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -202,9 +215,10 @@ func TestUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".nzn/state.json"},
@@ -232,12 +246,13 @@ func TestUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .bashrc --> a
-link .gitconfig --> a
-link .vim/ --> a
-link .vimrc --> a
-4 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .bashrc --> a
+				link .gitconfig --> a
+				link .vim/ --> a
+				link .vimrc --> a
+				4 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
@@ -253,9 +268,10 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .gitconfig --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .gitconfig --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"touch", ".nzn/r/b/.vimrc"},
@@ -271,9 +287,10 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: .vimrc: not tracked
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: .vimrc: not tracked
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vimrc"},
@@ -283,19 +300,21 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vimrc -/- a
-nzn: not linked to layer 'a'
-[1]
-`,
+			out: cli.Dedent(`
+				unlink .vimrc -/- a
+				nzn: not linked to layer 'a'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vimrc --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vimrc --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vimrc"},
@@ -305,11 +324,12 @@ nzn: not linked to layer 'a'
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vimrc --> b
-error: .vimrc: .* (re)
-0 updated, 0 removed, 1 failed
-[1]
-`,
+			out: cli.Dedent(`
+				link .vimrc --> b
+				error: .vimrc: .* (re)
+				0 updated, 0 removed, 1 failed
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vimrc"},
@@ -325,12 +345,13 @@ error: .vimrc: .* (re)
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/ -/- a
-link .vim/syntax/go.vim --> b
-link .vim/syntax/vim.vim --> a
-link .vimrc --> b
-3 updated, 1 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink .vim/ -/- a
+				link .vim/syntax/go.vim --> b
+				link .vim/syntax/vim.vim --> a
+				link .vimrc --> b
+				3 updated, 1 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", "-r", ".vim/syntax"},
@@ -340,13 +361,14 @@ link .vimrc --> b
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/syntax/go.vim --> b
-error: .vim/syntax/go.vim: .* (re)
-link .vim/syntax/vim.vim --> a
-error: .vim/syntax/vim.vim: .* (re)
-0 updated, 0 removed, 2 failed
-[1]
-`,
+			out: cli.Dedent(`
+				link .vim/syntax/go.vim --> b
+				error: .vim/syntax/go.vim: .* (re)
+				link .vim/syntax/vim.vim --> a
+				error: .vim/syntax/vim.vim: .* (re)
+				0 updated, 0 removed, 2 failed
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vim/syntax"},
@@ -359,13 +381,14 @@ error: .vim/syntax/vim.vim: .* (re)
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/syntax/go.vim --> b
-error: .vim/syntax: (re)
-link .vim/syntax/vim.vim --> a
-error: .vim/syntax: (re)
-0 updated, 0 removed, 2 failed
-[1]
-`,
+			out: cli.Dedent(`
+				link .vim/syntax/go.vim --> b
+				error: .vim/syntax: (re)
+				link .vim/syntax/vim.vim --> a
+				error: .vim/syntax: (re)
+				0 updated, 0 removed, 2 failed
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vim/syntax"},
@@ -390,11 +413,12 @@ error: .vim/syntax: (re)
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: cannot resolve layer 'c':
-    1
-    2
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: cannot resolve layer 'c':
+				    1
+				    2
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/1"},
@@ -404,9 +428,10 @@ error: .vim/syntax: (re)
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `nzn: .nzn/r/c/1/.screenrc: .* (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: .nzn/r/c/1/.screenrc: .* (re)
+				[1]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {

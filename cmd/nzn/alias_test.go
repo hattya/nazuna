@@ -1,7 +1,7 @@
 //
-// nzn :: alias_test.go
+// nazuna/cmd/nzn :: alias_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -30,6 +30,8 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+
+	"github.com/hattya/go.cli"
 )
 
 func TestAlias(t *testing.T) {
@@ -84,13 +86,14 @@ func TestAlias(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .config/ --> a
-link .gitconfig --> a
-link .vim/syntax/go.vim --> b/1
-link .vim/syntax/vim.vim --> a
-link .vimrc --> a
-5 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .config/ --> a
+				link .gitconfig --> a
+				link .vim/syntax/go.vim --> b/1
+				link .vim/syntax/vim.vim --> a
+				link .vimrc --> a
+				5 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b/2"},
@@ -121,23 +124,25 @@ link .vimrc --> a
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .config/ -/- a
-unlink .vim/syntax/go.vim -/- b/1
-unlink .vim/syntax/vim.vim -/- a
-link AppData/Roaming/gocode/ --> a:.config/gocode/
-link vimfiles/syntax/go.vim --> b/2
-link vimfiles/syntax/vim.vim --> a:.vim/syntax/vim.vim
-3 updated, 3 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink .config/ -/- a
+				unlink .vim/syntax/go.vim -/- b/1
+				unlink .vim/syntax/vim.vim -/- a
+				link AppData/Roaming/gocode/ --> a:.config/gocode/
+				link vimfiles/syntax/go.vim --> b/2
+				link vimfiles/syntax/vim.vim --> a:.vim/syntax/vim.vim
+				3 updated, 3 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"rm", "-r", "AppData/Roaming"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link AppData/Roaming/ --> a:.config/
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link AppData/Roaming/ --> a:.config/
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"touch", ".nzn/r/a/.curlrc"},
@@ -150,11 +155,12 @@ link vimfiles/syntax/vim.vim --> a:.vim/syntax/vim.vim
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink AppData/Roaming/ -/- a:.config/
-link AppData/Roaming/_curlrc --> a:.curlrc
-link AppData/Roaming/gocode/ --> a:.config/gocode/
-2 updated, 1 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				unlink AppData/Roaming/ -/- a:.config/
+				link AppData/Roaming/_curlrc --> a:.curlrc
+				link AppData/Roaming/gocode/ --> a:.config/gocode/
+				2 updated, 1 removed, 0 failed
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -172,9 +178,10 @@ func TestAliasError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "alias"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -184,69 +191,76 @@ func TestAliasError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "alias"},
-			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".nzn/state.json"},
 		},
 		{
 			cmd: []string{"nzn", "alias"},
-			out: `nzn alias: --layer flag is required
-usage: nzn alias -l <layer> <src> <dst>
+			out: cli.Dedent(`
+				nzn alias: --layer flag is required
+				usage: nzn alias -l <layer> <src> <dst>
 
-create an alias for the specified path
+				create an alias for the specified path
 
-  Change the location of <src> to <dst>. <src> should be existed in the lower layer
-  than <dst>, and <src> is treated as <dst> in the layer <layer>. If <src> does
-  not match any locations on update, it will be ignored without error.
+				  Change the location of <src> to <dst>. <src> should be existed in the lower layer
+				  than <dst>, and <src> is treated as <dst> in the layer <layer>. If <src> does
+				  not match any locations on update, it will be ignored without error.
 
-  You can refer environment variables in <dst>. Supported formats are ${var}
-  and $var.
+				  You can refer environment variables in <dst>. Supported formats are ${var}
+				  and $var.
 
-options:
+				options:
 
-  -l, --layer <layer>    layer name
+				  -l, --layer <layer>    layer name
 
-[2]
-`,
+				[2]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "a", "src", "dst"},
-			out: `nzn: layer 'a' does not exist!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'a' does not exist!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "a"},
-			out: `nzn: invalid arguments
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid arguments
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b/1"},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b", "src", "dst"},
-			out: `nzn: layer 'b' is abstract
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'b' is abstract
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "../dst"},
-			out: `nzn: '../dst' is not under root
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: '../dst' is not under root
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "src"},
-			out: `nzn: 'src' and 'src' are the same path
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: 'src' and 'src' are the same path
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"touch", ".nzn/r/b/1/dst"},
@@ -256,9 +270,10 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "dst"},
-			out: `nzn: 'dst' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: 'dst' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "vcs", "rm", "-fq", "b/1/dst"},
@@ -268,9 +283,10 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "dst"},
-			out: `nzn: alias 'dst' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: alias 'dst' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"export", "ROOT=../"},
@@ -292,9 +308,10 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(`nzn: '%v' is not under root
-[1]
-`, filepath.FromSlash("../dst")),
+			out: fmt.Sprintf(cli.Dedent(`
+				nzn: '%v' is not under root
+				[1]
+			`), filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"nzn", "layer", "b/1"},
@@ -331,27 +348,30 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(`nzn: link '%v' is not under root
-[1]
-`, filepath.FromSlash("../dst")),
+			out: fmt.Sprintf(cli.Dedent(`
+				nzn: link '%v' is not under root
+				[1]
+			`), filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/2"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(`nzn: link '%v' is not under root
-[1]
-`, filepath.FromSlash("../dst")),
+			out: fmt.Sprintf(cli.Dedent(`
+				nzn: link '%v' is not under root
+				[1]
+			`), filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/3"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(`nzn: subrepo '%v' is not under root
-[1]
-`, filepath.FromSlash("../dst")),
+			out: fmt.Sprintf(cli.Dedent(`
+				nzn: subrepo '%v' is not under root
+				[1]
+			`), filepath.FromSlash("../dst")),
 		},
 		{
 			cmd: []string{"rm", "_"},

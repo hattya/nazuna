@@ -1,7 +1,7 @@
 //
-// nzn :: link.go
+// nazuna/cmd/nzn :: link.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -42,18 +42,18 @@ func init() {
 	app.Add(&cli.Command{
 		Name:  []string{"link"},
 		Usage: "-l <layer> [-p <path>] <src> <dst>",
-		Desc: strings.TrimSpace(`
-create a link for the specified path
+		Desc: strings.TrimSpace(cli.Dedent(`
+			create a link for the specified path
 
-  link is used to create a link of <src> to <dst>, and will be managed by
-  update. If <src> is not found on update, it will be ignored without error.
+			  link is used to create a link of <src> to <dst>, and will be managed by
+			  update. If <src> is not found on update, it will be ignored without error.
 
-  The value of --path flag is a list of directories like PATH or GOPATH
-  environment variables, and it is used to search <src>.
+			  The value of --path flag is a list of directories like PATH or GOPATH
+			  environment variables, and it is used to search <src>.
 
-  You can refer environment variables in <path> and <src>. Supported formats
-  are ${var} and $var.
-`),
+			  You can refer environment variables in <path> and <src>. Supported formats
+			  are ${var} and $var.
+		`)),
 		Flags:  flags,
 		Action: link,
 		Data:   true,

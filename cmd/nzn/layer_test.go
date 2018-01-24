@@ -1,7 +1,7 @@
 //
-// nzn :: layer_test.go
+// nazuna/cmd/nzn :: layer_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,7 +26,11 @@
 
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hattya/go.cli"
+)
 
 func TestLayer(t *testing.T) {
 	s := script{
@@ -47,17 +51,19 @@ func TestLayer(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `a
-`,
+			out: cli.Dedent(`
+				a
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `b
-a
-`,
+			out: cli.Dedent(`
+				b
+				a
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/2"},
@@ -67,36 +73,39 @@ a
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `c
-    1
-    2
-b
-a
-`,
+			out: cli.Dedent(`
+				c
+				    1
+				    2
+				b
+				a
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/1"},
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `c
-    1*
-    2
-b
-a
-`,
+			out: cli.Dedent(`
+				c
+				    1*
+				    2
+				b
+				a
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/2"},
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `c
-    1
-    2*
-b
-a
-`,
+			out: cli.Dedent(`
+				c
+				    1
+				    2*
+				b
+				a
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -111,9 +120,10 @@ func TestLayerError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"cd", "w"},
@@ -123,18 +133,20 @@ func TestLayerError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c"},
-			out: `nzn: invalid arguments
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid arguments
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"touch", ".nzn/state.json"},
 		},
 		{
 			cmd: []string{"nzn", "layer"},
-			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".nzn/state.json"},
@@ -144,69 +156,79 @@ func TestLayerError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
-			out: `nzn: layer 'a' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'a' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a/1"},
-			out: `nzn: layer 'a' is not abstract
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'a' is not abstract
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "/"},
-			out: `nzn: invalid layer '/'
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid layer '/'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b/"},
-			out: `nzn: invalid layer 'b/'
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid layer 'b/'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "/1"},
-			out: `nzn: invalid layer '/1'
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid layer '/1'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b/1"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "_", "_"},
-			out: `nzn: invalid arguments
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid arguments
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "_"},
-			out: `nzn: layer '_' does not exist!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer '_' does not exist!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "b"},
-			out: `nzn: layer 'b' is abstract
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'b' is abstract
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "a"},
-			out: `nzn: layer 'a' is not abstract
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'a' is not abstract
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "b/1"},
 		},
 		{
 			cmd: []string{"nzn", "layer", "b/1"},
-			out: `nzn: layer 'b' is already '1'
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'b' is already '1'
+				[1]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {

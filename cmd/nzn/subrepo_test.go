@@ -1,5 +1,5 @@
 //
-// nzn :: subrepo_test.go
+// nazuna/cmd/nzn :: subrepo_test.go
 //
 //   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
@@ -34,7 +34,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hattya/nazuna/testutil"
+	"github.com/hattya/go.cli"
+	"github.com/hattya/nazuna/internal/test"
 )
 
 func TestSubrepo(t *testing.T) {
@@ -56,7 +57,7 @@ func TestSubrepo(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = testutil.NewHTTPClient(ts.Listener.Addr().String())
+	http.DefaultClient = test.NewHTTPClient(ts.Listener.Addr().String())
 
 	sh.gitconfig["merge.stat"] = "false"
 	sh.gitconfig["http.sslVerify"] = "false"
@@ -138,27 +139,30 @@ func TestSubrepo(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `0 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				0 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "$GOROOT/misc/vim", ".vim/bundle/golang"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* bitbucket.org/editorconfig/editorconfig-vim
-Cloning into '.nzn/sub/bitbucket.org/editorconfig/editorconfig-vim'...
-* github.com/tpope/vim-pathogen
-Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
-`,
+			out: cli.Dedent(`
+				* bitbucket.org/editorconfig/editorconfig-vim
+				Cloning into '.nzn/sub/bitbucket.org/editorconfig/editorconfig-vim'...
+				* github.com/tpope/vim-pathogen
+				Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
+			`),
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(`link .vim/bundle/editorconfig-vim --> bitbucket.org/editorconfig/editorconfig-vim
-link .vim/bundle/golang/ --> .*%v (re)
-link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
-3 updated, 0 removed, 0 failed
-`, quote("/r/go/misc/vim/")),
+			out: cli.Dedent(`
+				link .vim/bundle/editorconfig-vim --> bitbucket.org/editorconfig/editorconfig-vim
+				link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
+				link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
+				3 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"cd", "../r/editorconfig-vim"},
@@ -183,14 +187,15 @@ link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* bitbucket.org/editorconfig/editorconfig-vim
-From https://127.0.0.1:\d+/editorconfig-vim (re)
-   [[:alnum:]]+\.\.[[:alnum:]]+  master\s+ -> origin/master (re)
-Updating [[:alnum:]]+\.\.[[:alnum:]]+ (re)
-Fast-forward
-* github.com/tpope/vim-pathogen
-Already up.to.date\. (re)
-`,
+			out: cli.Dedent(`
+				* bitbucket.org/editorconfig/editorconfig-vim
+				From https://127.0.0.1:\d+/editorconfig-vim (re)
+				   [[:alnum:]]+\.\.[[:alnum:]]+  master\s+ -> origin/master (re)
+				Updating [[:alnum:]]+\.\.[[:alnum:]]+ (re)
+				Fast-forward
+				* github.com/tpope/vim-pathogen
+				Already up.to.date\. (re)
+			`),
 		},
 	}
 	if err := sh.run(s); err != nil {
@@ -208,9 +213,10 @@ func TestSubrepoError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -220,50 +226,54 @@ func TestSubrepoError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo"},
-			out: `nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".nzn/state.json"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-a"},
-			out: `nzn subrepo: --layer flag is required
-usage: nzn subrepo -l <layer> -a <repository> <path>
-   or: nzn subrepo -u
+			out: cli.Dedent(`
+				nzn subrepo: --layer flag is required
+				usage: nzn subrepo -l <layer> -a <repository> <path>
+				   or: nzn subrepo -u
 
-manage subrepositories
+				manage subrepositories
 
-  subrepo is used to manage external repositories.
+				  subrepo is used to manage external repositories.
 
-  subrepo can associate <repository> to <path> by --add flag. If <path> ends
-  with a path separator, it will be associated as the basename of <repository>
-  under <path>.
+				  subrepo can associate <repository> to <path> by --add flag. If <path> ends
+				  with a path separator, it will be associated as the basename of <repository>
+				  under <path>.
 
-  subrepo can clone or update the repositories in the working copy by --update
-  flag.
+				  subrepo can clone or update the repositories in the working copy by --update
+				  flag.
 
-options:
+				options:
 
-  -a, --add              add <repository> to <path>
-  -l, --layer <layer>    layer name
-  -u, --update           clone or update repositories
+				  -a, --add              add <repository> to <path>
+				  -l, --layer <layer>    layer name
+				  -u, --update           clone or update repositories
 
-[2]
-`,
+				[2]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a"},
-			out: `nzn: invalid arguments
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: invalid arguments
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
-			out: `nzn: layer 'a' does not exist!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'a' does not exist!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "a"},
@@ -279,27 +289,30 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
-			out: `nzn: '.vim/bundle/vim-pathogen' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: '.vim/bundle/vim-pathogen' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "vcs", "rm", "-rfq", "a/.vim"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", "../dst"},
-			out: `nzn: '../dst' is not under root
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: '../dst' is not under root
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
-			out: `nzn: subrepo '.vim/bundle/vim-pathogen' already exists!
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: subrepo '.vim/bundle/vim-pathogen' already exists!
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/kien/ctrlp.vim", ".vim/bundle/ctrlp.vim"},
@@ -312,10 +325,11 @@ options:
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `link .vim/bundle/ctrlp.vim --> github.com/kien/ctrlp.vim
-link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
-2 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				link .vim/bundle/ctrlp.vim --> github.com/kien/ctrlp.vim
+				link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
+				2 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b"},
@@ -334,10 +348,11 @@ link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `unlink .vim/bundle/ctrlp.vim -/- github.com/kien/ctrlp.vim
-nzn: not linked to 'github.com/kien/ctrlp.vim'
-[1]
-`,
+			out: cli.Dedent(`
+				unlink .vim/bundle/ctrlp.vim -/- github.com/kien/ctrlp.vim
+				nzn: not linked to 'github.com/kien/ctrlp.vim'
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", ".vim/bundle/ctrlp.vim"},
@@ -356,19 +371,21 @@ nzn: not linked to 'github.com/kien/ctrlp.vim'
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: `warning: subrepo: '.vim/bundle/ctrlp.vim' exists in the repository
-link .vim/bundle/ctrlp.vim/ --> b
-1 updated, 0 removed, 0 failed
-`,
+			out: cli.Dedent(`
+				warning: subrepo: '.vim/bundle/ctrlp.vim' exists in the repository
+				link .vim/bundle/ctrlp.vim/ --> b
+				1 updated, 0 removed, 0 failed
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "c/1"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "c", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
-			out: `nzn: layer 'c' is abstract
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: layer 'c' is abstract
+				[1]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -391,7 +408,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = testutil.NewHTTPClient(ts.Listener.Addr().String())
+	http.DefaultClient = test.NewHTTPClient(ts.Listener.Addr().String())
 
 	sh.gitconfig["http.sslVerify"] = "false"
 	sh.gitconfig["url."+ts.URL+"/vim-pathogen/.git.insteadOf"] = "https://github.com/tpope/vim-pathogen"
@@ -441,9 +458,10 @@ func TestSubrepoUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: fmt.Sprintf(`nzn: \w+ .*%v: .* (re)
-[1]
-`, quote("/w/.nzn/r/a/.vimrc")),
+			out: cli.Dedent(`
+				nzn: \w+ .*` + quote("/w/.nzn/r/a/.vimrc") + `: .* (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/.vimrc"},
@@ -453,13 +471,14 @@ func TestSubrepoUpdateError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* github.com/tpope/vim-pathogen
-Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
-remote: 404 page not found
-fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
-nzn: git: exit status .*\d+ (re)
-[1]
-`,
+			out: cli.Dedent(`
+				* github.com/tpope/vim-pathogen
+				Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
+				remote: 404 page not found
+				fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
+				nzn: git: exit status .*\d+ (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"cd", "../r/vim-pathogen"},
@@ -478,41 +497,45 @@ nzn: git: exit status .*\d+ (re)
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* github.com/tpope/vim-pathogen
-nzn: unknown vcs for directory '[^']+' (re)
-[1]
-`,
+			out: cli.Dedent(`
+				* github.com/tpope/vim-pathogen
+				nzn: unknown vcs for directory '[^']+' (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"rm", "-r", ".nzn/sub"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* github.com/tpope/vim-pathogen
-Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
-`,
+			out: cli.Dedent(`
+				* github.com/tpope/vim-pathogen
+				Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
+			`),
 		},
 		{
 			cmd: []string{"rm", "../r/vim-pathogen/.git/info/refs"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* github.com/tpope/vim-pathogen
-remote: 404 page not found
-fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
-nzn: git: exit status .*\d+ (re)
-[1]
-`,
+			out: cli.Dedent(`
+				* github.com/tpope/vim-pathogen
+				remote: 404 page not found
+				fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
+				nzn: git: exit status .*\d+ (re)
+				[1]
+			`),
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "example.com/repo", ".r"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
-			out: `* example.com/repo
-nzn: unknown remote
-[1]
-`,
+			out: cli.Dedent(`
+				* example.com/repo
+				nzn: unknown remote
+				[1]
+			`),
 		},
 	}
 	if err := sh.run(s); err != nil {

@@ -1,7 +1,7 @@
 //
 // nazuna :: remote_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -34,7 +34,7 @@ import (
 	"testing"
 
 	"github.com/hattya/nazuna"
-	"github.com/hattya/nazuna/testutil"
+	"github.com/hattya/nazuna/internal/test"
 )
 
 func TestRemote(t *testing.T) {
@@ -48,7 +48,7 @@ func TestRemote(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = testutil.NewHTTPClient(s.Listener.Addr().String())
+	http.DefaultClient = test.NewHTTPClient(s.Listener.Addr().String())
 
 	r, err := nazuna.NewRemote(nil, "github.com/kien/ctrlp.vim")
 	if err != nil {
@@ -120,7 +120,7 @@ func TestRemoteError(t *testing.T) {
 
 	c := http.DefaultClient
 	defer func() { http.DefaultClient = c }()
-	http.DefaultClient = testutil.NewHTTPClient(s.Listener.Addr().String())
+	http.DefaultClient = test.NewHTTPClient(s.Listener.Addr().String())
 
 	switch _, err := nazuna.NewRemote(nil, "github.com/hattya"); {
 	case err == nil:

@@ -1,7 +1,7 @@
 //
-// nzn :: subrepo.go
+// nazuna/cmd/nzn :: subrepo.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -47,18 +47,18 @@ func init() {
 			"-l <layer> -a <repository> <path>",
 			"-u",
 		},
-		Desc: strings.TrimSpace(`
-manage subrepositories
+		Desc: strings.TrimSpace(cli.Dedent(`
+			manage subrepositories
 
-  subrepo is used to manage external repositories.
+			  subrepo is used to manage external repositories.
 
-  subrepo can associate <repository> to <path> by --add flag. If <path> ends
-  with a path separator, it will be associated as the basename of <repository>
-  under <path>.
+			  subrepo can associate <repository> to <path> by --add flag. If <path> ends
+			  with a path separator, it will be associated as the basename of <repository>
+			  under <path>.
 
-  subrepo can clone or update the repositories in the working copy by --update
-  flag.
-`),
+			  subrepo can clone or update the repositories in the working copy by --update
+			  flag.
+		`)),
 		Flags:  flags,
 		Action: subrepo,
 		Data:   true,

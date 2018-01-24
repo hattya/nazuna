@@ -1,7 +1,7 @@
 //
 // nazuna :: layer_test.go
 //
-//   Copyright (c) 2014-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -38,12 +38,12 @@ import (
 func TestLayer(t *testing.T) {
 	l := &nazuna.Layer{Name: "layer"}
 	if g, e := l.Path(), "layer"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Layer.Path() = %v, expected %v", g, e)
 	}
 
 	l.Abst(&nazuna.Layer{Name: "abst"})
 	if g, e := l.Path(), "abst/layer"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Layer.Path() = %v, expected %v", g, e)
 	}
 }
 
@@ -146,10 +146,10 @@ func TestLayerNewLink(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g, e := lnk.Src, "src"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Link.Src = %v, expected %v", g, e)
 	}
 	if g, e := lnk.Dst, "dst"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Link.Dst = %v, expected %v", g, e)
 	}
 
 	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
@@ -218,10 +218,10 @@ func TestLayerNewSubrepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g, e := sub.Src, src; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Subrepo.Src = %v, expected %v", g, e)
 	}
 	if g, e := sub.Name, "dst"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Subrepo.Name = %v, expected %v", g, e)
 	}
 
 	l.Subrepos = nil
@@ -230,10 +230,10 @@ func TestLayerNewSubrepo(t *testing.T) {
 		t.Fatal(err)
 	}
 	if g, e := sub.Src, src; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Subrepo.Src = %v, expected %v", g, e)
 	}
 	if g, e := sub.Name, ""; g != e {
-		t.Errorf("expected %v, got %v", e, g)
+		t.Errorf("Subrepo.Name = %v, expected %v", g, e)
 	}
 
 	if _, err := l.NewSubrepo(src, filepath.Base(src)); err == nil {

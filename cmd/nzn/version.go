@@ -1,7 +1,7 @@
 //
-// nzn :: version.go
+// nazuna/cmd/nzn :: version.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -35,6 +35,6 @@ func init() {
 }
 
 func showVersion(ctx *cli.Context) error {
-	ctx.UI.Printf("nazuna version %v\n", ctx.UI.Version)
+	ctx.UI.Printf("nzn version %v\n", ctx.UI.Version)
 	return nil
 }

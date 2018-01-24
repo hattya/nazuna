@@ -1,7 +1,7 @@
 //
-// nzn :: vcs_test.go
+// nazuna/cmd/nzn :: vcs_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,7 +26,11 @@
 
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hattya/go.cli"
+)
 
 func TestVCS(t *testing.T) {
 	s := script{
@@ -41,8 +45,9 @@ func TestVCS(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "vcs", "--version"},
-			out: `git version \d.* (re)
-`,
+			out: cli.Dedent(`
+				git version \d.* (re)
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
@@ -60,9 +65,10 @@ func TestVCSError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "vcs", "--version"},
-			out: `nzn: no repository found in '.*' \(\.nzn not found\)! (re)
-[1]
-`,
+			out: cli.Dedent(`
+				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				[1]
+			`),
 		},
 	}
 	if err := s.exec(); err != nil {
