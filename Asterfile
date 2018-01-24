@@ -1,12 +1,14 @@
 var os = require('os');
 var path = require('path');
 var go_ = require('language/go');
+var dep = go_.dep;
 var go = go_.go;
 var rst2html = require('language/restructuredtext').rst2html;
 
 var title = 'Aster ☆ ' + path.basename(os.getwd());
 
 aster.title(title);
+aster.ignore.push(/^vendor(?:\.orig)?$/);
 
 // go
 aster.watch(/.+\.go$/, function(files) {
@@ -22,6 +24,12 @@ aster.watch(/.+\.go$/, function(files) {
     go.tool.cover('-func', out);
     go.tool.cover('-html', out, '-o', 'coverage.html');
     os.remove(out);
+  }
+});
+
+aster.watch(/^Gopkg\.(?:lock|toml)$/, function() {
+  if (os.stat('vendor')) {
+    dep.ensure('-v');
   }
 });
 
