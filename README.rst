@@ -9,6 +9,9 @@ nazuna is a layered dotfiles management tool.
 .. image:: https://ci.appveyor.com/api/projects/status/2eg4vbro37mhsdk0/branch/master?svg=true
    :target: https://ci.appveyor.com/project/hattya/nazuna
 
+.. image:: https://codecov.io/gh/hattya/nazuna/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/hattya/nazuna
+
 
 Install
 -------
