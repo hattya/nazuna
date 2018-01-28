@@ -121,6 +121,9 @@ func TestNewLayer(t *testing.T) {
 		{Name: "a"},
 		{Name: "z"},
 	}
+	for _, l := range layers {
+		l.SetRepo(repo)
+	}
 	if _, err := repo.NewLayer("z"); err != nil {
 		t.Error(err)
 	}
@@ -140,6 +143,7 @@ func TestNewLayer(t *testing.T) {
 	}
 	abst.SetRepo(repo)
 	for _, l := range abst.Layers {
+		l.SetRepo(repo)
 		l.SetAbst(abst)
 	}
 	if _, err := repo.NewLayer("abst/z"); err != nil {
@@ -219,10 +223,10 @@ func TestFindPath(t *testing.T) {
 	}
 	defer os.RemoveAll(repo.Root())
 
-	if _, err := repo.NewLayer("layer"); err != nil {
+	l, err := repo.NewLayer("layer")
+	if err != nil {
 		t.Fatal(err)
 	}
-	l, _ := repo.LayerOf("layer")
 	if err := mkdir(repo.PathFor(l, "dir")); err != nil {
 		t.Fatal(err)
 	}

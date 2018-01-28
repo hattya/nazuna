@@ -141,6 +141,7 @@ func (repo *Repository) NewLayer(name string) (*Layer, error) {
 		}
 		ll := &Layer{
 			Name: n[1],
+			repo: repo,
 			abst: l,
 		}
 		l.Layers = append(l.Layers, ll)
@@ -154,7 +155,10 @@ func (repo *Repository) NewLayer(name string) (*Layer, error) {
 func (repo *Repository) newLayer(name string) *Layer {
 	repo.Layers = append(repo.Layers, nil)
 	copy(repo.Layers[1:], repo.Layers)
-	repo.Layers[0] = &Layer{Name: name}
+	repo.Layers[0] = &Layer{
+		Name: name,
+		repo: repo,
+	}
 	return repo.Layers[0]
 }
 
