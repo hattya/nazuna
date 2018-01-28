@@ -1,7 +1,7 @@
 //
 // nazuna :: export_test.go
 //
-//   Copyright (c) 2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,21 +26,14 @@
 
 package nazuna
 
-func (l *Layer) Abst(abst *Layer) {
+func (l *Layer) SetAbst(abst *Layer) {
 	l.abst = abst
 }
 
-func SortLayers(layers []*Layer) []*Layer {
-	layerSlice(layers).Sort()
-	return layers
+func (l *Layer) SetRepo(repo *Repository) {
+	l.repo = repo
 }
 
-func SortLinks(links []*Link) []*Link {
-	linkSlice(links).Sort()
-	return links
-}
-
-func SortSubrepos(subrepos []*Subrepo) []*Subrepo {
-	subrepoSlice(subrepos).Sort()
-	return subrepos
+func (repo *Repository) Root() string {
+	return repo.root
 }

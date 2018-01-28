@@ -1,7 +1,7 @@
 //
 // nazuna :: repository.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -149,7 +150,7 @@ func (repo *Repository) NewLayer(name string) (*Layer, error) {
 			abst: l,
 		}
 		l.Layers = append(l.Layers, ll)
-		layerSlice(l.Layers).Sort()
+		sort.Slice(l.Layers, func(i, j int) bool { return l.Layers[i].Name < l.Layers[j].Name })
 		l = ll
 	}
 	os.MkdirAll(repo.PathFor(l, "/"), 0777)

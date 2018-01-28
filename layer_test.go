@@ -28,8 +28,8 @@ package nazuna_test
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -41,27 +41,43 @@ func TestLayer(t *testing.T) {
 		t.Errorf("Layer.Path() = %v, expected %v", g, e)
 	}
 
-	l.Abst(&nazuna.Layer{Name: "abst"})
+	l.SetAbst(&nazuna.Layer{Name: "abst"})
 	if g, e := l.Path(), "abst/layer"; g != e {
 		t.Errorf("Layer.Path() = %v, expected %v", g, e)
 	}
 }
 
-func TestLayerNewAlias(t *testing.T) {
-	dir, err := tempDir()
+func TestNewAlias(t *testing.T) {
+	repo, err := initLayer()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
-	repo, err := create(dir)
+	defer os.RemoveAll(repo.Root())
+
+	l, err := repo.LayerOf("abst/layer")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if _, err := repo.NewLayer("abst/layer"); err != nil {
-		t.Fatal(err)
+	if err := l.NewAlias("src", "dst"); err != nil {
+		t.Error(err)
 	}
 
+	if err := l.NewAlias("src", "src"); err == nil {
+		t.Error("expected error")
+	}
+	if err := l.NewAlias("src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestNewAliasError(t *testing.T) {
+	repo, err := initLayer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
+	// abstruct layer
 	l, err := repo.LayerOf("abst")
 	if err != nil {
 		t.Fatal(err)
@@ -69,23 +85,11 @@ func TestLayerNewAlias(t *testing.T) {
 	if err := l.NewAlias("src", "dst"); err == nil {
 		t.Error("expected error")
 	}
-
+	// already exists: file
 	l, err = repo.LayerOf("abst/layer")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := l.NewAlias("src", "src"); err == nil {
-		t.Error("expected error")
-	}
-	if err := l.NewAlias("src", "dst"); err != nil {
-		t.Error(err)
-	}
-
-	if err := l.NewAlias("src", "dst"); err == nil {
-		t.Error("expected error")
-	}
-
-	l.Aliases = nil
 	if err := touch(repo.PathFor(l, "dst")); err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +99,7 @@ func TestLayerNewAlias(t *testing.T) {
 	if err := l.NewAlias("src", "dst"); err == nil {
 		t.Error("expected error")
 	}
-
+	// already exists: directory
 	l.Aliases = nil
 	if err := repo.Command("rm", "-rf", "."); err != nil {
 		t.Fatal(err)
@@ -114,21 +118,47 @@ func TestLayerNewAlias(t *testing.T) {
 	}
 }
 
-func TestLayerNewLink(t *testing.T) {
-	dir, err := tempDir()
+func TestNewLink(t *testing.T) {
+	repo, err := initLayer()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
-	repo, err := create(dir)
+	defer os.RemoveAll(repo.Root())
+
+	links := map[string][]*nazuna.Link{
+		"": []*nazuna.Link{
+			{[]string{"path"}, "src", "dst"},
+			{nil, "a", "z"},
+		},
+	}
+
+	l, err := repo.LayerOf("abst/layer")
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	if _, err := repo.NewLayer("abst/layer"); err != nil {
+	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := l.NewLink(nil, "a", "z"); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(l.Links, links) {
+		t.Error("expected to sort by Link.Dst")
+	}
 
+	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestNewLinkError(t *testing.T) {
+	repo, err := initLayer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
+	// abstruct layer
 	l, err := repo.LayerOf("abst")
 	if err != nil {
 		t.Fatal(err)
@@ -136,27 +166,11 @@ func TestLayerNewLink(t *testing.T) {
 	if _, err := l.NewLink([]string{}, "src", "dst"); err == nil {
 		t.Error("expected error")
 	}
-
+	// already exists: file
 	l, err = repo.LayerOf("abst/layer")
 	if err != nil {
 		t.Fatal(err)
 	}
-	lnk, err := l.NewLink([]string{"path"}, "src", "dst")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g, e := lnk.Src, "src"; g != e {
-		t.Errorf("Link.Src = %v, expected %v", g, e)
-	}
-	if g, e := lnk.Dst, "dst"; g != e {
-		t.Errorf("Link.Dst = %v, expected %v", g, e)
-	}
-
-	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
-		t.Error("expected error")
-	}
-
-	l.Links = nil
 	if err := touch(repo.PathFor(l, "dst")); err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +180,7 @@ func TestLayerNewLink(t *testing.T) {
 	if _, err := l.NewLink([]string{"path"}, "src", "dst"); err == nil {
 		t.Error("expected error")
 	}
-
+	// already exists: directory
 	l.Links = nil
 	if err := repo.Command("rm", "-rf", "."); err != nil {
 		t.Fatal(err)
@@ -185,22 +199,68 @@ func TestLayerNewLink(t *testing.T) {
 	}
 }
 
-func TestLayerNewSubrepo(t *testing.T) {
-	dir, err := tempDir()
+func TestNewSubrepo(t *testing.T) {
+	repo, err := initLayer()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
-	repo, err := create(dir)
+	defer os.RemoveAll(repo.Root())
+
+	src := "github.com/hattya/nazuna"
+	subrepos := make(map[string][]*nazuna.Subrepo)
+	l, err := repo.LayerOf("abst/layer")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := repo.NewLayer("abst/layer"); err != nil {
+	subrepos[""] = []*nazuna.Subrepo{
+		{"a", "z"},
+		{src, "dst"},
+	}
+	if _, err := l.NewSubrepo(src, "dst"); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := l.NewSubrepo("a", "z"); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(l.Subrepos, subrepos) {
+		t.Error("expected to sort by Subrepo.Src")
+	}
+
+	if _, err := l.NewSubrepo(src, "dst"); err == nil {
+		t.Error("expected error")
+	}
+
+	l.Subrepos = nil
+	subrepos[""] = []*nazuna.Subrepo{
+		{"a", "z"},
+		{src, ""},
+	}
+	if _, err := l.NewSubrepo(src, filepath.Base(src)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.NewSubrepo("a", "z"); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(l.Subrepos, subrepos) {
+		t.Error("expected to sort by Subrepo.Src")
+	}
+
+	if _, err := l.NewSubrepo(src, filepath.Base(src)); err == nil {
+		t.Error("expected error")
+	}
+}
+
+func TestNewSubrepoError(t *testing.T) {
+	repo, err := initLayer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
 	src := "github.com/hattya/nazuna"
 
+	// abstruct layer
 	l, err := repo.LayerOf("abst")
 	if err != nil {
 		t.Fatal(err)
@@ -208,39 +268,11 @@ func TestLayerNewSubrepo(t *testing.T) {
 	if _, err := l.NewSubrepo(src, "dst"); err == nil {
 		t.Error("expected error")
 	}
-
+	// already exists: file
 	l, err = repo.LayerOf("abst/layer")
 	if err != nil {
 		t.Fatal(err)
 	}
-	sub, err := l.NewSubrepo(src, "dst")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g, e := sub.Src, src; g != e {
-		t.Errorf("Subrepo.Src = %v, expected %v", g, e)
-	}
-	if g, e := sub.Name, "dst"; g != e {
-		t.Errorf("Subrepo.Name = %v, expected %v", g, e)
-	}
-
-	l.Subrepos = nil
-	sub, err = l.NewSubrepo(src, filepath.Base(src))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g, e := sub.Src, src; g != e {
-		t.Errorf("Subrepo.Src = %v, expected %v", g, e)
-	}
-	if g, e := sub.Name, ""; g != e {
-		t.Errorf("Subrepo.Name = %v, expected %v", g, e)
-	}
-
-	if _, err := l.NewSubrepo(src, filepath.Base(src)); err == nil {
-		t.Error("expected error")
-	}
-
-	l.Subrepos = nil
 	if err := touch(repo.PathFor(l, "dst")); err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +282,7 @@ func TestLayerNewSubrepo(t *testing.T) {
 	if _, err = l.NewSubrepo(src, "dst"); err == nil {
 		t.Error("expected error")
 	}
-
+	// already exists: directory
 	l.Subrepos = nil
 	if err := repo.Command("rm", "-rf", "."); err != nil {
 		t.Fatal(err)
@@ -269,57 +301,11 @@ func TestLayerNewSubrepo(t *testing.T) {
 	}
 }
 
-func create(path string) (*nazuna.Repository, error) {
-	rdir := filepath.Join(path, ".nzn", "r")
-	if err := mkdir(rdir); err != nil {
-		return nil, err
+func initLayer() (repo *nazuna.Repository, err error) {
+	repo, err = init_()
+	if err != nil {
+		return
 	}
-	cmd := exec.Command("git", "init", "-q")
-	cmd.Dir = rdir
-	if err := cmd.Run(); err != nil {
-		return nil, err
-	}
-	return nazuna.Open(&testUI{}, path)
-}
-
-func TestSortLayers(t *testing.T) {
-	layers := []*nazuna.Layer{
-		{Name: "b"},
-		{Name: "a"},
-	}
-	nazuna.SortLayers(layers)
-	if g, e := layers[0].Name, "a"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
-	}
-	if g, e := layers[1].Name, "b"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
-	}
-}
-
-func TestSortLinks(t *testing.T) {
-	links := []*nazuna.Link{
-		{Dst: "b"},
-		{Dst: "a"},
-	}
-	nazuna.SortLinks(links)
-	if g, e := links[0].Dst, "a"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
-	}
-	if g, e := links[1].Dst, "b"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
-	}
-}
-
-func TestSortSubrepos(t *testing.T) {
-	subrepos := []*nazuna.Subrepo{
-		{Src: "b"},
-		{Src: "a"},
-	}
-	nazuna.SortSubrepos(subrepos)
-	if g, e := subrepos[0].Src, "a"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
-	}
-	if g, e := subrepos[1].Src, "b"; g != e {
-		t.Errorf("expected %v, got %v", e, g)
-	}
+	_, err = repo.NewLayer("abst/layer")
+	return
 }

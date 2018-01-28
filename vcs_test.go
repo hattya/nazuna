@@ -208,7 +208,7 @@ func TestGitVCS(t *testing.T) {
 	}
 	defer popd()
 
-	ui := &testUI{}
+	ui := new(testUI)
 	vcs, err := nazuna.FindVCS(ui, "git", "")
 	if err != nil {
 		t.Fatal(err)
@@ -275,7 +275,7 @@ func TestMercurialVCS(t *testing.T) {
 	}
 	defer popd()
 
-	ui := &testUI{}
+	ui := new(testUI)
 	vcs, err := nazuna.FindVCS(ui, "hg", "")
 	if err != nil {
 		t.Fatal(err)

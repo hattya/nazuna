@@ -1,7 +1,7 @@
 //
 // nazuna :: layer.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -84,7 +84,7 @@ func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
 		l.Links = make(map[string][]*Link)
 	}
 	l.Links[dir] = append(l.Links[dir], lnk)
-	linkSlice(l.Links[dir]).Sort()
+	sort.Slice(l.Links[dir], func(i, j int) bool { return l.Links[dir][i].Dst < l.Links[dir][j].Dst })
 	return lnk, nil
 }
 
@@ -105,7 +105,7 @@ func (l *Layer) NewSubrepo(src, dst string) (*Subrepo, error) {
 		l.Subrepos = make(map[string][]*Subrepo)
 	}
 	l.Subrepos[dir] = append(l.Subrepos[dir], sub)
-	subrepoSlice(l.Subrepos[dir]).Sort()
+	sort.Slice(l.Subrepos[dir], func(i, j int) bool { return l.Subrepos[dir][i].Src < l.Subrepos[dir][j].Src })
 	return sub, nil
 }
 
@@ -126,37 +126,13 @@ func (l *Layer) check(path string, dir bool) error {
 	return nil
 }
 
-type layerSlice []*Layer
-
-func (p layerSlice) Len() int           { return len(p) }
-func (p layerSlice) Less(i, j int) bool { return p[i].Name < p[j].Name }
-func (p layerSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-func (p layerSlice) Sort() { sort.Sort(p) }
-
 type Link struct {
 	Path []string `json:"path,omitempty"`
 	Src  string   `json:"src"`
 	Dst  string   `json:"dst"`
 }
 
-type linkSlice []*Link
-
-func (p linkSlice) Len() int           { return len(p) }
-func (p linkSlice) Less(i, j int) bool { return p[i].Dst < p[j].Dst }
-func (p linkSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-func (p linkSlice) Sort() { sort.Sort(p) }
-
 type Subrepo struct {
 	Src  string `json:"src"`
 	Name string `json:"name,omitempty"`
 }
-
-type subrepoSlice []*Subrepo
-
-func (p subrepoSlice) Len() int           { return len(p) }
-func (p subrepoSlice) Less(i, j int) bool { return p[i].Src < p[j].Src }
-func (p subrepoSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-func (p subrepoSlice) Sort() { sort.Sort(p) }

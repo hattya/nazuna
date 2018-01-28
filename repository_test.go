@@ -1,7 +1,7 @@
 //
 // nazuna :: repository_test.go
 //
-//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -29,7 +29,9 @@ package nazuna_test
 import (
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -94,4 +96,91 @@ func TestRepository(t *testing.T) {
 	if g, e := string(data), "[]\n"; g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
+}
+
+func TestNewLayer(t *testing.T) {
+	repo, err := init_()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
+	layers := []*nazuna.Layer{
+		{Name: "a"},
+		{Name: "z"},
+	}
+	if _, err := repo.NewLayer("z"); err != nil {
+		t.Error(err)
+	}
+	if _, err := repo.NewLayer("a"); err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(repo.Layers, layers) {
+		t.Error("unexpected order")
+	}
+
+	repo.Layers = nil
+	layers = []*nazuna.Layer{{Name: "abst"}}
+	abst := layers[0]
+	abst.Layers = []*nazuna.Layer{
+		{Name: "a"},
+		{Name: "z"},
+	}
+	abst.SetRepo(repo)
+	for _, l := range abst.Layers {
+		l.SetAbst(abst)
+	}
+	if _, err := repo.NewLayer("abst/z"); err != nil {
+		t.Error(err)
+	}
+	if _, err := repo.NewLayer("abst/a"); err != nil {
+		t.Error(err)
+	}
+	if !reflect.DeepEqual(repo.Layers, layers) {
+		t.Error("expected to sort by Layer.Name")
+	}
+}
+
+func TestNewLayerError(t *testing.T) {
+	repo, err := init_()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
+	if _, err := repo.NewLayer("layer"); err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range []string{
+		"",
+		"/",
+		"//",
+		"layer/layer",
+		"layer",
+	} {
+		if _, err := repo.NewLayer(n); err == nil {
+			t.Error("expected error")
+		}
+	}
+}
+
+func init_() (repo *nazuna.Repository, err error) {
+	dir, err := tempDir()
+	if err != nil {
+		return
+	}
+	rdir := filepath.Join(dir, ".nzn", "r")
+	if err = mkdir(rdir); err != nil {
+		return
+	}
+	cmd := exec.Command("git", "init", "-q")
+	cmd.Dir = rdir
+	if err = cmd.Run(); err != nil {
+		return
+	}
+	repo, err = nazuna.Open(new(testUI), dir)
+	if err != nil {
+		return
+	}
+	return
 }
