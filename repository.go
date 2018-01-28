@@ -130,20 +130,14 @@ func (repo *Repository) NewLayer(name string) (*Layer, error) {
 	}
 
 	var l *Layer
-	newLayer := func(n string) *Layer {
-		repo.Layers = append(repo.Layers, nil)
-		copy(repo.Layers[1:], repo.Layers)
-		repo.Layers[0] = &Layer{Name: n}
-		return repo.Layers[0]
-	}
 	switch n, _ := repo.splitLayer(name); len(n) {
 	case 1:
-		l = newLayer(n[0])
+		l = repo.newLayer(n[0])
 	default:
 		var err error
 		l, err = repo.LayerOf(n[0])
 		if err != nil {
-			l = newLayer(n[0])
+			l = repo.newLayer(n[0])
 		}
 		ll := &Layer{
 			Name: n[1],
@@ -157,19 +151,29 @@ func (repo *Repository) NewLayer(name string) (*Layer, error) {
 	return l, nil
 }
 
+func (repo *Repository) newLayer(name string) *Layer {
+	repo.Layers = append(repo.Layers, nil)
+	copy(repo.Layers[1:], repo.Layers)
+	repo.Layers[0] = &Layer{Name: name}
+	return repo.Layers[0]
+}
+
 func (repo *Repository) splitLayer(name string) ([]string, error) {
 	n := strings.Split(name, "/")
-	if 2 < len(n) || strings.TrimSpace(n[0]) == "" || (1 < len(n) && strings.TrimSpace(n[1]) == "") {
+	for i := range n {
+		n[i] = strings.TrimSpace(n[i])
+	}
+	if n[0] == "" || (len(n) > 1 && n[1] == "") || len(n) > 2 {
 		return nil, fmt.Errorf("invalid layer '%v'", name)
 	}
 	return n, nil
 }
 
 func (repo *Repository) PathFor(layer *Layer, path string) string {
-	if layer != nil {
-		return filepath.Join(repo.rdir, layer.Path(), path)
+	if layer == nil {
+		return filepath.Join(repo.rdir, path)
 	}
-	return filepath.Join(repo.rdir, path)
+	return filepath.Join(repo.rdir, layer.Path(), path)
 }
 
 func (repo *Repository) SubrepoFor(path string) string {
@@ -182,7 +186,7 @@ func (repo *Repository) WC() (*WC, error) {
 
 func (repo *Repository) Find(layer *Layer, path string) (typ string) {
 	err := repo.Walk(repo.PathFor(layer, path), func(p string, fi os.FileInfo, err error) error {
-		if !strings.HasSuffix(p, "/"+path) {
+		if !strings.HasSuffix(p, "/"+filepath.ToSlash(path)) {
 			typ = "dir"
 		} else {
 			typ = "file"
@@ -225,15 +229,15 @@ func (repo *Repository) Walk(path string, walk filepath.WalkFunc) error {
 	}
 	defer cmd.Wait()
 	defer cmd.Process.Kill()
-	scanner := bufio.NewScanner(out)
-	for scanner.Scan() {
-		l := scanner.Text()
-		fi, err := os.Stat(filepath.Join(repo.rdir, l))
-		if err = walk(l, fi, err); err != nil {
+	s := bufio.NewScanner(out)
+	for s.Scan() {
+		p := s.Text()
+		fi, err := os.Stat(filepath.Join(repo.rdir, p))
+		if err = walk(p, fi, err); err != nil {
 			return err
 		}
 	}
-	return scanner.Err()
+	return s.Err()
 }
 
 func (repo *Repository) Add(paths ...string) error {

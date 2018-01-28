@@ -110,7 +110,7 @@ func (l *Layer) NewSubrepo(src, dst string) (*Subrepo, error) {
 }
 
 func (l *Layer) check(path string, dir bool) error {
-	if 0 < len(l.Layers) {
+	if len(l.Layers) != 0 {
 		return fmt.Errorf("layer '%v' is abstract", l.Path())
 	}
 	switch typ := l.repo.Find(l, path); typ {
