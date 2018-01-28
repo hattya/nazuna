@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -50,9 +50,12 @@ type Entry struct {
 const unlinkableType = "_"
 
 func (e *Entry) Format(format string) string {
-	var sep, rhs string
+	var sep, lhs, rhs string
 	if e.IsDir {
 		sep = "/"
+	}
+	if e.Path != "" {
+		lhs = e.Path + sep
 	}
 	switch {
 	case e.Origin == "":
@@ -64,7 +67,7 @@ func (e *Entry) Format(format string) string {
 	default:
 		rhs = e.Layer + ":" + e.Origin + sep
 	}
-	return fmt.Sprintf(format, e.Path+sep, rhs)
+	return fmt.Sprintf(format, lhs, rhs)
 }
 
 type UI interface {
