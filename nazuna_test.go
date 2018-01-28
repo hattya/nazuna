@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna_test.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/hattya/nazuna"
 )
@@ -71,10 +72,10 @@ func tempDir() (string, error) {
 	return ioutil.TempDir("", "nazuna.test")
 }
 
-func mkdir(path string) error {
-	return os.MkdirAll(path, 0777)
+func mkdir(s ...string) error {
+	return os.MkdirAll(filepath.Join(s...), 0777)
 }
 
-func touch(path string) error {
-	return ioutil.WriteFile(path, []byte{}, 0666)
+func touch(s ...string) error {
+	return ioutil.WriteFile(filepath.Join(s...), []byte{}, 0666)
 }

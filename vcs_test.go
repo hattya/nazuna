@@ -224,13 +224,13 @@ func TestGitVCS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := touch("r/file"); err != nil {
+	if err := touch("r", "file"); err != nil {
 		t.Fatal(err)
 	}
-	if err := mkdir("r/dir"); err != nil {
+	if err := mkdir("r", "dir"); err != nil {
 		t.Fatal(err)
 	}
-	if err := touch("r/dir/file"); err != nil {
+	if err := touch("r", "dir", "file"); err != nil {
 		t.Fatal(err)
 	}
 	if err := vcs.Add("."); err != nil {
@@ -291,13 +291,13 @@ func TestMercurialVCS(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := touch("r/file"); err != nil {
+	if err := touch("r", "file"); err != nil {
 		t.Fatal(err)
 	}
-	if err := mkdir("r/dir"); err != nil {
+	if err := mkdir("r", "dir"); err != nil {
 		t.Fatal(err)
 	}
-	if err := touch("r/dir/file"); err != nil {
+	if err := touch("r", "dir", "file"); err != nil {
 		t.Fatal(err)
 	}
 	if err := vcs.Add("."); err != nil {

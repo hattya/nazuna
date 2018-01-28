@@ -38,7 +38,7 @@ import (
 	"github.com/hattya/nazuna"
 )
 
-func TestRepository(t *testing.T) {
+func TestOpen(t *testing.T) {
 	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
@@ -50,14 +50,46 @@ func TestRepository(t *testing.T) {
 	}
 	defer popd()
 
+	if err := mkdir(".nzn", "r", ".git"); err != nil {
+		t.Fatal(err)
+	}
+	repo, err := nazuna.Open(nil, ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Flush(); err != nil {
+		t.Error(err)
+	}
+	data, err := ioutil.ReadFile(filepath.Join(".nzn", "r", "nazuna.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := string(data), "[]\n"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
+}
+
+func TestOpenError(t *testing.T) {
+	dir, err := tempDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	popd, err := pushd(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer popd()
+
+	// no repository
 	switch _, err := nazuna.Open(nil, "."); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasPrefix(err.Error(), "no repository found "):
 		t.Error("unexpected error:", err)
 	}
-
-	if err := mkdir(".nzn/r"); err != nil {
+	// unknown vcs
+	if err := mkdir(".nzn", "r"); err != nil {
 		t.Fatal(err)
 	}
 	switch _, err = nazuna.Open(nil, "."); {
@@ -66,35 +98,15 @@ func TestRepository(t *testing.T) {
 	case !strings.HasPrefix(err.Error(), "unknown vcs for directory "):
 		t.Error("unexpected error:", err)
 	}
-
-	if err := mkdir(".nzn/r/.git"); err != nil {
+	// unmarshal error
+	if err := mkdir(".nzn", "r", ".git"); err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(".nzn", "r", "nazuna.json")
-
-	if err := mkdir(path); err != nil {
+	if err := mkdir(".nzn", "r", "nazuna.json"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = nazuna.Open(nil, "."); err == nil {
+	if _, err := nazuna.Open(nil, "."); err == nil {
 		t.Error("expected error")
-	}
-	if err := os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
-
-	repo, err := nazuna.Open(nil, ".")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.Flush(); err != nil {
-		t.Error(err)
-	}
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g, e := string(data), "[]\n"; g != e {
-		t.Errorf("expected %q, got %q", e, g)
 	}
 }
 
@@ -160,6 +172,79 @@ func TestNewLayerError(t *testing.T) {
 	} {
 		if _, err := repo.NewLayer(n); err == nil {
 			t.Error("expected error")
+		}
+	}
+}
+
+func TestRepositoryPaths(t *testing.T) {
+	repo, err := init_()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
+	rdir := filepath.Join(repo.Root(), ".nzn", "r")
+	if g, e := repo.PathFor(nil, "a"), filepath.Join(rdir, "a"); g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
+	l, err := repo.NewLayer("layer")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g, e := repo.PathFor(l, "a"), filepath.Join(rdir, l.Path(), "a"); g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
+
+	subroot := filepath.Join(repo.Root(), ".nzn", "sub")
+	if g, e := repo.SubrepoFor("a"), filepath.Join(subroot, "a"); g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
+}
+
+var findPathTests = []struct {
+	typ, path string
+}{
+	{"", "_"},
+	{"dir", "dir"},
+	{"file", filepath.Join("dir", "file")},
+	{"alias", "alias"},
+	{"link", "link"},
+	{"subrepo", "subrepo"},
+}
+
+func TestFindPath(t *testing.T) {
+	repo, err := init_()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(repo.Root())
+
+	if _, err := repo.NewLayer("layer"); err != nil {
+		t.Fatal(err)
+	}
+	l, _ := repo.LayerOf("layer")
+	if err := mkdir(repo.PathFor(l, "dir")); err != nil {
+		t.Fatal(err)
+	}
+	if err := touch(repo.PathFor(l, filepath.Join("dir", "file"))); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Add("."); err != nil {
+		t.Fatal(err)
+	}
+	if err := l.NewAlias("a", "alias"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.NewLink(nil, "l", "link"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := l.NewSubrepo("github.com/hattya/nazuna", "subrepo"); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tt := range findPathTests {
+		if g, e := repo.Find(l, tt.path), tt.typ; g != e {
+			t.Errorf("expected %v, got %v", e, g)
 		}
 	}
 }
