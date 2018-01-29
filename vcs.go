@@ -1,7 +1,7 @@
 //
 // nazuna :: vcs.go
 //
-//   Copyright (c) 2013-2014 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -159,40 +160,35 @@ func (v *Mercurial) Update() error {
 	return v.Exec("update")
 }
 
-type NewVCS func(UI, string) VCS
-
-type vcsType struct {
-	ctrlDir string
-	new     NewVCS
-}
-
 var (
-	mu sync.RWMutex
-
+	mu    sync.RWMutex
 	vcses = map[string]*vcsType{
 		"git": {".git", newGit},
 		"hg":  {".hg", newMercurial},
 	}
 )
 
-func RegisterVCS(cmd, ctrlDir string, new NewVCS) {
-	mu.Lock()
-	defer mu.Unlock()
+type vcsType struct {
+	ctrlDir string
+	new     NewVCS
+}
 
-	if new == nil {
-		panic("NewVCS is nil")
-	}
-	if _, dup := vcses[cmd]; dup {
+type NewVCS func(UI, string) VCS
+
+func RegisterVCS(cmd, ctrlDir string, new NewVCS) {
+	k := strings.ToLower(cmd)
+	if _, ok := vcses[k]; ok {
 		panic(fmt.Sprintf("vcs '%v' already registered", cmd))
 	}
-	vcses[cmd] = &vcsType{ctrlDir, new}
+	vcses[k] = &vcsType{ctrlDir, new}
 }
 
 func FindVCS(ui UI, cmd, dir string) (VCS, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	if v, ok := vcses[cmd]; ok {
+	k := strings.ToLower(cmd)
+	if v, ok := vcses[k]; ok {
 		return v.new(ui, dir), nil
 	}
 	return nil, fmt.Errorf("unknown vcs '%v'", cmd)

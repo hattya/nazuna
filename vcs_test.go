@@ -28,7 +28,6 @@ package nazuna_test
 
 import (
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -54,61 +53,41 @@ func init() {
 func TestRegisterVCSPanic(t *testing.T) {
 	func() {
 		defer func() {
-			switch err := recover(); {
-			case err == nil:
-				t.Fatal("does not panic")
-			case err != "NewVCS is nil":
-				t.Fatal("unexpected panic:", err)
+			if recover() == nil {
+				t.Error("expected panic")
 			}
 		}()
-		nazuna.RegisterVCS("", "", nil)
+
+		nazuna.RegisterVCS("test", ".test", newTest)
 	}()
 
 	func() {
 		defer func() {
-			switch err := recover(); {
-			case err == nil:
-				t.Fatal("does not panic")
-			case err != "vcs 'test' already registered":
-				t.Fatal("unexpected panic:", err)
+			if recover() == nil {
+				t.Error("expected panic")
 			}
 		}()
-		nazuna.RegisterVCS("test", ".test2", newTest)
+
+		nazuna.RegisterVCS("TEST", ".test", newTest)
 	}()
 }
 
 func TestFindVCS(t *testing.T) {
-	switch _, err := nazuna.FindVCS(nil, "cvs", ""); {
-	case err == nil:
-		t.Error("expected error")
-	case !strings.HasPrefix(err.Error(), "unknown vcs 'cvs'"):
-		t.Error("unexpected error:", err)
-	}
-
 	vcs, err := nazuna.FindVCS(nil, "hg", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, e := vcs.String(), "Mercurial"; g != e {
-		t.Errorf("VCS.String() = %q, expected %q", g, e)
-	}
-	hg, ok := vcs.(*nazuna.Mercurial)
-	if !ok {
-		t.Fatalf("expected *Mercurial, got %T", vcs)
-	}
-	if g, e := hg.Cmd, "hg"; g != e {
-		t.Errorf("VCS.Cmd = %q, expected %q", g, e)
-	}
-	if g, e := hg.Dir, ""; g != e {
-		t.Errorf("VCS.Dir = %q, expected %q", g, e)
+	switch vcs := vcs.(type) {
+	case *nazuna.Mercurial:
+		if g, e := vcs.Dir, ""; g != e {
+			t.Errorf("VCS.Dir = %q, expected %q", g, e)
+		}
+	default:
+		t.Errorf("expected *Mercurial, got %T", vcs)
 	}
 
-	vcs, err = nazuna.FindVCS(nil, "test", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, ok := vcs.(*testVCS); !ok {
-		t.Fatalf("expected *testVCS, got %T", vcs)
+	if _, err := nazuna.FindVCS(nil, "cvs", ""); err == nil {
+		t.Error("expected error")
 	}
 }
 
@@ -124,10 +103,6 @@ func TestVCSFor(t *testing.T) {
 	}
 	defer popd()
 
-	if _, err = nazuna.VCSFor(nil, dir); err == nil {
-		t.Error("expected error")
-	}
-
 	if err := mkdir(".git"); err != nil {
 		t.Fatal(err)
 	}
@@ -135,29 +110,20 @@ func TestVCSFor(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, e := vcs.String(), "Git"; g != e {
-		t.Errorf("VCS.String() = %q, expected %q", g, e)
-	}
-	git, ok := vcs.(*nazuna.Git)
-	if !ok {
+	switch vcs := vcs.(type) {
+	case *nazuna.Git:
+		if g, e := vcs.Dir, dir; g != e {
+			t.Errorf("VCS.Dir = %q, expected %q", g, e)
+		}
+	default:
 		t.Fatalf("expected *Git, got %T", vcs)
 	}
-	if g, e := git.Cmd, "git"; g != e {
-		t.Errorf("VCS.Cmd = %q, expected %q", g, e)
-	}
-	if g, e := git.Dir, dir; g != e {
-		t.Errorf("VCS.Dir = %q, expected %q", g, e)
-	}
 
-	if err := os.Rename(".git", ".test"); err != nil {
+	if err := os.Remove(".git"); err != nil {
 		t.Fatal(err)
 	}
-	vcs, err = nazuna.VCSFor(nil, dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, ok := vcs.(*testVCS); !ok {
-		t.Fatalf("expected *testVCS, got %T", vcs)
+	if _, err = nazuna.VCSFor(nil, dir); err == nil {
+		t.Error("expected error")
 	}
 }
 
@@ -167,103 +133,35 @@ func TestBaseVCS(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	switch err := vcs.Init("dir"); {
-	case err == nil:
-		t.Error("expected error")
-	case err.Error() != "VCS.Init not implemented":
-		t.Error("unexpected error:", err)
+	if g, e := vcs.String(), "name"; g != e {
+		t.Errorf("VCS.String() = %q, expected %q", g, e)
 	}
-	switch err := vcs.Clone("src", "dst"); {
-	case err == nil:
+	if err := vcs.Init("dir"); err == nil {
 		t.Error("expected error")
-	case err.Error() != "VCS.Clone not implemented":
-		t.Error("unexpected error:", err)
 	}
-	switch err := vcs.Add("paths"); {
-	case err == nil:
+	if err := vcs.Clone("src", "dst"); err == nil {
 		t.Error("expected error")
-	case err.Error() != "VCS.Add not implemented":
-		t.Error("unexpected error:", err)
 	}
-	if c := vcs.List("paths"); c != nil {
-		t.Errorf("expected nil, got %T", c)
-	}
-	switch err := vcs.Update(); {
-	case err == nil:
+	if err := vcs.Add("a", "b", "c"); err == nil {
 		t.Error("expected error")
-	case err.Error() != "VCS.Update not implemented":
-		t.Error("unexpected error:", err)
+	}
+	if cmd := vcs.List("a", "b", "c"); cmd != nil {
+		t.Errorf("expected nil, got %T", cmd)
+	}
+	if err := vcs.Update(); err == nil {
+		t.Error("expected error")
 	}
 }
 
 func TestGitVCS(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	popd, err := pushd(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
-
-	ui := new(testUI)
-	vcs, err := nazuna.FindVCS(ui, "git", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := vcs.Init("r"); err != nil {
-		t.Fatal(err)
-	}
-	if err := vcs.Clone("r", "w"); err != nil {
-		t.Fatal(err)
-	}
-
-	vcs, err = nazuna.FindVCS(ui, "git", "r")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := touch("r", "file"); err != nil {
-		t.Fatal(err)
-	}
-	if err := mkdir("r", "dir"); err != nil {
-		t.Fatal(err)
-	}
-	if err := touch("r", "dir", "file"); err != nil {
-		t.Fatal(err)
-	}
-	if err := vcs.Add("."); err != nil {
-		t.Fatal(err)
-	}
-	if err := vcs.Exec("commit", "-am", "."); err != nil {
-		t.Fatal(err)
-	}
-
-	vcs, err = nazuna.FindVCS(ui, "git", "w")
-	if err != nil {
-		t.Fatal(err)
-	}
-	ui.Reset()
-	if err := ui.Exec(vcs.List(".")); err != nil {
-		t.Fatal(err)
-	}
-	if g, e := ui.String(), ""; g != e {
-		t.Errorf("expected %q, got %q", e, g)
-	}
-	if err := vcs.Update(); err != nil {
-		t.Fatal(err)
-	}
-	ui.Reset()
-	if err := ui.Exec(vcs.List(".")); err != nil {
-		t.Fatal(err)
-	}
-	if g, e := ui.String(), "dir/file\nfile\n"; g != e {
-		t.Errorf("expected %q, got %q", e, g)
-	}
+	testVCSImpl(t, "git")
 }
 
 func TestMercurialVCS(t *testing.T) {
+	testVCSImpl(t, "hg")
+}
+
+func testVCSImpl(t *testing.T, cmd string) {
 	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
@@ -276,7 +174,7 @@ func TestMercurialVCS(t *testing.T) {
 	defer popd()
 
 	ui := new(testUI)
-	vcs, err := nazuna.FindVCS(ui, "hg", "")
+	vcs, err := nazuna.FindVCS(ui, cmd, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,9 +185,12 @@ func TestMercurialVCS(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vcs, err = nazuna.FindVCS(ui, "hg", "r")
+	vcs, err = nazuna.FindVCS(ui, cmd, "r")
 	if err != nil {
 		t.Fatal(err)
+	}
+	if err := vcs.Update(); err == nil {
+		t.Error("expected error")
 	}
 	if err := touch("r", "file"); err != nil {
 		t.Fatal(err)
@@ -307,7 +208,7 @@ func TestMercurialVCS(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vcs, err = nazuna.FindVCS(ui, "hg", "w")
+	vcs, err = nazuna.FindVCS(ui, cmd, "w")
 	if err != nil {
 		t.Fatal(err)
 	}
