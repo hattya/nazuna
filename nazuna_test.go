@@ -178,6 +178,10 @@ func (ui *testUI) Exec(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
 
+func mkdir(s ...string) error {
+	return os.MkdirAll(filepath.Join(s...), 0777)
+}
+
 func pushd(path string) (func() error, error) {
 	wd, err := os.Getwd()
 	popd := func() error {
@@ -191,10 +195,6 @@ func pushd(path string) (func() error, error) {
 
 func tempDir() (string, error) {
 	return ioutil.TempDir("", "nazuna.test")
-}
-
-func mkdir(s ...string) error {
-	return os.MkdirAll(filepath.Join(s...), 0777)
 }
 
 func touch(s ...string) error {
