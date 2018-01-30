@@ -26,6 +26,12 @@
 
 package nazuna
 
+var (
+	SortKeys  = sortKeys
+	Marshal   = marshal
+	Unmarshal = unmarshal
+)
+
 func (l *Layer) SetAbst(abst *Layer) {
 	l.abst = abst
 }
