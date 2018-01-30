@@ -1,7 +1,7 @@
 //
 // nazuna :: util_unix.go
 //
-//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -39,9 +39,6 @@ func IsLink(path string) bool {
 }
 
 func LinksTo(path, origin string) bool {
-	if !IsLink(path) {
-		return false
-	}
 	r, err := os.Readlink(path)
 	if err != nil {
 		return false
