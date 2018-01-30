@@ -39,9 +39,9 @@ import (
 
 func TestRemote(t *testing.T) {
 	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.RequestURI, "/1.0/repositories/") {
+		if strings.HasPrefix(r.RequestURI, "/2.0/repositories/") {
 			l := strings.Split(r.RequestURI[18:], "/")
-			fmt.Fprintf(w, `{"owner":"%v","scm":"%v"}`, l[0], l[1])
+			fmt.Fprintf(w, `{"owner":{"username":"%v"},"scm":"%v"}`, l[0], l[1])
 		}
 	}))
 	defer s.Close()
@@ -104,14 +104,14 @@ func TestRemote(t *testing.T) {
 
 func TestRemoteError(t *testing.T) {
 	s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.RequestURI, "/1.0/repositories/") {
+		if strings.HasPrefix(r.RequestURI, "/2.0/repositories/") {
 			l := strings.Split(r.RequestURI[18:], "/")
 			if l[0] != "_" {
 				switch l[1] {
 				case "_":
 					http.NotFound(w, r)
 				default:
-					fmt.Fprintf(w, `{"owner":"%v","scm":"%v"}`, l[0], l[1])
+					fmt.Fprintf(w, `{"owner":{"username":"%v"},"scm":"%v"}`, l[0], l[1])
 				}
 			}
 		}
