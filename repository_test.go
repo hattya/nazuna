@@ -188,19 +188,19 @@ func TestRepositoryPaths(t *testing.T) {
 	defer os.RemoveAll(repo.Root())
 
 	rdir := filepath.Join(repo.Root(), ".nzn", "r")
-	if g, e := repo.PathFor(nil, "a"), filepath.Join(rdir, "a"); g != e {
+	if g, e := repo.PathFor(nil, "file"), filepath.Join(rdir, "file"); g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 	l, err := repo.NewLayer("layer")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if g, e := repo.PathFor(l, "a"), filepath.Join(rdir, l.Path(), "a"); g != e {
+	if g, e := repo.PathFor(l, "file"), filepath.Join(rdir, l.Path(), "file"); g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 
 	subroot := filepath.Join(repo.Root(), ".nzn", "sub")
-	if g, e := repo.SubrepoFor("a"), filepath.Join(subroot, "a"); g != e {
+	if g, e := repo.SubrepoFor("subrepo"), filepath.Join(subroot, "subrepo"); g != e {
 		t.Errorf("expected %q, got %q", e, g)
 	}
 }
