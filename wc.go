@@ -35,22 +35,9 @@ import (
 )
 
 var (
-	ErrLink    = errors.New("file is a link")
-	ErrNotLink = errors.New("not a link")
+	ErrLink    = errors.New("path is link")
+	ErrNotLink = errors.New("path is not link")
 )
-
-type ResolveError struct {
-	Name string
-	List []string
-}
-
-func (e *ResolveError) Error() string {
-	s := fmt.Sprintf("cannot resolve layer '%v'", e.Name)
-	if len(e.List) == 0 {
-		return s
-	}
-	return fmt.Sprintf("%v:\n    %v", s, strings.Join(e.List, "\n    "))
-}
 
 type WC struct {
 	State State
@@ -59,9 +46,9 @@ type WC struct {
 	repo *Repository
 }
 
-func openWC(ui UI, repo *Repository) (*WC, error) {
+func openWC(repo *Repository) (*WC, error) {
 	wc := &WC{
-		ui:   ui,
+		ui:   repo.ui,
 		repo: repo,
 	}
 	if err := unmarshal(repo, filepath.Join(repo.nzndir, "state.json"), &wc.State); err != nil {
@@ -103,7 +90,7 @@ func (wc *WC) Rel(base rune, path string) (string, error) {
 		return "", fmt.Errorf("unknown base '%c'", base)
 	}
 	rel, err := filepath.Rel(wc.repo.root, abs)
-	if err != nil || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
 		return "", fmt.Errorf("'%v' is not under root", path)
 	}
 	return filepath.ToSlash(rel), nil
@@ -163,7 +150,7 @@ func (wc *WC) SelectLayer(name string) error {
 	switch {
 	case err != nil:
 		return err
-	case 0 < len(l.Layers):
+	case len(l.Layers) != 0:
 		return fmt.Errorf("layer '%v' is abstract", name)
 	case l.abst == nil:
 		return fmt.Errorf("layer '%v' is not abstract", name)
@@ -190,20 +177,23 @@ func (wc *WC) LayerFor(name string) (*Layer, error) {
 			return wc.repo.LayerOf(k + "/" + v)
 		}
 	}
-	return nil, &ResolveError{Name: name}
+	return nil, ResolveError{Name: name}
 }
 
 func (wc *WC) Layers() ([]*Layer, error) {
 	list := make([]*Layer, len(wc.repo.Layers))
 	for i, l := range wc.repo.Layers {
-		if 0 < len(l.Layers) {
+		if len(l.Layers) != 0 {
 			wl, err := wc.LayerFor(l.Name)
 			if err != nil {
 				list := make([]string, len(l.Layers))
 				for i, ll := range l.Layers {
 					list[i] = ll.Name
 				}
-				return nil, &ResolveError{l.Name, list}
+				return nil, ResolveError{
+					Name: l.Name,
+					List: list,
+				}
 			}
 			l = wl
 		}
@@ -297,6 +287,19 @@ func (e *Entry) Format(format string) string {
 		rhs = e.Layer + ":" + e.Origin + sep
 	}
 	return fmt.Sprintf(format, lhs, rhs)
+}
+
+type ResolveError struct {
+	Name string
+	List []string
+}
+
+func (e ResolveError) Error() string {
+	s := fmt.Sprintf("cannot resolve layer '%v'", e.Name)
+	if len(e.List) == 0 {
+		return s
+	}
+	return fmt.Sprintf("%v:\n    %v", s, strings.Join(e.List, "\n    "))
 }
 
 const unlinkableType = "_"
@@ -406,7 +409,7 @@ func (b *wcBuilder) link() error {
 		for _, l := range b.l.Links[dir] {
 			src := filepath.FromSlash(filepath.Clean(os.ExpandEnv(l.Src)))
 			dst := filepath.ToSlash(filepath.Join(dir, l.Dst))
-			if 0 < len(l.Path) {
+			if len(l.Path) > 0 {
 			L:
 				for _, v := range l.Path {
 					for _, p := range filepath.SplitList(os.ExpandEnv(v)) {

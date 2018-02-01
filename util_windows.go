@@ -1,7 +1,7 @@
 //
 // nazuna :: util_windows.go
 //
-//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -47,7 +47,7 @@ func IsLink(path string) bool {
 		return false
 	}
 	// hard link
-	if 1 < fi.NumberOfLinks {
+	if fi.NumberOfLinks > 1 {
 		return true
 	}
 	// reparse point
@@ -80,7 +80,7 @@ func LinksTo(path, origin string) bool {
 		return false
 	}
 	// hard link
-	if 1 < fi1.NumberOfLinks {
+	if fi1.NumberOfLinks > 1 {
 		h, err := createFile(origin, 0)
 		if err != nil {
 			return false
@@ -130,8 +130,8 @@ func LinksTo(path, origin string) bool {
 	if strings.HasPrefix(path, `\??\`) {
 		path = path[4:]
 		switch {
-		case 2 <= len(path) && path[1] == ':':
-		case 4 <= len(path) && path[:4] == `UNC\`:
+		case len(path) >= 2 && path[1] == ':':
+		case len(path) >= 4 && path[:4] == `UNC\`:
 			path = `\\` + path[4:]
 		}
 	}

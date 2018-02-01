@@ -119,7 +119,7 @@ func TestWCError(t *testing.T) {
 	switch err := wc.Unlink("_"); {
 	case err == nil:
 		t.Error("expected error")
-	case !strings.HasSuffix(err.Error(), ": not a link"):
+	case !strings.HasSuffix(err.Error(), ": path is not link"):
 		t.Error("unexpected error:", err)
 	}
 }

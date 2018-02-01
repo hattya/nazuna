@@ -185,7 +185,7 @@ func (repo *Repository) SubrepoFor(path string) string {
 }
 
 func (repo *Repository) WC() (*WC, error) {
-	return openWC(repo.ui, repo)
+	return openWC(repo)
 }
 
 func (repo *Repository) Find(layer *Layer, path string) (typ string) {
