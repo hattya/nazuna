@@ -34,11 +34,6 @@ import (
 
 const Version = "0.4+"
 
-type State struct {
-	Layers map[string]string `json:"layers,omitempty"`
-	WC     []*Entry          `json:"wc,omitempty"`
-}
-
 type Entry struct {
 	Layer  string `json:"layer"`
 	Path   string `json:"path"`

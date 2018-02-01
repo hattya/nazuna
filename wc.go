@@ -1,7 +1,7 @@
 //
 // nazuna :: wc.go
 //
-//   Copyright (c) 2013-2017 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -263,6 +263,11 @@ func (wc *WC) Errorf(err error) error {
 		return fmt.Errorf("%v: %v", v.Path, v.Err)
 	}
 	return err
+}
+
+type State struct {
+	Layers map[string]string `json:"layers,omitempty"`
+	WC     []*Entry          `json:"wc,omitempty"`
 }
 
 type wcBuilder struct {
