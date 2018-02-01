@@ -27,43 +27,10 @@
 package nazuna
 
 import (
-	"fmt"
 	"os/exec"
-	"path/filepath"
 )
 
 const Version = "0.4+"
-
-type Entry struct {
-	Layer  string `json:"layer"`
-	Path   string `json:"path"`
-	Origin string `json:"origin,omitempty"`
-	IsDir  bool   `json:"dir,omitempty"`
-	Type   string `json:"type,omitempty"`
-}
-
-const unlinkableType = "_"
-
-func (e *Entry) Format(format string) string {
-	var sep, lhs, rhs string
-	if e.IsDir {
-		sep = "/"
-	}
-	if e.Path != "" {
-		lhs = e.Path + sep
-	}
-	switch {
-	case e.Origin == "":
-		rhs = e.Layer
-	case e.Type == "link":
-		rhs = filepath.FromSlash(e.Origin + sep)
-	case e.Type == "subrepo":
-		rhs = e.Origin
-	default:
-		rhs = e.Layer + ":" + e.Origin + sep
-	}
-	return fmt.Sprintf(format, lhs, rhs)
-}
 
 type UI interface {
 	Print(...interface{}) (int, error)

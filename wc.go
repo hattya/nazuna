@@ -270,6 +270,37 @@ type State struct {
 	WC     []*Entry          `json:"wc,omitempty"`
 }
 
+type Entry struct {
+	Layer  string `json:"layer"`
+	Path   string `json:"path"`
+	Origin string `json:"origin,omitempty"`
+	IsDir  bool   `json:"dir,omitempty"`
+	Type   string `json:"type,omitempty"`
+}
+
+func (e *Entry) Format(format string) string {
+	var sep, lhs, rhs string
+	if e.IsDir {
+		sep = "/"
+	}
+	if e.Path != "" {
+		lhs = e.Path + sep
+	}
+	switch {
+	case e.Origin == "":
+		rhs = e.Layer
+	case e.Type == "link":
+		rhs = filepath.FromSlash(e.Origin + sep)
+	case e.Type == "subrepo":
+		rhs = e.Origin
+	default:
+		rhs = e.Layer + ":" + e.Origin + sep
+	}
+	return fmt.Sprintf(format, lhs, rhs)
+}
+
+const unlinkableType = "_"
+
 type wcBuilder struct {
 	w       *WC
 	l       *Layer
