@@ -203,19 +203,22 @@ func (wc *WC) Layers() ([]*Layer, error) {
 }
 
 func (wc *WC) MergeLayers() ([]*Entry, error) {
-	b := wcBuilder{w: wc}
+	b := wcBuilder{
+		ui: wc.ui,
+		wc: wc,
+	}
 	if err := b.build(); err != nil {
 		return nil, err
 	}
 
 	wc.State.WC = wc.State.WC[:0]
 	dir := ""
-	for _, p := range sortKeys(b.wc) {
+	for _, p := range sortKeys(b.WC) {
 		switch {
 		case dir != "" && strings.HasPrefix(p, dir):
-		case len(b.wc[p]) == 1:
-			e := b.wc[p][0]
-			if e.Type == unlinkableType {
+		case len(b.WC[p]) == 1:
+			e := b.WC[p][0]
+			if e.Type == unlinkable {
 				continue
 			}
 			wc.State.WC = append(wc.State.WC, e)
@@ -224,17 +227,17 @@ func (wc *WC) MergeLayers() ([]*Entry, error) {
 			} else {
 				dir = ""
 			}
-			if c, ok := b.state[p]; ok {
+			if c, ok := b.State[p]; ok {
 				if c.Layer == e.Layer && c.IsDir == e.IsDir {
-					delete(b.state, p)
+					delete(b.State, p)
 				}
 			}
 		}
 	}
 
-	ul := make([]*Entry, len(b.state))
-	for i, p := range sortKeys(b.state) {
-		ul[i] = b.state[p]
+	ul := make([]*Entry, len(b.State))
+	for i, p := range sortKeys(b.State) {
+		ul[i] = b.State[p]
 	}
 	return ul, nil
 }
@@ -302,27 +305,29 @@ func (e ResolveError) Error() string {
 	return fmt.Sprintf("%v:\n    %v", s, strings.Join(e.List, "\n    "))
 }
 
-const unlinkableType = "_"
+const unlinkable = "_"
 
 type wcBuilder struct {
-	w       *WC
+	State map[string]*Entry
+	WC    map[string][]*Entry
+
+	ui      UI
+	wc      *WC
 	l       *Layer
 	layer   string
-	state   map[string]*Entry
-	wc      map[string][]*Entry
 	aliases map[string]string
 }
 
 func (b *wcBuilder) build() error {
-	layers, err := b.w.Layers()
+	layers, err := b.wc.Layers()
 	if err != nil {
 		return err
 	}
-	b.state = make(map[string]*Entry)
-	for _, e := range b.w.State.WC {
-		b.state[e.Path] = e
+	b.State = make(map[string]*Entry)
+	for _, e := range b.wc.State.WC {
+		b.State[e.Path] = e
 	}
-	b.wc = make(map[string][]*Entry)
+	b.WC = make(map[string][]*Entry)
 	b.aliases = make(map[string]string)
 	for _, l := range layers {
 		b.l = l
@@ -346,7 +351,7 @@ func (b *wcBuilder) build() error {
 }
 
 func (b *wcBuilder) repo() error {
-	return b.w.repo.Walk(b.layer, func(path string, fi os.FileInfo, err error) error {
+	return b.wc.repo.Walk(b.layer, func(path string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -355,14 +360,14 @@ func (b *wcBuilder) repo() error {
 		if err != nil {
 			return err
 		}
-		if _, ok := b.wc[path]; !ok {
-			b.parentDirs(path, true)
+		if _, ok := b.WC[path]; !ok {
+			b.parents(path, true)
 			e := &Entry{
 				Layer: b.layer,
 				Path:  path,
 				IsDir: fi.IsDir(),
 			}
-			b.wc[path] = append(b.wc[path], e)
+			b.WC[path] = append(b.WC[path], e)
 			if path != origin {
 				e.Origin = origin
 				for p, o := filepath.Dir(path), filepath.Dir(origin); p != "."; p = filepath.Dir(p) {
@@ -371,7 +376,7 @@ func (b *wcBuilder) repo() error {
 						e.Origin = filepath.ToSlash(o)
 						o = filepath.Dir(o)
 					} else {
-						e.Type = unlinkableType
+						e.Type = unlinkable
 					}
 				}
 			}
@@ -390,10 +395,10 @@ func (b *wcBuilder) link() error {
 		if err != nil {
 			return false, fmt.Errorf("link %v", err)
 		}
-		switch list, ok := b.wc[dst]; {
+		switch list, ok := b.WC[dst]; {
 		case !ok:
-			b.parentDirs(dst, false)
-			b.wc[dst] = append(b.wc[dst], &Entry{
+			b.parents(dst, false)
+			b.WC[dst] = append(b.WC[dst], &Entry{
 				Layer:  b.layer,
 				Path:   dst,
 				Origin: src,
@@ -401,7 +406,7 @@ func (b *wcBuilder) link() error {
 				Type:   "link",
 			})
 		case list[0].Layer == b.layer && list[0].Type != "link":
-			b.w.ui.Errorf("warning: link: '%v' exists in the repository\n", dst)
+			b.ui.Errorf("warning: link: '%v' exists in the repository\n", dst)
 		}
 		return true, nil
 	}
@@ -414,10 +419,10 @@ func (b *wcBuilder) link() error {
 				for _, v := range l.Path {
 					for _, p := range filepath.SplitList(os.ExpandEnv(v)) {
 						switch ok, err := link(filepath.FromSlash(filepath.Clean(filepath.Join(p, src))), dst); {
-						case ok:
-							break L
 						case err != nil:
 							return err
+						case ok:
+							break L
 						}
 					}
 				}
@@ -432,27 +437,25 @@ func (b *wcBuilder) link() error {
 func (b *wcBuilder) subrepo() error {
 	for _, dir := range sortKeys(b.l.Subrepos) {
 		for _, sub := range b.l.Subrepos[dir] {
-			var name string
-			if sub.Name != "" {
-				name = sub.Name
-			} else {
+			name := sub.Name
+			if name == "" {
 				name = filepath.Base(sub.Src)
 			}
 			dst, err := b.alias(filepath.ToSlash(filepath.Join(dir, name)))
 			if err != nil {
 				return fmt.Errorf("subrepo %v", err)
 			}
-			switch list, ok := b.wc[dst]; {
+			switch list, ok := b.WC[dst]; {
 			case !ok:
-				b.parentDirs(dst, false)
-				b.wc[dst] = append(b.wc[dst], &Entry{
+				b.parents(dst, false)
+				b.WC[dst] = append(b.WC[dst], &Entry{
 					Layer:  b.layer,
 					Path:   dst,
 					Origin: sub.Src,
 					Type:   "subrepo",
 				})
 			case list[0].Layer == b.layer && list[0].Type != "subrepo":
-				b.w.ui.Errorf("warning: subrepo: '%v' exists in the repository\n", dst)
+				b.ui.Errorf("warning: subrepo: '%v' exists in the repository\n", dst)
 			}
 		}
 	}
@@ -467,48 +470,50 @@ func (b *wcBuilder) alias(path string) (string, error) {
 			} else {
 				path = filepath.Join(dst, path[len(src)+1:])
 			}
-			return b.w.Rel('/', filepath.Clean(os.ExpandEnv(path)))
+			return b.wc.Rel('/', filepath.Clean(os.ExpandEnv(path)))
 		}
 	}
 	return path, nil
 }
 
-func (b *wcBuilder) parentDirs(path string, linkable bool) {
+func (b *wcBuilder) parents(path string, linkable bool) {
 	inWC := true
-	for i, _ := range path {
-		if path[i] == '/' {
-			p := path[:i]
-			e := b.find(p)
-			if e == nil {
-				e = &Entry{
-					Layer: b.layer,
-					Path:  p,
-					IsDir: true,
-				}
-				b.wc[p] = append(b.wc[p], e)
+	for i, r := range path {
+		if r != '/' {
+			continue
+		}
+		p := path[:i]
+		e := b.find(p)
+		if e == nil {
+			e = &Entry{
+				Layer: b.layer,
+				Path:  p,
+				IsDir: true,
 			}
-			switch {
-			case !inWC:
-			case linkable:
-				switch _, ok := b.state[p]; {
-				case ok:
-					inWC = false
-					if b.w.Exists(p) && !b.w.IsLink(p) {
-						e.Type = unlinkableType
-						delete(b.state, p)
-					}
-				case b.w.Exists(p):
-					e.Type = unlinkableType
+			b.WC[p] = append(b.WC[p], e)
+		}
+		if !inWC {
+			continue
+		}
+		if linkable {
+			switch _, ok := b.State[p]; {
+			case ok:
+				inWC = false
+				if b.wc.Exists(p) && !b.wc.IsLink(p) {
+					e.Type = unlinkable
+					delete(b.State, p)
 				}
-			case !linkable:
-				e.Type = unlinkableType
+			case b.wc.Exists(p):
+				e.Type = unlinkable
 			}
+		} else {
+			e.Type = unlinkable
 		}
 	}
 }
 
 func (b *wcBuilder) find(p string) *Entry {
-	for _, e := range b.wc[p] {
+	for _, e := range b.WC[p] {
 		if e.Layer == b.layer {
 			return e
 		}

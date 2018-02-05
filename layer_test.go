@@ -126,7 +126,7 @@ func TestNewLink(t *testing.T) {
 	defer os.RemoveAll(repo.Root())
 
 	links := map[string][]*nazuna.Link{
-		"": []*nazuna.Link{
+		"": {
 			{[]string{"path"}, "src", "dst"},
 			{nil, "a", "z"},
 		},

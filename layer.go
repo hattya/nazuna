@@ -51,7 +51,9 @@ func (l *Layer) Path() string {
 }
 
 func (l *Layer) NewAlias(src, dst string) error {
-	if src == dst {
+	s := filepath.ToSlash(filepath.Clean(src))
+	d := filepath.ToSlash(filepath.Clean(dst))
+	if s == d {
 		return fmt.Errorf("'%v' and '%v' are the same path", src, dst)
 	}
 	if err := l.check(dst, true); err != nil {
@@ -61,7 +63,7 @@ func (l *Layer) NewAlias(src, dst string) error {
 	if l.Aliases == nil {
 		l.Aliases = make(map[string]string)
 	}
-	l.Aliases[src] = dst
+	l.Aliases[s] = d
 	return nil
 }
 
@@ -74,7 +76,7 @@ func (l *Layer) NewLink(path []string, src, dst string) (*Link, error) {
 		path[i] = filepath.ToSlash(filepath.Clean(p))
 	}
 	src = filepath.ToSlash(filepath.Clean(src))
-	dir, dst := SplitPath(dst)
+	dir, dst := SplitPath(filepath.ToSlash(filepath.Clean(dst)))
 	lnk := &Link{
 		Path: path,
 		Src:  src,
@@ -93,7 +95,7 @@ func (l *Layer) NewSubrepo(src, dst string) (*Subrepo, error) {
 		return nil, err
 	}
 
-	dir, name := SplitPath(dst)
+	dir, name := SplitPath(filepath.ToSlash(filepath.Clean(dst)))
 	if name == filepath.Base(src) {
 		name = ""
 	}
