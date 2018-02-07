@@ -30,7 +30,7 @@ import (
 	"os/exec"
 )
 
-const Version = "0.4+"
+const Version = "0.5"
 
 type UI interface {
 	Print(...interface{}) (int, error)
