@@ -35,6 +35,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"testing"
 
 	"github.com/hattya/go.cli"
 	"github.com/hattya/go.diff"
@@ -45,6 +46,13 @@ func init() {
 	nazuna.Discover(false)
 
 	app.Name = "nzn"
+}
+
+func TestSystemExit(t *testing.T) {
+	err := SystemExit(1)
+	if g, e := err.Error(), "exit status 1"; g != e {
+		t.Errorf("expected %q, got %q", e, g)
+	}
 }
 
 type shell struct {
@@ -108,8 +116,7 @@ func (sh *shell) run(s script) error {
 	}
 	defer os.Chdir(wd)
 
-	i := 1
-	for _, c := range s {
+	for i, c := range s {
 		args := sh.expand(c.cmd[1:]...)
 		out, rc := "unknown command", 1
 		switch f := sh.funcs[c.cmd[0]].(type) {
@@ -119,9 +126,8 @@ func (sh *shell) run(s script) error {
 			out, rc = f(args...)
 		}
 		if diff := sh.verify(c.out, out, rc); diff != "" {
-			return fmt.Errorf("script:%d:\n$ %v\n%v", i, strings.Join(c.cmd, " "), diff)
+			return fmt.Errorf("script:%d:\n$ %v\n%v", i+1, strings.Join(c.cmd, " "), diff)
 		}
-		i++
 	}
 	return nil
 }
@@ -210,11 +216,15 @@ func (sh *shell) cd(args ...string) (string, int) {
 
 func (sh *shell) export(args ...string) (string, int) {
 	kv := strings.SplitN(args[0], "=", 2)
-	v := os.Getenv(kv[0])
+	v, ok := os.LookupEnv(kv[0])
 	if err := os.Setenv(kv[0], kv[1]); err != nil {
 		return sh.report(err)
 	}
-	sh.atexit(func() { os.Setenv(kv[0], v) })
+	if ok {
+		sh.atexit(func() { os.Setenv(kv[0], v) })
+	} else {
+		sh.atexit(func() { os.Unsetenv(kv[0]) })
+	}
 	sh.env[kv[0]] = kv[1]
 	return sh.report(nil)
 }
@@ -249,7 +259,7 @@ func (sh *shell) ls(args ...string) (string, int) {
 		return sh.report(err)
 	}
 	rc := 0
-	b := new(bytes.Buffer)
+	var b bytes.Buffer
 	for _, fi := range list {
 		var s string
 		switch {
@@ -261,7 +271,7 @@ func (sh *shell) ls(args ...string) (string, int) {
 			s = ">"
 			rc = 1
 		}
-		fmt.Fprintf(b, "%v%v\n", fi.Name(), s)
+		fmt.Fprintf(&b, "%v%v\n", fi.Name(), s)
 	}
 	return b.String(), rc
 }
@@ -278,9 +288,9 @@ func (sh *shell) nzn(args ...string) (string, int) {
 		}
 	}
 
-	b := new(bytes.Buffer)
-	app.Stdout = b
-	app.Stderr = b
+	var b bytes.Buffer
+	app.Stdout = &b
+	app.Stderr = &b
 
 	rc := 0
 	if err := app.Run(args); err != nil {
@@ -310,18 +320,22 @@ func (sh *shell) rm(args ...string) (string, int) {
 }
 
 func (sh *shell) setup(args ...string) (string, int) {
-	for _, d := range []string{"h", "r", "w"} {
+	for _, d := range []string{"home", "public", "wc"} {
 		out, rc := sh.mkdir(d)
 		if rc != 0 {
 			return out, rc
 		}
-	}
-	out, rc := sh.export(sh.expand("HOME=$tempdir/h")...)
-	if rc != 0 {
-		return out, rc
+		k := d
+		if k == "home" {
+			k = "HOME"
+		}
+		out, rc = sh.export(sh.expand(fmt.Sprintf("%v=$tempdir/%v", k, d))...)
+		if rc != 0 {
+			return out, rc
+		}
 	}
 	for n, v := range sh.gitconfig {
-		out, rc = sh.git("config", "--global", n, v)
+		out, rc := sh.git("config", "--global", n, v)
 		if rc != 0 {
 			return out, rc
 		}
@@ -360,6 +374,10 @@ func (d *lines) Equal(i, j int) bool {
 		return err == nil && m
 	}
 	return d.a[i] == d.b[j]
+}
+
+func path(path string) string {
+	return filepath.FromSlash(path)
 }
 
 func quote(path string) string {

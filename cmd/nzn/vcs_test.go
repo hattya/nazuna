@@ -38,7 +38,7 @@ func TestVCS(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -46,7 +46,7 @@ func TestVCS(t *testing.T) {
 		{
 			cmd: []string{"nzn", "vcs", "--version"},
 			out: cli.Dedent(`
-				git version \d.* (re)
+				git version \d.+ (re)
 			`),
 		},
 	}
@@ -61,12 +61,12 @@ func TestVCSError(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "vcs", "--version"},
 			out: cli.Dedent(`
-				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				nzn: no repository found in '.+' \(\.nzn not found\)! (re)
 				[1]
 			`),
 		},

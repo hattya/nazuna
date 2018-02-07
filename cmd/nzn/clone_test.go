@@ -27,8 +27,6 @@
 package main
 
 import (
-	"fmt"
-	"path/filepath"
 	"testing"
 
 	"github.com/hattya/go.cli"
@@ -40,10 +38,10 @@ func TestClone(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"git", "init", "-q", "r"},
+			cmd: []string{"git", "init", "-q", "$public/repo"},
 		},
 		{
-			cmd: []string{"cd", "r"},
+			cmd: []string{"cd", "$public/repo"},
 		},
 		{
 			cmd: []string{"touch", "nazuna.json"},
@@ -52,26 +50,26 @@ func TestClone(t *testing.T) {
 			cmd: []string{"git", "add", "."},
 		},
 		{
-			cmd: []string{"git", "commit", "-qm."},
+			cmd: []string{"git", "commit", "-qm", "."},
 		},
 		{
-			cmd: []string{"cd", ".."},
+			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "git", "r", "w"},
-			out: fmt.Sprintf(cli.Dedent(`
-				Cloning into '%v'...
+			cmd: []string{"nzn", "clone", "--vcs", "git", "$public/repo", "wc"},
+			out: cli.Dedent(`
+				Cloning into '` + path("wc/.nzn/r") + `'...
 				done.
-			`), filepath.FromSlash("w/.nzn/r")),
+			`),
 		},
 		{
-			cmd: []string{"ls", "w/.nzn"},
+			cmd: []string{"ls", "wc/.nzn"},
 			out: cli.Dedent(`
 				r/
 			`),
 		},
 		{
-			cmd: []string{"ls", "w/.nzn/r"},
+			cmd: []string{"ls", "wc/.nzn/r"},
 			out: cli.Dedent(`
 				.git/
 				nazuna.json
@@ -96,10 +94,10 @@ func TestCloneError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"git", "init", "-q", "r"},
+			cmd: []string{"git", "init", "-q", "$public/repo"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "r", "w"},
+			cmd: []string{"nzn", "clone", "$public/repo", "wc"},
 			out: cli.Dedent(`
 				nzn clone: --vcs flag is required (re)
 				usage: nzn clone --vcs <type> <repository> [<path>]
@@ -119,27 +117,27 @@ func TestCloneError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "cvs", "r", "w"},
+			cmd: []string{"nzn", "clone", "--vcs", "cvs", "$public/repo", "wc"},
 			out: cli.Dedent(`
 				nzn: unknown vcs 'cvs'
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "wc"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "git", "r", "w"},
+			cmd: []string{"nzn", "clone", "--vcs", "git", "$public/repo", "wc"},
 			out: cli.Dedent(`
-				nzn: repository 'w' already exists!
+				nzn: repository 'wc' already exists!
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
-			cmd: []string{"nzn", "clone", "--vcs", "git", "../r"},
+			cmd: []string{"nzn", "clone", "--vcs", "git", "$public/repo"},
 			out: cli.Dedent(`
 				nzn: repository '.' already exists!
 				[1]

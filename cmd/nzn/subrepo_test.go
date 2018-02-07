@@ -45,7 +45,7 @@ func TestSubrepo(t *testing.T) {
 	}
 	defer sh.exit()
 
-	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "r")))
+	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "public")))
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.RequestURI, "/2.0/repositories/") {
 			fmt.Fprintf(w, `{"owner":{"username":"%v"},"scm":"git"}`, strings.Split(r.RequestURI[18:], "/")[0])
@@ -59,8 +59,8 @@ func TestSubrepo(t *testing.T) {
 	defer func() { http.DefaultClient = c }()
 	http.DefaultClient = test.NewHTTPClient(ts.Listener.Addr().String())
 
-	sh.gitconfig["merge.stat"] = "false"
 	sh.gitconfig["http.sslVerify"] = "false"
+	sh.gitconfig["merge.stat"] = "false"
 	sh.gitconfig["url."+ts.URL+"/vim-pathogen/.git.insteadOf"] = "https://github.com/tpope/vim-pathogen"
 	sh.gitconfig["url."+ts.URL+"/editorconfig-vim/.git.insteadOf"] = "https://bitbucket.org/editorconfig/editorconfig-vim.git"
 
@@ -69,10 +69,10 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"git", "init", "-q", "r/vim-pathogen"},
+			cmd: []string{"git", "init", "-q", "$public/vim-pathogen"},
 		},
 		{
-			cmd: []string{"cd", "r/vim-pathogen"},
+			cmd: []string{"cd", "$public/vim-pathogen"},
 		},
 		{
 			cmd: []string{"mkdir", "autoload"},
@@ -84,19 +84,19 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"git", "add", "."},
 		},
 		{
-			cmd: []string{"git", "commit", "-qm."},
+			cmd: []string{"git", "commit", "-qm", "."},
 		},
 		{
 			cmd: []string{"git", "update-server-info"},
 		},
 		{
-			cmd: []string{"cd", "../.."},
+			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"git", "init", "-q", "r/editorconfig-vim"},
+			cmd: []string{"git", "init", "-q", "$public/editorconfig-vim"},
 		},
 		{
-			cmd: []string{"cd", "r/editorconfig-vim"},
+			cmd: []string{"cd", "$public/editorconfig-vim"},
 		},
 		{
 			cmd: []string{"mkdir", "plugin"},
@@ -108,22 +108,22 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"git", "add", "."},
 		},
 		{
-			cmd: []string{"git", "commit", "-qm."},
+			cmd: []string{"git", "commit", "-qm", "."},
 		},
 		{
 			cmd: []string{"git", "update-server-info"},
 		},
 		{
-			cmd: []string{"cd", "../.."},
+			cmd: []string{"cd", "$tempdir"},
 		},
 		{
-			cmd: []string{"export", "GOROOT=$tempdir/r/go"},
+			cmd: []string{"export", "GOROOT=$public/go"},
 		},
 		{
-			cmd: []string{"mkdir", "r/go/misc/vim"},
+			cmd: []string{"mkdir", "$public/go/misc/vim"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -159,13 +159,13 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
 				link .vim/bundle/editorconfig-vim --> bitbucket.org/editorconfig/editorconfig-vim
-				link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
+				link .vim/bundle/golang/ --> .+` + quote("/go/misc/vim/") + ` (re)
 				link .vim/bundle/vim-pathogen --> github.com/tpope/vim-pathogen
 				3 updated, 0 removed, 0 failed
 			`),
 		},
 		{
-			cmd: []string{"cd", "../r/editorconfig-vim"},
+			cmd: []string{"cd", "$public/editorconfig-vim"},
 		},
 		{
 			cmd: []string{"mkdir", "autoload"},
@@ -177,13 +177,13 @@ func TestSubrepo(t *testing.T) {
 			cmd: []string{"git", "add", "."},
 		},
 		{
-			cmd: []string{"git", "commit", "-qm."},
+			cmd: []string{"git", "commit", "-qm", "."},
 		},
 		{
 			cmd: []string{"git", "update-server-info"},
 		},
 		{
-			cmd: []string{"cd", "../../w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
@@ -209,12 +209,12 @@ func TestSubrepoError(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo"},
 			out: cli.Dedent(`
-				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				nzn: no repository found in '.+' \(\.nzn not found\)! (re)
 				[1]
 			`),
 		},
@@ -227,7 +227,7 @@ func TestSubrepoError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "subrepo"},
 			out: cli.Dedent(`
-				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				nzn: ` + path(".nzn/state.json") + `: unexpected end of JSON input
 				[1]
 			`),
 		},
@@ -285,7 +285,7 @@ func TestSubrepoError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.vim/bundle/vim-pathogen/autoload/pathogen.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
@@ -295,7 +295,7 @@ func TestSubrepoError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"nzn", "vcs", "rm", "-rfq", "a/.vim"},
+			cmd: []string{"nzn", "vcs", "rm", "-qrf", "a/.vim"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", "../dst"},
@@ -367,7 +367,7 @@ func TestSubrepoError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/.vim/bundle/ctrlp.vim/plugin/ctrlp.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -400,7 +400,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 	}
 	defer sh.exit()
 
-	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "r")))
+	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "public")))
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	}))
@@ -418,10 +418,10 @@ func TestSubrepoUpdateError(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"git", "init", "-q", "r/vim-pathogen"},
+			cmd: []string{"git", "init", "-q", "$public/vim-pathogen"},
 		},
 		{
-			cmd: []string{"cd", "r/vim-pathogen"},
+			cmd: []string{"cd", "$public/vim-pathogen"},
 		},
 		{
 			cmd: []string{"mkdir", "autoload"},
@@ -433,13 +433,10 @@ func TestSubrepoUpdateError(t *testing.T) {
 			cmd: []string{"git", "add", "."},
 		},
 		{
-			cmd: []string{"git", "commit", "-qm."},
+			cmd: []string{"git", "commit", "-qm", "."},
 		},
 		{
-			cmd: []string{"cd", "../.."},
-		},
-		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -451,7 +448,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"rm", ".nzn/r/a/.vimrc"},
@@ -459,12 +456,12 @@ func TestSubrepoUpdateError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
 			out: cli.Dedent(`
-				nzn: \w+ .*` + quote("/w/.nzn/r/a/.vimrc") + `: .* (re)
+				nzn: \w+ .+` + quote("/.nzn/r/a/.vimrc") + `: .+ (re)
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/.vimrc"},
+			cmd: []string{"nzn", "vcs", "rm", "-qf", "a/.vimrc"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-l", "a", "-a", "github.com/tpope/vim-pathogen", ".vim/bundle/"},
@@ -475,19 +472,19 @@ func TestSubrepoUpdateError(t *testing.T) {
 				* github.com/tpope/vim-pathogen
 				Cloning into '.nzn/sub/github.com/tpope/vim-pathogen'...
 				remote: 404 page not found
-				fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
-				nzn: git: exit status .*\d+ (re)
+				fatal: repository 'https://127.0.0.1:\d+/vim-pathogen/.git/' not found (re)
+				nzn: git: exit status \d+ (re)
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"cd", "../r/vim-pathogen"},
+			cmd: []string{"cd", "$public/vim-pathogen"},
 		},
 		{
 			cmd: []string{"git", "update-server-info"},
 		},
 		{
-			cmd: []string{"cd", "../../w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"mkdir", ".nzn/sub/github.com/tpope/vim-pathogen/autoload"},
@@ -499,7 +496,7 @@ func TestSubrepoUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "subrepo", "-u"},
 			out: cli.Dedent(`
 				* github.com/tpope/vim-pathogen
-				nzn: unknown vcs for directory '[^']+' (re)
+				nzn: unknown vcs for directory '.+` + quote("/.nzn/sub/github.com/tpope/vim-pathogen") + `' (re)
 				[1]
 			`),
 		},
@@ -514,15 +511,15 @@ func TestSubrepoUpdateError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"rm", "../r/vim-pathogen/.git/info/refs"},
+			cmd: []string{"rm", "$public/vim-pathogen/.git/info/refs"},
 		},
 		{
 			cmd: []string{"nzn", "subrepo", "-u"},
 			out: cli.Dedent(`
 				* github.com/tpope/vim-pathogen
 				remote: 404 page not found
-				fatal: .*https://127.0.0.1:\d+/vim-pathogen/.git/.* not found.* (re)
-				nzn: git: exit status .*\d+ (re)
+				fatal: repository 'https://127.0.0.1:\d+/vim-pathogen/.git/' not found (re)
+				nzn: git: exit status \d+ (re)
 				[1]
 			`),
 		},

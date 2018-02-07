@@ -38,7 +38,7 @@ func TestLayer(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -121,12 +121,12 @@ func TestLayerError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "layer"},
 			out: cli.Dedent(`
-				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				nzn: no repository found in '.+' \(\.nzn not found\)! (re)
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -144,7 +144,14 @@ func TestLayerError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "layer"},
 			out: cli.Dedent(`
-				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				nzn: ` + path(".nzn/state.json") + `: unexpected end of JSON input
+				[1]
+			`),
+		},
+		{
+			cmd: []string{"nzn", "layer", "_"},
+			out: cli.Dedent(`
+				nzn: ` + path(".nzn/state.json") + `: unexpected end of JSON input
 				[1]
 			`),
 		},

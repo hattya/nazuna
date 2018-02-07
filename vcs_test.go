@@ -178,27 +178,27 @@ func testVCSImpl(t *testing.T, cmd string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := vcs.Init("r"); err != nil {
+	if err := vcs.Init("repo"); err != nil {
 		t.Fatal(err)
 	}
-	if err := vcs.Clone("r", "w"); err != nil {
+	if err := vcs.Clone("repo", "wc"); err != nil {
 		t.Fatal(err)
 	}
 
-	vcs, err = nazuna.FindVCS(ui, cmd, "r")
+	vcs, err = nazuna.FindVCS(ui, cmd, "repo")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := vcs.Update(); err == nil {
 		t.Error("expected error")
 	}
-	if err := touch("r", "file"); err != nil {
+	if err := touch("repo", "file"); err != nil {
 		t.Fatal(err)
 	}
-	if err := mkdir("r", "dir"); err != nil {
+	if err := mkdir("repo", "dir"); err != nil {
 		t.Fatal(err)
 	}
-	if err := touch("r", "dir", "file"); err != nil {
+	if err := touch("repo", "dir", "file"); err != nil {
 		t.Fatal(err)
 	}
 	if err := vcs.Add("."); err != nil {
@@ -208,7 +208,7 @@ func testVCSImpl(t *testing.T, cmd string) {
 		t.Fatal(err)
 	}
 
-	vcs, err = nazuna.FindVCS(ui, cmd, "w")
+	vcs, err = nazuna.FindVCS(ui, cmd, "wc")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -82,7 +82,7 @@ func TestHelp(t *testing.T) {
 		{
 			cmd: []string{"nzn", "--nazuna"},
 			out: fmt.Sprintf(cli.Dedent(`
-				nzn: flag .* not defined: -*nazuna (re)
+				nzn: flag provided but not defined: -nazuna
 				%v
 				[2]
 			`), helpOut),
@@ -106,7 +106,7 @@ func TestHelp(t *testing.T) {
 		{
 			cmd: []string{"nzn", "help", "--nazuna"},
 			out: fmt.Sprintf(cli.Dedent(`
-				nzn help: flag .* not defined: -*nazuna (re)
+				nzn help: flag provided but not defined: -nazuna
 				%v
 				[2]
 			`), helpUsage),

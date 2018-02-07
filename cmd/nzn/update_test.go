@@ -38,7 +38,7 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -59,7 +59,7 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.vim/syntax/vim.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -83,7 +83,7 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/.vim/syntax/go.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -109,7 +109,7 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/c/2/.tmux.conf"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "c"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/1"},
@@ -139,7 +139,7 @@ func TestUpdate(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/.vim/autoload/go/complete.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -198,12 +198,12 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
-				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				nzn: no repository found in '.+' \(\.nzn not found\)! (re)
 				[1]
 			`),
 		},
@@ -216,7 +216,7 @@ func TestUpdateError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
-				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				nzn: ` + path(".nzn/state.json") + `: unexpected end of JSON input
 				[1]
 			`),
 		},
@@ -242,7 +242,7 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -261,7 +261,7 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/.gitconfig"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"rm", ".gitconfig"},
@@ -277,7 +277,7 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/.vimrc"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"rm", ".vimrc"},
@@ -326,7 +326,7 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
 				link .vimrc --> b
-				error: .vimrc: .* (re)
+				error: .vimrc: .+ (re)
 				0 updated, 0 removed, 1 failed
 				[1]
 			`),
@@ -341,7 +341,7 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/.vim/syntax/go.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -363,9 +363,9 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
 				link .vim/syntax/go.vim --> b
-				error: .vim/syntax/go.vim: .* (re)
+				error: .vim/syntax/go.vim: .+ (re)
 				link .vim/syntax/vim.vim --> a
-				error: .vim/syntax/vim.vim: .* (re)
+				error: .vim/syntax/vim.vim: .+ (re)
 				0 updated, 0 removed, 2 failed
 				[1]
 			`),
@@ -383,9 +383,9 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
 				link .vim/syntax/go.vim --> b
-				error: .vim/syntax: (re)
+				error: .vim/syntax: .+ (re)
 				link .vim/syntax/vim.vim --> a
-				error: .vim/syntax: (re)
+				error: .vim/syntax: .+ (re)
 				0 updated, 0 removed, 2 failed
 				[1]
 			`),
@@ -409,7 +409,7 @@ func TestUpdateError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/c/2/.tmux.conf"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "c"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},
@@ -429,7 +429,7 @@ func TestUpdateError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
-				nzn: .nzn/r/c/1/.screenrc: .* (re)
+				nzn: .nzn/r/c/1/.screenrc: .+ (re)
 				[1]
 			`),
 		},

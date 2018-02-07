@@ -30,13 +30,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hattya/go.cli"
 	"github.com/hattya/nazuna"
 )
 
-var versionOut = fmt.Sprintf(cli.Dedent(`
-	nzn version %v
-`), nazuna.Version)
+var versionOut = fmt.Sprintf("nzn version %v", nazuna.Version)
 
 func TestVersion(t *testing.T) {
 	s := script{

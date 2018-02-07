@@ -40,13 +40,13 @@ func TestLink(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"mkdir", "r/go/misc/vim"},
+			cmd: []string{"mkdir", "$public/go/misc/vim"},
 		},
 		{
-			cmd: []string{"mkdir", "r/gocode/src/github.com/nsf/gocode/vim"},
+			cmd: []string{"mkdir", "$public/gocode/src/github.com/nsf/gocode/vim"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -58,43 +58,43 @@ func TestLink(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.vimrc"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
-			cmd: []string{"nzn", "link", "-l", "a", "$tempdir/r/go/misc/vim", ".vim/bundle/golang"},
+			cmd: []string{"nzn", "link", "-l", "a", "$public/go/misc/vim", ".vim/bundle/golang"},
 		},
 		{
 			cmd: []string{"export", "GOPATH="},
 		},
 		{
-			cmd: []string{"nzn", "link", "-l", "a", "-p", "$GOPATH" + sep + "$tempdir/r/gocode", "src/github.com/nsf/gocode/vim", ".vim/bundle/gocode"},
+			cmd: []string{"nzn", "link", "-l", "a", "-p", "$GOPATH" + sep + "$public/gocode", "src/github.com/nsf/gocode/vim", ".vim/bundle/gocode"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
-				link .vim/bundle/gocode/ --> .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
-				link .vim/bundle/golang/ --> .*` + quote("/r/go/misc/vim/") + ` (re)
+				link .vim/bundle/gocode/ --> .+` + quote("/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+				link .vim/bundle/golang/ --> .+` + quote("/go/misc/vim/") + ` (re)
 				link .vimrc --> a
 				3 updated, 0 removed, 0 failed
 			`),
 		},
 		{
-			cmd: []string{"rm", "-r", "../r/go"},
+			cmd: []string{"rm", "-r", "$public/go"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
-				unlink .vim/bundle/golang/ -/- .*` + quote("/r/go/misc/vim/") + ` (re)
+				unlink .vim/bundle/golang/ -/- .+` + quote("/go/misc/vim/") + ` (re)
 				0 updated, 1 removed, 0 failed
 			`),
 		},
 		{
-			cmd: []string{"rm", "-r", "../r"},
+			cmd: []string{"rm", "-r", "$public"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
 			out: cli.Dedent(`
-				unlink .vim/bundle/gocode/ -/- .*` + quote("/r/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
+				unlink .vim/bundle/gocode/ -/- .+` + quote("/gocode/src/github.com/nsf/gocode/vim/") + ` (re)
 				0 updated, 1 removed, 0 failed
 			`),
 		},
@@ -119,12 +119,12 @@ func TestLinkError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "link"},
 			out: cli.Dedent(`
-				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				nzn: no repository found in '.+' \(\.nzn not found\)! (re)
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -135,7 +135,7 @@ func TestLinkError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "link"},
 			out: cli.Dedent(`
-				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				nzn: ` + path(".nzn/state.json") + `: unexpected end of JSON input
 				[1]
 			`),
 		},
@@ -145,7 +145,7 @@ func TestLinkError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "link"},
 			out: cli.Dedent(`
-				nzn link: --layer flag is required (re)
+				nzn link: --layer flag is required
 				usage: nzn link -l <layer> [-p <path>] <src> <dst>
 
 				create a link for the specified path
@@ -195,7 +195,7 @@ func TestLinkError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/dst"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
@@ -205,7 +205,7 @@ func TestLinkError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"nzn", "vcs", "rm", "-fq", "a/dst"},
+			cmd: []string{"nzn", "vcs", "rm", "-qf", "a/dst"},
 		},
 		{
 			cmd: []string{"mkdir", ".nzn/r/a/dst"},
@@ -214,7 +214,7 @@ func TestLinkError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/dst/1"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
@@ -224,7 +224,7 @@ func TestLinkError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"nzn", "vcs", "rm", "-frq", "a/dst"},
+			cmd: []string{"nzn", "vcs", "rm", "-qrf", "a/dst"},
 		},
 		{
 			cmd: []string{"nzn", "link", "-l", "a", "src", "dst"},
@@ -279,7 +279,7 @@ func TestLinkError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/dst"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "update"},

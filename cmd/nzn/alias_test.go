@@ -27,8 +27,6 @@
 package main
 
 import (
-	"fmt"
-	"path/filepath"
 	"testing"
 
 	"github.com/hattya/go.cli"
@@ -40,7 +38,7 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "init", "--vcs", "git"},
@@ -67,9 +65,6 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.vim/syntax/vim.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
-		},
-		{
 			cmd: []string{"nzn", "layer", "-c", "b/1"},
 		},
 		{
@@ -79,7 +74,7 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/1/.vim/syntax/go.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "layer", "b/1"},
@@ -105,13 +100,13 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/2/vimfiles/syntax/go.vim"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/2", ".vim", "vimfiles"},
 		},
 		{
-			cmd: []string{"export", "APPDATA=$tempdir/w/AppData/Roaming"},
+			cmd: []string{"export", "APPDATA=$wc/AppData/Roaming"},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/2", ".config/gocode/config.json", "$APPDATA/gocode/config.json"},
@@ -148,7 +143,7 @@ func TestAlias(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/a/.curlrc"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/2", ".curlrc", "$APPDATA/_curlrc"},
@@ -174,12 +169,12 @@ func TestAliasError(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"cd", "w"},
+			cmd: []string{"cd", "$wc"},
 		},
 		{
 			cmd: []string{"nzn", "alias"},
 			out: cli.Dedent(`
-				nzn: no repository found in '.*' \(\.nzn not found\)! (re)
+				nzn: no repository found in '.+' \(\.nzn not found\)! (re)
 				[1]
 			`),
 		},
@@ -192,7 +187,7 @@ func TestAliasError(t *testing.T) {
 		{
 			cmd: []string{"nzn", "alias"},
 			out: cli.Dedent(`
-				nzn: \.nzn[/\\]state.json: unexpected end of JSON input (re)
+				nzn: ` + path(".nzn/state.json") + `: unexpected end of JSON input
 				[1]
 			`),
 		},
@@ -249,6 +244,13 @@ func TestAliasError(t *testing.T) {
 			`),
 		},
 		{
+			cmd: []string{"nzn", "alias", "-l", "b/1", "../src", "dst"},
+			out: cli.Dedent(`
+				nzn: '../src' is not under root
+				[1]
+			`),
+		},
+		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "../dst"},
 			out: cli.Dedent(`
 				nzn: '../dst' is not under root
@@ -266,7 +268,7 @@ func TestAliasError(t *testing.T) {
 			cmd: []string{"touch", ".nzn/r/b/1/dst"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "b"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "dst"},
@@ -276,7 +278,7 @@ func TestAliasError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"nzn", "vcs", "rm", "-fq", "b/1/dst"},
+			cmd: []string{"nzn", "vcs", "rm", "-qf", "b/1/dst"},
 		},
 		{
 			cmd: []string{"nzn", "alias", "-l", "b/1", "src", "dst"},
@@ -289,13 +291,13 @@ func TestAliasError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"export", "ROOT=../"},
+			cmd: []string{"export", "ROOT=.."},
 		},
 		{
 			cmd: []string{"touch", ".nzn/r/a/src"},
 		},
 		{
-			cmd: []string{"nzn", "vcs", "add", "a"},
+			cmd: []string{"nzn", "vcs", "add", "."},
 		},
 		{
 			cmd: []string{"nzn", "layer", "-c", "b/2"},
@@ -308,10 +310,10 @@ func TestAliasError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(cli.Dedent(`
-				nzn: '%v' is not under root
+			out: cli.Dedent(`
+				nzn: '` + path("../dst") + `' is not under root
 				[1]
-			`), filepath.FromSlash("../dst")),
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "b/1"},
@@ -348,30 +350,30 @@ func TestAliasError(t *testing.T) {
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(cli.Dedent(`
-				nzn: link '%v' is not under root
+			out: cli.Dedent(`
+				nzn: link '` + path("../dst") + `' is not under root
 				[1]
-			`), filepath.FromSlash("../dst")),
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/2"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(cli.Dedent(`
-				nzn: link '%v' is not under root
+			out: cli.Dedent(`
+				nzn: link '` + path("../dst") + `' is not under root
 				[1]
-			`), filepath.FromSlash("../dst")),
+			`),
 		},
 		{
 			cmd: []string{"nzn", "layer", "c/3"},
 		},
 		{
 			cmd: []string{"nzn", "update"},
-			out: fmt.Sprintf(cli.Dedent(`
-				nzn: subrepo '%v' is not under root
+			out: cli.Dedent(`
+				nzn: subrepo '` + path("../dst") + `' is not under root
 				[1]
-			`), filepath.FromSlash("../dst")),
+			`),
 		},
 		{
 			cmd: []string{"rm", "_"},

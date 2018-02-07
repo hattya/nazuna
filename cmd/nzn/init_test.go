@@ -38,23 +38,23 @@ func TestInit(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "$wc"},
 		},
 		{
-			cmd: []string{"ls", "w/.nzn"},
+			cmd: []string{"ls", "$wc/.nzn"},
 			out: cli.Dedent(`
 				r/
 			`),
 		},
 		{
-			cmd: []string{"ls", "w/.nzn/r"},
+			cmd: []string{"ls", "$wc/.nzn/r"},
 			out: cli.Dedent(`
 				.git/
 				nazuna.json
 			`),
 		},
 		{
-			cmd: []string{"cat", "w/.nzn/r/nazuna.json"},
+			cmd: []string{"cat", "$wc/.nzn/r/nazuna.json"},
 			out: cli.Dedent(`
 				[]
 			`),
@@ -71,7 +71,7 @@ func TestInitError(t *testing.T) {
 			cmd: []string{"setup"},
 		},
 		{
-			cmd: []string{"nzn", "init", "w"},
+			cmd: []string{"nzn", "init", "$wc"},
 			out: cli.Dedent(`
 				nzn init: --vcs flag is required
 				usage: nzn init --vcs <type> [<path>]
@@ -91,19 +91,19 @@ func TestInitError(t *testing.T) {
 			`),
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "cvs", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "cvs", "$wc"},
 			out: cli.Dedent(`
 				nzn: unknown vcs 'cvs'
 				[1]
 			`),
 		},
 		{
-			cmd: []string{"mkdir", "w/.nzn/r"},
+			cmd: []string{"mkdir", "$wc/.nzn/r"},
 		},
 		{
-			cmd: []string{"nzn", "init", "--vcs", "git", "w"},
+			cmd: []string{"nzn", "init", "--vcs", "git", "$wc"},
 			out: cli.Dedent(`
-				nzn: repository '.*' already exists! (re)
+				nzn: repository '.+' already exists! (re)
 				[1]
 			`),
 		},
