@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna.go
 //
-//   Copyright (c) 2013-2018 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
 //
 //   Permission is hereby granted, free of charge, to any person
 //   obtaining a copy of this software and associated documentation files
@@ -26,11 +26,9 @@
 
 package nazuna
 
-import (
-	"os/exec"
-)
+import "os/exec"
 
-const Version = "0.5"
+const Version = "0.5+"
 
 type UI interface {
 	Print(...interface{}) (int, error)
