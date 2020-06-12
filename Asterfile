@@ -1,19 +1,15 @@
 var os = require('os');
 var path = require('path');
 var go_ = require('language/go');
-var dep = go_.dep;
 var go = go_.go;
 var rst2html = require('language/restructuredtext').rst2html;
 
 var title = 'Aster ☆ ' + path.basename(os.getwd());
 
 aster.title(title);
-aster.ignore.push(/^vendor(?:\.orig)?$/);
 
 // go
 aster.watch(/.+\.go$/, function(files) {
-  if (go.get('-t', '-v', './...')) return;
-  if (go.vet('./...')) return;
   // go test for each package
   var bad = go_.packagesOf(files).some(function(p) {
     return go.test('-v', '-race', '-covermode', 'atomic', '-coverprofile', p + '/cover.out', p);
@@ -25,12 +21,7 @@ aster.watch(/.+\.go$/, function(files) {
     go.tool.cover('-html', out, '-o', 'coverage.html');
     os.remove(out);
   }
-});
-
-aster.watch(/^Gopkg\.(?:lock|toml)$/, function() {
-  if (os.stat('vendor')) {
-    dep.ensure('-v');
-  }
+  if (go.vet('./...')) return;
 });
 
 // rst
