@@ -9,7 +9,9 @@
 package nazuna_test
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/hattya/nazuna"
@@ -136,14 +138,28 @@ func TestBaseVCS(t *testing.T) {
 }
 
 func TestGitVCS(t *testing.T) {
-	testVCSImpl(t, "git")
+	testVCSImpl(t, "git", func(vcs nazuna.VCS) (err error) {
+		for n, v := range map[string]string{
+			"user.name":  "Nazuna",
+			"user.email": "nazuna@example.com",
+		} {
+			if err = vcs.Exec("config", "--local", n, v); err != nil {
+				break
+			}
+		}
+		return
+	})
 }
 
 func TestMercurialVCS(t *testing.T) {
-	testVCSImpl(t, "hg")
+	testVCSImpl(t, "hg", func(vcs nazuna.VCS) error {
+		dir := vcs.(*nazuna.Mercurial).Dir
+		data := "[ui]\nusername = Nazuna <nazuna@example.com>\n"
+		return ioutil.WriteFile(filepath.Join(dir, ".hg", "hgrc"), []byte(data), 0666)
+	})
 }
 
-func testVCSImpl(t *testing.T, cmd string) {
+func testVCSImpl(t *testing.T, cmd string, config func(nazuna.VCS) error) {
 	dir, err := tempDir()
 	if err != nil {
 		t.Fatal(err)
@@ -173,6 +189,9 @@ func testVCSImpl(t *testing.T, cmd string) {
 	}
 	if err := vcs.Update(); err == nil {
 		t.Error("expected error")
+	}
+	if err := config(vcs); err != nil {
+		t.Fatal(err)
 	}
 	if err := touch("repo", "file"); err != nil {
 		t.Fatal(err)

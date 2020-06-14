@@ -57,7 +57,7 @@ func newShell() (*shell, error) {
 		},
 		gitconfig: map[string]string{
 			"core.autocrlf": "false",
-			"user.name":     "nazuna",
+			"user.name":     "Nazuna",
 			"user.email":    "nazuna@example.com",
 		},
 	}
