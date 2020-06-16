@@ -13,8 +13,8 @@ Nazuna is a layered dotfiles management tool.
    :target: https://codecov.io/gh/hattya/nazuna
 
 
-Install
--------
+Installation
+------------
 
 .. code:: console
 
