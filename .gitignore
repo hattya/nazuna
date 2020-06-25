@@ -4,4 +4,3 @@
 *.sw?
 *.test
 cmd/nzn/nzn
-vendor/
