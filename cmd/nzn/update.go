@@ -118,7 +118,7 @@ func update(ctx *cli.Context) error {
 	if err := wc.Flush(); err != nil {
 		return err
 	}
-	if 0 < failed {
+	if failed > 0 {
 		return SystemExit(1)
 	}
 	return nil

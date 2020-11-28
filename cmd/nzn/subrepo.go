@@ -72,7 +72,7 @@ func subrepo(ctx *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		if 0 < len(dst) && os.IsPathSeparator(dst[len(dst)-1]) {
+		if len(dst) > 0 && os.IsPathSeparator(dst[len(dst)-1]) {
 			dst = rel + "/" + filepath.Base(src)
 		} else {
 			dst = rel

@@ -161,7 +161,7 @@ func (sh shell) verify(aout, bout string, rc int) string {
 		format("-", a, 0, len(a))
 	default:
 		cl := diff.Diff(len(a), len(b), &lines{a, b})
-		if 0 < len(cl) {
+		if len(cl) > 0 {
 			lno := 0
 			for _, c := range cl {
 				format(" ", a, lno, c.A)
@@ -180,7 +180,7 @@ func (sh *shell) atexit(f func()) {
 }
 
 func (sh *shell) exit() {
-	for i := len(sh.atexitFuncs) - 1; 0 <= i; i-- {
+	for i := len(sh.atexitFuncs) - 1; i >= 0; i-- {
 		sh.atexitFuncs[i]()
 	}
 }
@@ -293,7 +293,7 @@ func (sh *shell) nzn(args ...string) (string, int) {
 
 func (sh *shell) rm(args ...string) (string, int) {
 	var remove func(string) error
-	if 1 < len(args) && args[0] == "-r" {
+	if len(args) > 1 && args[0] == "-r" {
 		remove = os.RemoveAll
 		args = args[1:]
 	} else {

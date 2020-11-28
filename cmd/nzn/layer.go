@@ -45,7 +45,7 @@ func layer(ctx *cli.Context) error {
 			return err
 		}
 		return repo.Flush()
-	case 0 < len(ctx.Args):
+	case len(ctx.Args) > 0:
 		if len(ctx.Args) != 1 {
 			return cli.ErrArgs
 		}

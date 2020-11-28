@@ -41,7 +41,7 @@ func init() {
 
 func init_(ctx *cli.Context) error {
 	root := "."
-	if 0 < len(ctx.Args) {
+	if len(ctx.Args) > 0 {
 		root = ctx.Args[0]
 	}
 	nzndir := filepath.Join(root, ".nzn")

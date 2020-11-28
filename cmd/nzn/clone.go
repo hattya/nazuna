@@ -46,7 +46,7 @@ func clone(ctx *cli.Context) error {
 	src := ctx.Args[0]
 
 	root := "."
-	if 1 < len(ctx.Args) {
+	if len(ctx.Args) > 1 {
 		root = ctx.Args[1]
 	}
 	nzndir := filepath.Join(root, ".nzn")
