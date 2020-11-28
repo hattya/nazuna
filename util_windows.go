@@ -95,8 +95,8 @@ func LinksTo(path, origin string) bool {
 	switch rdb := (*reparseDataBuffer)(unsafe.Pointer(&b[0])); rdb.ReparseTag {
 	case windows.IO_REPARSE_TAG_SYMLINK:
 		rb := (*symbolicLinkReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer))
-		pb := (*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))
-		p := windows.UTF16ToString(pb[rb.SubstituteNameOffset/2 : (rb.SubstituteNameOffset+rb.SubstituteNameLength)/2])
+		n := (rb.SubstituteNameOffset + rb.SubstituteNameLength) / 2
+		p := windows.UTF16ToString((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[rb.SubstituteNameOffset/2 : n : n])
 		if rb.Flags&_SYMLINK_FLAG_RELATIVE != 0 {
 			path = filepath.Join(filepath.Dir(path), p)
 		} else {
@@ -104,8 +104,8 @@ func LinksTo(path, origin string) bool {
 		}
 	case windows.IO_REPARSE_TAG_MOUNT_POINT:
 		rb := (*mountPointReparseBuffer)(unsafe.Pointer(&rdb.ReparseBuffer))
-		pb := (*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))
-		path = windows.UTF16ToString(pb[rb.SubstituteNameOffset/2 : (rb.SubstituteNameOffset+rb.SubstituteNameLength)/2])
+		n := (rb.SubstituteNameOffset + rb.SubstituteNameLength) / 2
+		path = windows.UTF16ToString((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[rb.SubstituteNameOffset/2 : n : n])
 	default:
 		return false
 	}
@@ -181,6 +181,7 @@ func createMountPoint(src, dst string) error {
 		return linkErr(err)
 	}
 
+	n := len(sn) + len(pn)
 	b := make([]byte, windows.MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
 	var retlen uint32
 	rdb := (*reparseDataBuffer)(unsafe.Pointer(&b[0]))
@@ -189,7 +190,7 @@ func createMountPoint(src, dst string) error {
 	rb.SubstituteNameLength = uint16((len(sn) - 1) * 2)
 	rb.PrintNameOffset = rb.SubstituteNameLength + 2
 	rb.PrintNameLength = uint16((len(pn) - 1) * 2)
-	copy((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[:], append(sn, pn...))
+	copy((*[0xffff]uint16)(unsafe.Pointer(&rb.PathBuffer[0]))[:n:n], append(sn, pn...))
 	rdb.ReparseDataLength = 8 + rb.PrintNameOffset + rb.PrintNameLength + 2
 	if err := windows.DeviceIoControl(h, _FSCTL_SET_REPARSE_POINT, &b[0], uint32(rdb.ReparseDataLength+8), nil, 0, &retlen, nil); err != nil {
 		return linkErr(err)
