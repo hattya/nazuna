@@ -94,6 +94,7 @@ func (sh *shell) run(s script) error {
 	if err != nil {
 		return err
 	}
+	os.Setenv("PWD", sh.dir)
 	if err = os.Chdir(sh.dir); err != nil {
 		return err
 	}
@@ -194,6 +195,7 @@ func (sh *shell) cat(args ...string) (string, int) {
 }
 
 func (sh *shell) cd(args ...string) (string, int) {
+	os.Setenv("PWD", args[0])
 	return sh.report(os.Chdir(args[0]))
 }
 

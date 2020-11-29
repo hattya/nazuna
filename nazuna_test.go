@@ -51,6 +51,7 @@ func pushd(path string) (func() error, error) {
 		}
 		return err
 	}
+	os.Setenv("PWD", path)
 	return popd, os.Chdir(path)
 }
 
