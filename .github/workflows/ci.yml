@@ -8,6 +8,7 @@ jobs:
       matrix:
         platform:
           - Linux
+          - macOS
           - Windows
         go-version:
           - 1.13
@@ -16,11 +17,16 @@ jobs:
         include:
           - platform: Linux
             os: ubuntu-latest
+          - platform: macOS
+            os: macos-latest
           - platform: Windows
             os: windows-latest
       fail-fast: false
     name: Go ${{ matrix.go-version }} on ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
+    env:
+      HOMEBREW_NO_ANALYTICS: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -31,6 +37,9 @@ jobs:
           go-version: ${{ matrix.go-version }}
       - name: Download modules
         run: go mod download
+      - name: Install Mercurial on macOS
+        if: matrix.platform == 'macOS'
+        run: brew install mercurial
       - name: Test
         run: go test -v -race -covermode atomic -coverprofile coverage.txt ./...
       - name: Vet
