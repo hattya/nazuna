@@ -3,6 +3,9 @@ Nazuna
 
 Nazuna is a layered dotfiles management tool.
 
+.. image:: https://github.com/hattya/nazuna/workflows/CI/badge.svg
+   :target: https://github.com/hattya/nazuna/actions?query=workflow:CI
+
 .. image:: https://semaphoreci.com/api/v1/hattya/nazuna/branches/master/badge.svg
    :target: https://semaphoreci.com/hattya/nazuna
 
