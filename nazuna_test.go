@@ -46,10 +46,11 @@ func mkdir(s ...string) error {
 func pushd(path string) (func() error, error) {
 	wd, err := os.Getwd()
 	popd := func() error {
-		if err == nil {
-			return os.Chdir(wd)
+		if err != nil {
+			return err
 		}
-		return err
+		os.Setenv("PWD", wd)
+		return os.Chdir(wd)
 	}
 	os.Setenv("PWD", path)
 	return popd, os.Chdir(path)

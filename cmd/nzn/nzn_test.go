@@ -99,6 +99,7 @@ func (sh *shell) run(s script) error {
 		return err
 	}
 	defer os.Chdir(wd)
+	defer os.Setenv("PWD", wd)
 
 	for i, c := range s {
 		args := sh.expand(c.cmd[1:]...)
@@ -147,10 +148,10 @@ func (sh shell) verify(aout, bout string, rc int) string {
 	}
 	a := strings.Split(strings.TrimSuffix(aout, "\n"), "\n")
 	b := strings.Split(strings.TrimSuffix(bout, "\n"), "\n")
-	var buf bytes.Buffer
+	var Δ []string
 	format := func(sign string, lines []string, i, j int) {
 		for ; i < j; i++ {
-			fmt.Fprintf(&buf, "%v%v\n", sign, lines[i])
+			Δ = append(Δ, sign+lines[i])
 		}
 	}
 	switch {
@@ -173,11 +174,11 @@ func (sh shell) verify(aout, bout string, rc int) string {
 			format(" ", a, lno, len(a))
 		}
 	}
-	return strings.TrimSuffix(buf.String(), "\n")
+	return strings.Join(Δ, "\n")
 }
 
-func (sh *shell) atexit(f func()) {
-	sh.atexitFuncs = append(sh.atexitFuncs, f)
+func (sh *shell) atexit(fn func()) {
+	sh.atexitFuncs = append(sh.atexitFuncs, fn)
 }
 
 func (sh *shell) exit() {
