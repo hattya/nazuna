@@ -2,7 +2,7 @@ var os = require('os');
 var path = require('path');
 var go_ = require('language/go');
 var go = go_.go;
-var rst2html = require('language/restructuredtext').rst2html;
+var md2html = require('language/markdown').md2html;
 
 var title = 'Aster ☆ ' + path.basename(os.getwd());
 
@@ -10,6 +10,7 @@ aster.title(title);
 
 // go
 aster.watch(/.+\.go$/, function(files) {
+  go.mod.tidy();
   // go test for each package
   var bad = go_.packagesOf(files).some(function(p) {
     return go.test('-v', '-race', '-covermode', 'atomic', '-coverprofile', p + '/cover.out', p);
@@ -24,7 +25,11 @@ aster.watch(/.+\.go$/, function(files) {
   if (go.vet('./...')) return;
 });
 
-// rst
-aster.watch(/.+\.rst$/, function(files) {
-  files.some(function(rst) { return rst2html({ options: ['--strict'], src: rst }); });
+aster.watch(/go\.mod$/, function() {
+  go.mod.tidy();
+});
+
+// md
+aster.watch(/.+\.md$/, function(files) {
+  files.some(function(md) { return md2html({ src: md }); });
 });
