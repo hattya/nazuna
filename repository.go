@@ -1,7 +1,7 @@
 //
 // nazuna :: repository.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -130,7 +130,7 @@ func (repo *Repository) NewLayer(name string) (*Layer, error) {
 		sort.Slice(l.Layers, func(i, j int) bool { return l.Layers[i].Name < l.Layers[j].Name })
 		l = ll
 	}
-	os.MkdirAll(repo.PathFor(l, "/"), 0777)
+	os.MkdirAll(repo.PathFor(l, "/"), 0o777)
 	return l, nil
 }
 

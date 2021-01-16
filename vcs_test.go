@@ -1,7 +1,7 @@
 //
 // nazuna :: vcs_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -155,7 +155,7 @@ func TestMercurialVCS(t *testing.T) {
 	testVCSImpl(t, "hg", func(vcs nazuna.VCS) error {
 		dir := vcs.(*nazuna.Mercurial).Dir
 		data := "[ui]\nusername = Nazuna <nazuna@example.com>\n"
-		return ioutil.WriteFile(filepath.Join(dir, ".hg", "hgrc"), []byte(data), 0666)
+		return ioutil.WriteFile(filepath.Join(dir, ".hg", "hgrc"), []byte(data), 0o666)
 	})
 }
 

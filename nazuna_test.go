@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -40,7 +40,7 @@ func (ui *testUI) Exec(cmd *exec.Cmd) error {
 }
 
 func mkdir(s ...string) error {
-	return os.MkdirAll(filepath.Join(s...), 0777)
+	return os.MkdirAll(filepath.Join(s...), 0o777)
 }
 
 func pushd(path string) (func() error, error) {
@@ -61,5 +61,5 @@ func tempDir() (string, error) {
 }
 
 func touch(s ...string) error {
-	return ioutil.WriteFile(filepath.Join(s...), []byte{}, 0666)
+	return ioutil.WriteFile(filepath.Join(s...), []byte{}, 0o666)
 }

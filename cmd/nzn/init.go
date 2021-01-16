@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: init.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -57,7 +57,7 @@ func init_(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(nzndir, 0777); err != nil {
+	if err := os.MkdirAll(nzndir, 0o777); err != nil {
 		return err
 	}
 	if err := vcs.Init(filepath.Join(nzndir, "r")); err != nil {

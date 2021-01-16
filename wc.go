@@ -1,7 +1,7 @@
 //
 // nazuna :: wc.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -104,7 +104,7 @@ func (wc *WC) Link(src, dst string) error {
 	}
 	dir := filepath.Dir(dst)
 	if _, err := os.Lstat(dir); err != nil {
-		if err := os.MkdirAll(dir, 0777); err != nil {
+		if err := os.MkdirAll(dir, 0o777); err != nil {
 			return err
 		}
 	}

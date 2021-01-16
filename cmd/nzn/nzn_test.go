@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: nzn_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -263,7 +263,7 @@ func (sh *shell) ls(args ...string) (string, int) {
 }
 
 func (sh *shell) mkdir(args ...string) (string, int) {
-	return sh.report(os.MkdirAll(args[0], 0777))
+	return sh.report(os.MkdirAll(args[0], 0o777))
 }
 
 func (sh *shell) nzn(args ...string) (string, int) {
@@ -330,7 +330,7 @@ func (sh *shell) setup(args ...string) (string, int) {
 }
 
 func (sh *shell) touch(args ...string) (string, int) {
-	return sh.report(ioutil.WriteFile(filepath.Clean(args[0]), []byte{}, 0666))
+	return sh.report(ioutil.WriteFile(filepath.Clean(args[0]), []byte{}, 0o666))
 }
 
 type script []*cmdLine

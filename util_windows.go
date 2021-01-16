@@ -1,7 +1,7 @@
 //
 // nazuna :: util_windows.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -159,7 +159,7 @@ func createMountPoint(src, dst string) error {
 	if _, err := os.Stat(dst); err == nil {
 		return linkErr(windows.ERROR_ALREADY_EXISTS)
 	}
-	if err := os.MkdirAll(dst, 0777); err != nil {
+	if err := os.MkdirAll(dst, 0o777); err != nil {
 		return linkErr(err)
 	}
 	h, err := createFile(dst, windows.GENERIC_WRITE)

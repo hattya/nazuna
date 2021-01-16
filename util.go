@@ -1,7 +1,7 @@
 //
 // nazuna :: util.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -71,7 +71,7 @@ func marshal(repo *Repository, path string, v interface{}) error {
 	if err != nil {
 		return fmt.Errorf("%v: %v", rel, err)
 	}
-	if err := ioutil.WriteFile(path, append(data, '\n'), 0666); err != nil {
+	if err := ioutil.WriteFile(path, append(data, '\n'), 0o666); err != nil {
 		return fmt.Errorf("cannot write '%v'", rel)
 	}
 	return nil
