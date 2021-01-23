@@ -10,7 +10,7 @@ package nazuna
 
 import "os/exec"
 
-const Version = "0.6"
+const Version = "0.6+"
 
 type UI interface {
 	Print(...interface{}) (int, error)
