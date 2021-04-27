@@ -57,7 +57,7 @@ func pushd(path string) (func() error, error) {
 }
 
 func tempDir() (string, error) {
-	return ioutil.TempDir("", "nazuna.test")
+	return ioutil.TempDir("", "nazuna")
 }
 
 func touch(s ...string) error {

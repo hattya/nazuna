@@ -46,7 +46,7 @@ type shell struct {
 }
 
 func newShell() (*shell, error) {
-	dir, err := ioutil.TempDir("", "nzn.test")
+	dir, err := ioutil.TempDir("", "nzn")
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (sh *shell) ls(args ...string) (string, int) {
 		return sh.report(err)
 	}
 	rc := 0
-	var b bytes.Buffer
+	var b strings.Builder
 	for _, fi := range list {
 		var s string
 		switch {
