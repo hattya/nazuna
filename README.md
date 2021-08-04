@@ -3,7 +3,7 @@
 Nazuna is a layered dotfiles management tool.
 
 [![pkg.go.dev](https://pkg.go.dev/badge/github.com/hattya/nazuna)](https://pkg.go.dev/github.com/hattya/nazuna)
-[![GitHub Actions](https://github.com/hattya/nazuna/workflows/CI/badge.svg)](https://github.com/hattya/nazuna/actions?query=workflow:CI)
+[![GitHub Actions](https://github.com/hattya/nazuna/actions/workflows/ci.yml/badge.svg)](https://github.com/hattya/nazuna/actions/workflows/ci.yml)
 [![Semaphore](https://semaphoreci.com/api/v1/hattya/nazuna/branches/master/badge.svg)](https://semaphoreci.com/hattya/nazuna)
 [![Appveyor](https://ci.appveyor.com/api/projects/status/2eg4vbro37mhsdk0/branch/master?svg=true)](https://ci.appveyor.com/project/hattya/nazuna)
 [![Codecov](https://codecov.io/gh/hattya/nazuna/branch/master/graph/badge.svg)](https://codecov.io/gh/hattya/nazuna)
