@@ -1,7 +1,7 @@
 //
 // nazuna :: repository_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -21,12 +21,7 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	popd, err := pushd(dir)
+	popd, err := pushd(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,12 +47,7 @@ func TestOpen(t *testing.T) {
 }
 
 func TestOpenError(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	popd, err := pushd(dir)
+	popd, err := pushd(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,7 +226,7 @@ func TestFindPath(t *testing.T) {
 }
 
 func init_() (repo *nazuna.Repository, err error) {
-	dir, err := tempDir()
+	dir, err := ioutil.TempDir("", "nazuna")
 	if err != nil {
 		return
 	}

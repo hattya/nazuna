@@ -1,29 +1,24 @@
 //
 // nazuna :: util_unix_test.go
 //
-//   Copyright (c) 2014-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
 
+//go:build !plan9 && !windows
 // +build !plan9,!windows
 
 package nazuna_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hattya/nazuna"
 )
 
 func TestCreateLink(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(dir)
-	}
-	defer os.RemoveAll(dir)
-	popd, err := pushd(dir)
+	popd, err := pushd(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

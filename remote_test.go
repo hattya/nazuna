@@ -1,7 +1,7 @@
 //
 // nazuna :: remote_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -119,12 +119,7 @@ func TestNewRemoteError(t *testing.T) {
 }
 
 func TestRemote(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-
+	dir := t.TempDir()
 	if _, ok := os.LookupEnv("HOME"); ok {
 		defer os.Setenv("HOME", os.Getenv("HOME"))
 	} else {

@@ -76,11 +76,7 @@ func TestFindVCS(t *testing.T) {
 }
 
 func TestVCSFor(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	popd, err := pushd(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -160,12 +156,7 @@ func TestMercurialVCS(t *testing.T) {
 }
 
 func testVCSImpl(t *testing.T, cmd string, config func(nazuna.VCS) error) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	popd, err := pushd(dir)
+	popd, err := pushd(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

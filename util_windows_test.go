@@ -1,7 +1,7 @@
 //
 // nazuna :: util_windows_test.go
 //
-//   Copyright (c) 2014-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2021 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -16,12 +16,7 @@ import (
 )
 
 func TestCreateLink(t *testing.T) {
-	dir, err := tempDir()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
-	popd, err := pushd(dir)
+	popd, err := pushd(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
