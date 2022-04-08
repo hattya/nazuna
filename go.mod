@@ -3,7 +3,7 @@ module github.com/hattya/nazuna
 go 1.16
 
 require (
-	github.com/hattya/go.cli v0.0.0-20210908132550-ae86b1f54045
-	github.com/hattya/go.diff v0.0.0-20210905131750-4d1475c602d5
-	golang.org/x/sys v0.0.0-20210831042530-f4d43177bf5e
+	github.com/hattya/go.cli v0.0.0-20220328120704-5245e45808f2
+	github.com/hattya/go.diff v0.0.0-20220326070125-66842564754f
+	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8
 )
