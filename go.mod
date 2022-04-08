@@ -1,6 +1,6 @@
 module github.com/hattya/nazuna
 
-go 1.15
+go 1.16
 
 require (
 	github.com/hattya/go.cli v0.0.0-20210908132550-ae86b1f54045

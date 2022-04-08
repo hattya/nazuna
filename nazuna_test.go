@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna_test.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -10,7 +10,6 @@ package nazuna_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -57,5 +56,5 @@ func pushd(path string) (func() error, error) {
 }
 
 func touch(s ...string) error {
-	return ioutil.WriteFile(filepath.Join(s...), []byte{}, 0o666)
+	return os.WriteFile(filepath.Join(s...), []byte{}, 0o666)
 }

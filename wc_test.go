@@ -1,7 +1,7 @@
 //
 // nazuna :: wc_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -10,7 +10,6 @@ package nazuna_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -39,7 +38,7 @@ func TestOpenWC(t *testing.T) {
 	if err := wc.Flush(); err != nil {
 		t.Error(err)
 	}
-	data, err := ioutil.ReadFile(filepath.Join(".nzn", "state.json"))
+	data, err := os.ReadFile(filepath.Join(".nzn", "state.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,7 +1,7 @@
 //
 // nazuna :: util.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -71,7 +70,7 @@ func marshal(repo *Repository, path string, v interface{}) error {
 	if err != nil {
 		return fmt.Errorf("%v: %v", rel, err)
 	}
-	if err := ioutil.WriteFile(path, append(data, '\n'), 0o666); err != nil {
+	if err := os.WriteFile(path, append(data, '\n'), 0o666); err != nil {
 		return fmt.Errorf("cannot write '%v'", rel)
 	}
 	return nil
@@ -83,7 +82,7 @@ func unmarshal(repo *Repository, path string, v interface{}) error {
 		return err
 	}
 	if _, err := os.Stat(path); err == nil {
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("cannot read '%v'", rel)
 		}
@@ -103,7 +102,7 @@ func httpGet(uri string) ([]byte, error) {
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("%v: %v", uri, resp.Status)
 	}
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: nzn_test.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -11,7 +11,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -46,7 +45,7 @@ type shell struct {
 }
 
 func newShell() (*shell, error) {
-	dir, err := ioutil.TempDir("", "nzn")
+	dir, err := os.MkdirTemp("", "nzn")
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +187,7 @@ func (sh *shell) exit() {
 }
 
 func (sh *shell) cat(args ...string) (string, int) {
-	data, err := ioutil.ReadFile(args[0])
+	data, err := os.ReadFile(args[0])
 	if err != nil {
 		return sh.report(err)
 	}
@@ -240,24 +239,24 @@ func (sh *shell) ln(args ...string) (string, int) {
 }
 
 func (sh *shell) ls(args ...string) (string, int) {
-	list, err := ioutil.ReadDir(args[0])
+	list, err := os.ReadDir(args[0])
 	if err != nil {
 		return sh.report(err)
 	}
 	rc := 0
 	var b strings.Builder
-	for _, fi := range list {
+	for _, de := range list {
 		var s string
 		switch {
-		case fi.Mode().IsRegular():
-		case fi.Mode().IsDir():
+		case de.Type().IsRegular():
+		case de.Type().IsDir():
 			s = "/"
-		case fi.Mode()&os.ModeSymlink != 0:
+		case de.Type()&os.ModeSymlink != 0:
 		default:
 			s = ">"
 			rc = 1
 		}
-		fmt.Fprintf(&b, "%v%v\n", fi.Name(), s)
+		fmt.Fprintf(&b, "%v%v\n", de.Name(), s)
 	}
 	return b.String(), rc
 }
@@ -330,7 +329,7 @@ func (sh *shell) setup(args ...string) (string, int) {
 }
 
 func (sh *shell) touch(args ...string) (string, int) {
-	return sh.report(ioutil.WriteFile(filepath.Clean(args[0]), []byte{}, 0o666))
+	return sh.report(os.WriteFile(filepath.Clean(args[0]), []byte{}, 0o666))
 }
 
 type script []*cmdLine

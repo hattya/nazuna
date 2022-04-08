@@ -1,7 +1,7 @@
 //
 // nazuna :: repository_test.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -9,7 +9,6 @@
 package nazuna_test
 
 import (
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,7 +36,7 @@ func TestOpen(t *testing.T) {
 	if err := repo.Flush(); err != nil {
 		t.Error(err)
 	}
-	data, err := ioutil.ReadFile(filepath.Join(".nzn", "r", "nazuna.json"))
+	data, err := os.ReadFile(filepath.Join(".nzn", "r", "nazuna.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,7 +225,7 @@ func TestFindPath(t *testing.T) {
 }
 
 func init_() (repo *nazuna.Repository, err error) {
-	dir, err := ioutil.TempDir("", "nazuna")
+	dir, err := os.MkdirTemp("", "nazuna")
 	if err != nil {
 		return
 	}

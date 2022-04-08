@@ -12,7 +12,7 @@ Nazuna is a layered dotfiles management tool.
 ## Installation
 
 ```console
-$ go get -u github.com/hattya/nazuna/cmd/nzn
+$ go install github.com/hattya/nazuna/cmd/nzn@latest
 ```
 
 
