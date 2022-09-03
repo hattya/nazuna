@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
 
 	"github.com/hattya/nazuna"
 )
@@ -42,17 +43,24 @@ func mkdir(s ...string) error {
 	return os.MkdirAll(filepath.Join(s...), 0o777)
 }
 
-func pushd(path string) (func() error, error) {
+func sandbox(t *testing.T) string {
+	t.Helper()
+
 	wd, err := os.Getwd()
-	popd := func() error {
-		if err != nil {
-			return err
-		}
-		os.Setenv("PWD", wd)
-		return os.Chdir(wd)
+	if err != nil {
+		t.Fatal("sandbox:", err)
 	}
-	os.Setenv("PWD", path)
-	return popd, os.Chdir(path)
+	dir := t.TempDir()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal("sandbox:", err)
+	}
+	t.Setenv("PWD", dir)
+	t.Cleanup(func() {
+		if err := os.Chdir(wd); err != nil {
+			t.Error("sandbox:", err)
+		}
+	})
+	return dir
 }
 
 func touch(s ...string) error {

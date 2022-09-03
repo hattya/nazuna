@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: alias_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -140,7 +140,7 @@ func TestAlias(t *testing.T) {
 			`),
 		},
 	}
-	if err := s.exec(); err != nil {
+	if err := s.exec(t); err != nil {
 		t.Error(err)
 	}
 }
@@ -361,7 +361,7 @@ func TestAliasError(t *testing.T) {
 			cmd: []string{"rm", "_"},
 		},
 	}
-	if err := s.exec(); err != nil {
+	if err := s.exec(t); err != nil {
 		t.Error(err)
 	}
 }

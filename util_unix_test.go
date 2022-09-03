@@ -1,7 +1,7 @@
 //
 // nazuna :: util_unix_test.go
 //
-//   Copyright (c) 2014-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -18,11 +18,7 @@ import (
 )
 
 func TestCreateLink(t *testing.T) {
-	popd, err := pushd(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	sandbox(t)
 
 	if err := touch("src"); err != nil {
 		t.Error(err)

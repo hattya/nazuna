@@ -75,12 +75,7 @@ func TestFindVCS(t *testing.T) {
 }
 
 func TestVCSFor(t *testing.T) {
-	dir := t.TempDir()
-	popd, err := pushd(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	dir := sandbox(t)
 
 	if err := mkdir(".git"); err != nil {
 		t.Fatal(err)
@@ -155,11 +150,7 @@ func TestMercurialVCS(t *testing.T) {
 }
 
 func testVCSImpl(t *testing.T, cmd string, config func(nazuna.VCS) error) {
-	popd, err := pushd(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	sandbox(t)
 
 	ui := new(testUI)
 	vcs, err := nazuna.FindVCS(ui, cmd, "")

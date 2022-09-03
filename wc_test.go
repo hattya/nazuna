@@ -20,16 +20,7 @@ import (
 )
 
 func TestOpenWC(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {
@@ -48,16 +39,7 @@ func TestOpenWC(t *testing.T) {
 }
 
 func TestOpenWCError(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	// unmarshal error
 	if err := mkdir(".nzn", "state.json"); err != nil {
@@ -69,16 +51,7 @@ func TestOpenWCError(t *testing.T) {
 }
 
 func TestWCPaths(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {
@@ -128,16 +101,7 @@ func TestWCPaths(t *testing.T) {
 }
 
 func TestWCLinks(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {
@@ -247,16 +211,7 @@ func testLink(wc *nazuna.WC, src, dst string) error {
 }
 
 func TestSelectLayer(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {
@@ -315,16 +270,7 @@ func TestSelectLayer(t *testing.T) {
 }
 
 func TestMergeLayers(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {
@@ -840,16 +786,7 @@ func TestMergeLayers(t *testing.T) {
 }
 
 func TestMergeLayersError(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
-	popd, err := pushd(repo.Root())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {
@@ -982,11 +919,7 @@ func TestMergeLayersError(t *testing.T) {
 }
 
 func TestWCErrorf(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := init_(t)
 
 	wc, err := repo.WC()
 	if err != nil {

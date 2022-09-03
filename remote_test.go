@@ -1,7 +1,7 @@
 //
 // nazuna :: remote_test.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -119,17 +119,12 @@ func TestNewRemoteError(t *testing.T) {
 }
 
 func TestRemote(t *testing.T) {
-	dir := t.TempDir()
-	if _, ok := os.LookupEnv("HOME"); ok {
-		defer os.Setenv("HOME", os.Getenv("HOME"))
-	} else {
-		defer os.Unsetenv("HOME")
-	}
+	dir := sandbox(t)
 	home := filepath.Join(dir, "home")
-	os.Setenv("HOME", home)
 	if err := mkdir(home); err != nil {
 		t.Fatal(err)
 	}
+	t.Setenv("HOME", home)
 
 	ts := httptest.NewTLSServer(http.FileServer(http.Dir(filepath.Join(dir, "public"))))
 	defer ts.Close()
@@ -139,8 +134,7 @@ func TestRemote(t *testing.T) {
 	git(t, "config", "--global", "http.sslVerify", "false")
 	git(t, "config", "--global", "url."+ts.URL+"/gist-vim/.git.insteadOf", "https://github.com/mattn/gist-vim")
 	git(t, "init", "-q", filepath.Join(dir, "public", "gist-vim"))
-	popd, err := pushd(filepath.Join(dir, "public", "gist-vim"))
-	if err != nil {
+	if err := os.Chdir(filepath.Join(dir, "public", "gist-vim")); err != nil {
 		t.Fatal(err)
 	}
 	if err := touch("README.md"); err != nil {
@@ -149,7 +143,7 @@ func TestRemote(t *testing.T) {
 	git(t, "add", ".")
 	git(t, "commit", "-qm", ".")
 	git(t, "update-server-info")
-	if err := popd(); err != nil {
+	if err := os.Chdir(dir); err != nil {
 		t.Fatal(err)
 	}
 

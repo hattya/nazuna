@@ -1,7 +1,7 @@
 //
 // nazuna :: layer_test.go
 //
-//   Copyright (c) 2014-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2014-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -9,7 +9,6 @@
 package nazuna_test
 
 import (
-	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -30,11 +29,7 @@ func TestLayer(t *testing.T) {
 }
 
 func TestNewAlias(t *testing.T) {
-	repo, err := initLayer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := initLayer(t)
 
 	l, err := repo.LayerOf("abst/layer")
 	if err != nil {
@@ -53,11 +48,7 @@ func TestNewAlias(t *testing.T) {
 }
 
 func TestNewAliasError(t *testing.T) {
-	repo, err := initLayer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := initLayer(t)
 
 	// abstruct layer
 	l, err := repo.LayerOf("abst")
@@ -101,11 +92,7 @@ func TestNewAliasError(t *testing.T) {
 }
 
 func TestNewLink(t *testing.T) {
-	repo, err := initLayer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := initLayer(t)
 
 	links := map[string][]*nazuna.Link{
 		"": {
@@ -134,11 +121,7 @@ func TestNewLink(t *testing.T) {
 }
 
 func TestNewLinkError(t *testing.T) {
-	repo, err := initLayer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := initLayer(t)
 
 	// abstruct layer
 	l, err := repo.LayerOf("abst")
@@ -182,11 +165,7 @@ func TestNewLinkError(t *testing.T) {
 }
 
 func TestNewSubrepo(t *testing.T) {
-	repo, err := initLayer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := initLayer(t)
 
 	src := "github.com/hattya/nazuna"
 	subrepos := make(map[string][]*nazuna.Subrepo)
@@ -234,11 +213,7 @@ func TestNewSubrepo(t *testing.T) {
 }
 
 func TestNewSubrepoError(t *testing.T) {
-	repo, err := initLayer()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := initLayer(t)
 
 	src := "github.com/hattya/nazuna"
 
@@ -283,11 +258,12 @@ func TestNewSubrepoError(t *testing.T) {
 	}
 }
 
-func initLayer() (repo *nazuna.Repository, err error) {
-	repo, err = init_()
-	if err != nil {
-		return
+func initLayer(t *testing.T) *nazuna.Repository {
+	t.Helper()
+
+	repo := init_(t)
+	if _, err := repo.NewLayer("abst/layer"); err != nil {
+		t.Fatal("initLayer:", err)
 	}
-	_, err = repo.NewLayer("abst/layer")
-	return
+	return repo
 }

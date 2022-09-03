@@ -37,19 +37,17 @@ func TestSystemExit(t *testing.T) {
 }
 
 type shell struct {
-	dir         string
-	env         map[string]string
-	gitconfig   map[string]string
-	funcs       map[string]interface{}
-	atexitFuncs []func()
+	t         *testing.T
+	dir       string
+	env       map[string]string
+	gitconfig map[string]string
+	funcs     map[string]interface{}
 }
 
-func newShell() (*shell, error) {
-	dir, err := os.MkdirTemp("", "nzn")
-	if err != nil {
-		return nil, err
-	}
+func newShell(t *testing.T) (*shell, error) {
+	dir := t.TempDir()
 	sh := &shell{
+		t:   t,
 		dir: dir,
 		env: map[string]string{
 			"tempdir": dir,
@@ -84,7 +82,6 @@ func newShell() (*shell, error) {
 		"setup":  sh.setup,
 		"touch":  sh.touch,
 	}
-	sh.atexit(func() { os.RemoveAll(sh.dir) })
 	return sh, nil
 }
 
@@ -93,12 +90,11 @@ func (sh *shell) run(s script) error {
 	if err != nil {
 		return err
 	}
-	os.Setenv("PWD", sh.dir)
 	if err = os.Chdir(sh.dir); err != nil {
 		return err
 	}
+	sh.t.Setenv("PWD", sh.dir)
 	defer os.Chdir(wd)
-	defer os.Setenv("PWD", wd)
 
 	for i, c := range s {
 		args := sh.expand(c.cmd[1:]...)
@@ -176,16 +172,6 @@ func (sh shell) verify(aout, bout string, rc int) string {
 	return strings.Join(Δ, "\n")
 }
 
-func (sh *shell) atexit(fn func()) {
-	sh.atexitFuncs = append(sh.atexitFuncs, fn)
-}
-
-func (sh *shell) exit() {
-	for i := len(sh.atexitFuncs) - 1; i >= 0; i-- {
-		sh.atexitFuncs[i]()
-	}
-}
-
 func (sh *shell) cat(args ...string) (string, int) {
 	data, err := os.ReadFile(args[0])
 	if err != nil {
@@ -195,21 +181,13 @@ func (sh *shell) cat(args ...string) (string, int) {
 }
 
 func (sh *shell) cd(args ...string) (string, int) {
-	os.Setenv("PWD", args[0])
+	sh.t.Setenv("PWD", args[0])
 	return sh.report(os.Chdir(args[0]))
 }
 
 func (sh *shell) export(args ...string) (string, int) {
 	kv := strings.SplitN(args[0], "=", 2)
-	v, ok := os.LookupEnv(kv[0])
-	if err := os.Setenv(kv[0], kv[1]); err != nil {
-		return sh.report(err)
-	}
-	if ok {
-		sh.atexit(func() { os.Setenv(kv[0], v) })
-	} else {
-		sh.atexit(func() { os.Unsetenv(kv[0]) })
-	}
+	sh.t.Setenv(kv[0], kv[1])
 	sh.env[kv[0]] = kv[1]
 	return sh.report(nil)
 }
@@ -334,12 +312,11 @@ func (sh *shell) touch(args ...string) (string, int) {
 
 type script []*cmdLine
 
-func (s script) exec() error {
-	sh, err := newShell()
+func (s script) exec(t *testing.T) error {
+	sh, err := newShell(t)
 	if err != nil {
 		return err
 	}
-	defer sh.exit()
 	return sh.run(s)
 }
 

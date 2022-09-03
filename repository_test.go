@@ -20,11 +20,7 @@ import (
 )
 
 func TestOpen(t *testing.T) {
-	popd, err := pushd(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	sandbox(t)
 
 	if err := mkdir(".nzn", "r", ".git"); err != nil {
 		t.Fatal(err)
@@ -46,11 +42,7 @@ func TestOpen(t *testing.T) {
 }
 
 func TestOpenError(t *testing.T) {
-	popd, err := pushd(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer popd()
+	sandbox(t)
 
 	// no repository
 	switch _, err := nazuna.Open(nil, "."); {
@@ -63,7 +55,7 @@ func TestOpenError(t *testing.T) {
 	if err := mkdir(".nzn", "r"); err != nil {
 		t.Fatal(err)
 	}
-	switch _, err = nazuna.Open(nil, "."); {
+	switch _, err := nazuna.Open(nil, "."); {
 	case err == nil:
 		t.Error("expected error")
 	case !strings.HasPrefix(err.Error(), "unknown vcs for directory "):
@@ -82,11 +74,7 @@ func TestOpenError(t *testing.T) {
 }
 
 func TestNewLayer(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := init_(t)
 
 	layers := []*nazuna.Layer{
 		{Name: "a"},
@@ -129,11 +117,7 @@ func TestNewLayer(t *testing.T) {
 }
 
 func TestNewLayerError(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := init_(t)
 
 	if _, err := repo.NewLayer("layer"); err != nil {
 		t.Fatal(err)
@@ -152,11 +136,7 @@ func TestNewLayerError(t *testing.T) {
 }
 
 func TestRepositoryPaths(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := init_(t)
 
 	rdir := filepath.Join(repo.Root(), ".nzn", "r")
 	if g, e := repo.PathFor(nil, "file"), filepath.Join(rdir, "file"); g != e {
@@ -188,11 +168,7 @@ var findPathTests = []struct {
 }
 
 func TestFindPath(t *testing.T) {
-	repo, err := init_()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(repo.Root())
+	repo := init_(t)
 
 	l, err := repo.NewLayer("layer")
 	if err != nil {
@@ -224,23 +200,22 @@ func TestFindPath(t *testing.T) {
 	}
 }
 
-func init_() (repo *nazuna.Repository, err error) {
-	dir, err := os.MkdirTemp("", "nazuna")
-	if err != nil {
-		return
-	}
+func init_(t *testing.T) *nazuna.Repository {
+	t.Helper()
+
+	dir := sandbox(t)
 	rdir := filepath.Join(dir, ".nzn", "r")
-	if err = mkdir(rdir); err != nil {
-		return
+	if err := mkdir(rdir); err != nil {
+		t.Fatal("init:", err)
 	}
 	cmd := exec.Command("git", "init", "-q")
 	cmd.Dir = rdir
-	if err = cmd.Run(); err != nil {
-		return
+	if err := cmd.Run(); err != nil {
+		t.Fatal("init:", err)
 	}
-	repo, err = nazuna.Open(new(testUI), dir)
+	repo, err := nazuna.Open(new(testUI), dir)
 	if err != nil {
-		return
+		t.Fatal("init:", err)
 	}
-	return
+	return repo
 }

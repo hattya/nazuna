@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: subrepo_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -21,11 +21,10 @@ import (
 )
 
 func TestSubrepo(t *testing.T) {
-	sh, err := newShell()
+	sh, err := newShell(t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer sh.exit()
 
 	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "public")))
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -370,17 +369,16 @@ func TestSubrepoError(t *testing.T) {
 			`),
 		},
 	}
-	if err := s.exec(); err != nil {
+	if err := s.exec(t); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestSubrepoUpdateError(t *testing.T) {
-	sh, err := newShell()
+	sh, err := newShell(t)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer sh.exit()
 
 	fs := http.FileServer(http.Dir(filepath.Join(sh.dir, "public")))
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

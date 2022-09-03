@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: clone_test.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -58,7 +58,7 @@ func TestClone(t *testing.T) {
 			`),
 		},
 	}
-	if err := s.exec(); err != nil {
+	if err := s.exec(t); err != nil {
 		t.Error(err)
 	}
 }
@@ -126,7 +126,7 @@ func TestCloneError(t *testing.T) {
 			`),
 		},
 	}
-	if err := s.exec(); err != nil {
+	if err := s.exec(t); err != nil {
 		t.Error(err)
 	}
 }
