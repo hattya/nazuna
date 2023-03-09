@@ -3,9 +3,9 @@ module github.com/hattya/nazuna
 go 1.18
 
 require (
-	github.com/hattya/go.cli v0.0.0-20220820004708-c913fccaa66d
-	github.com/hattya/go.diff v0.0.0-20220817125802-d52c0cdf9bcd
-	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6
+	github.com/hattya/go.cli v0.0.0-20230218013454-25866fd37116
+	github.com/hattya/go.diff v0.0.0-20230209123729-c2eebc3d7794
+	golang.org/x/sys v0.5.0
 )
 
-require golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
+require golang.org/x/term v0.5.0 // indirect
