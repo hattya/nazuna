@@ -1,13 +1,12 @@
 //
 // nazuna :: util_unix.go
 //
-//   Copyright (c) 2013-2020 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2023 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
 
-//go:build !plan9 && !windows
-// +build !plan9,!windows
+//go:build unix
 
 package nazuna
 
