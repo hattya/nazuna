@@ -1,8 +1,8 @@
-github.com/hattya/go.cli v0.0.0-20230218013454-25866fd37116 h1:qgSZrJH1AklwSXTuX8NOPzIgfY+ikWXJO/5MkxwrH/A=
-github.com/hattya/go.cli v0.0.0-20230218013454-25866fd37116/go.mod h1:oSDxDEmFEGOCK7Zxn6MfznJi01xw/dFten6h0JNt/Yw=
-github.com/hattya/go.diff v0.0.0-20230209123729-c2eebc3d7794 h1:eeFMRoetkKAaPtBpVVFmWzKNrPHGycDBiNsBInd2fpQ=
-github.com/hattya/go.diff v0.0.0-20230209123729-c2eebc3d7794/go.mod h1:9GenkidlwRctxfnPELRdJ6z3XmL1TvicffeS9+8K1Xk=
-golang.org/x/sys v0.5.0 h1:MUK/U/4lj1t1oPg0HfuXDN/Z1wv31ZJ/YcPiGccS4DU=
-golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/term v0.5.0 h1:n2a8QNdAb0sZNpU9R1ALUXBbY+w51fCQDN+7EdxNBsY=
-golang.org/x/term v0.5.0/go.mod h1:jMB1sMXY+tzblOD4FWmEbocvup2/aLOaQEp7JmGp78k=
+github.com/hattya/go.cli v0.0.0-20230902122146-c4cecb9e2117 h1:OEaHnj59cSUYdmCxMkZgCslE+riEFtQ0QM8tYp71+Ns=
+github.com/hattya/go.cli v0.0.0-20230902122146-c4cecb9e2117/go.mod h1:TxY5WRUaikjPDv2PvC8PkqPi0imjf7KrGLUhhil8NSY=
+github.com/hattya/go.diff v0.0.0-20230831124117-6db8d2605bfb h1:6k6bLRe6fx+F8hlMQ7uX0lfIeJUX6rrymmzQ+r37Mqw=
+github.com/hattya/go.diff v0.0.0-20230831124117-6db8d2605bfb/go.mod h1:X7GxR7T2Hz2LeoXnZQwZu5/8JW4gEdILW7pbOrRD/yI=
+golang.org/x/sys v0.12.0 h1:CM0HF96J0hcLAwsHPJZjfdNzs0gftsLfgKt57wWHJ0o=
+golang.org/x/sys v0.12.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/term v0.11.0 h1:F9tnn/DA/Im8nCwm+fX+1/eBwi4qFjRT++MhtVC4ZX0=
+golang.org/x/term v0.11.0/go.mod h1:zC9APTIj3jG3FdV/Ons+XE1riIZXG4aZ4GTHiPZJPIU=
