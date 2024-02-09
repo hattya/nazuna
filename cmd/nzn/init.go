@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: init.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2024 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -32,7 +32,7 @@ func init() {
 			  Create a new repository in <path>. If <path> does not exist, it will be
 			  created.
 
-			  If <path> is not specified, the current working diretory is used.
+			  If <path> is not specified, the current working directory is used.
 		`)),
 		Flags:  flags,
 		Action: init_,
