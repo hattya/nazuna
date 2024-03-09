@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna.go
 //
-//   Copyright (c) 2013-2021 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2024 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -10,7 +10,7 @@ package nazuna
 
 import "os/exec"
 
-const Version = "0.6+"
+const Version = "0.7"
 
 type UI interface {
 	Print(...interface{}) (int, error)
