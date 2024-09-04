@@ -1,11 +1,11 @@
 module github.com/hattya/nazuna
 
-go 1.20
+go 1.21
 
 require (
-	github.com/hattya/go.cli v0.0.0-20240224134234-a3d968fc2105
-	github.com/hattya/go.diff v0.0.0-20240224133603-71a674bc3067
-	golang.org/x/sys v0.17.0
+	github.com/hattya/go.cli v0.0.0-20240818060721-7cbd2f418d5e
+	github.com/hattya/go.diff v0.0.0-20240816131736-e1d52b3e8f55
+	golang.org/x/sys v0.23.0
 )
 
-require golang.org/x/term v0.17.0 // indirect
+require golang.org/x/term v0.23.0 // indirect
