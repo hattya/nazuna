@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna_test.go
 //
-//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2025 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -26,12 +26,12 @@ type testUI struct {
 	bytes.Buffer
 }
 
-func (*testUI) Print(...interface{}) (int, error)          { return 0, nil }
-func (*testUI) Printf(string, ...interface{}) (int, error) { return 0, nil }
-func (*testUI) Println(...interface{}) (int, error)        { return 0, nil }
-func (*testUI) Error(...interface{}) (int, error)          { return 0, nil }
-func (*testUI) Errorf(string, ...interface{}) (int, error) { return 0, nil }
-func (*testUI) Errorln(...interface{}) (int, error)        { return 0, nil }
+func (*testUI) Print(...any) (int, error)          { return 0, nil }
+func (*testUI) Printf(string, ...any) (int, error) { return 0, nil }
+func (*testUI) Println(...any) (int, error)        { return 0, nil }
+func (*testUI) Error(...any) (int, error)          { return 0, nil }
+func (*testUI) Errorf(string, ...any) (int, error) { return 0, nil }
+func (*testUI) Errorln(...any) (int, error)        { return 0, nil }
 
 func (ui *testUI) Exec(cmd *exec.Cmd) error {
 	cmd.Stdout = ui

@@ -1,7 +1,7 @@
 //
 // nazuna :: util.go
 //
-//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2025 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -44,7 +44,7 @@ func SplitPath(path string) (string, string) {
 	return dir, name
 }
 
-func sortKeys(i interface{}) []string {
+func sortKeys(i any) []string {
 	v := reflect.Indirect(reflect.ValueOf(i))
 	if v.Kind() != reflect.Map {
 		return nil
@@ -61,7 +61,7 @@ func sortKeys(i interface{}) []string {
 	return list
 }
 
-func marshal(repo *Repository, path string, v interface{}) error {
+func marshal(repo *Repository, path string, v any) error {
 	rel, err := filepath.Rel(repo.root, path)
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ func marshal(repo *Repository, path string, v interface{}) error {
 	return nil
 }
 
-func unmarshal(repo *Repository, path string, v interface{}) error {
+func unmarshal(repo *Repository, path string, v any) error {
 	rel, err := filepath.Rel(repo.root, path)
 	if err != nil {
 		return err

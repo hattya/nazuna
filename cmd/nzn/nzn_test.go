@@ -1,7 +1,7 @@
 //
 // nazuna/cmd/nzn :: nzn_test.go
 //
-//   Copyright (c) 2013-2022 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2025 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -41,7 +41,7 @@ type shell struct {
 	dir       string
 	env       map[string]string
 	gitconfig map[string]string
-	funcs     map[string]interface{}
+	funcs     map[string]any
 }
 
 func newShell(t *testing.T) (*shell, error) {
@@ -69,7 +69,7 @@ func newShell(t *testing.T) (*shell, error) {
 		}
 		sh.env[v[:i]] = v[i+1:]
 	}
-	sh.funcs = map[string]interface{}{
+	sh.funcs = map[string]any{
 		"cat":    sh.cat,
 		"cd":     sh.cd,
 		"export": sh.export,

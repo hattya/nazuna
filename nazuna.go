@@ -1,7 +1,7 @@
 //
 // nazuna :: nazuna.go
 //
-//   Copyright (c) 2013-2024 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2013-2025 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -13,11 +13,11 @@ import "os/exec"
 const Version = "0.7+"
 
 type UI interface {
-	Print(...interface{}) (int, error)
-	Printf(string, ...interface{}) (int, error)
-	Println(...interface{}) (int, error)
-	Error(...interface{}) (int, error)
-	Errorf(string, ...interface{}) (int, error)
-	Errorln(...interface{}) (int, error)
+	Print(...any) (int, error)
+	Printf(string, ...any) (int, error)
+	Println(...any) (int, error)
+	Error(...any) (int, error)
+	Errorf(string, ...any) (int, error)
+	Errorln(...any) (int, error)
 	Exec(*exec.Cmd) error
 }

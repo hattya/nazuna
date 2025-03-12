@@ -1,7 +1,7 @@
 //
 // nazuna :: util_test.go
 //
-//   Copyright (c) 2018-2022 Akinori Hattori <hattya@gmail.com>
+//   Copyright (c) 2018-2025 Akinori Hattori <hattya@gmail.com>
 //
 //   SPDX-License-Identifier: MIT
 //
@@ -68,7 +68,7 @@ func TestSplitPath(t *testing.T) {
 }
 
 func TestSortKeys(t *testing.T) {
-	var m interface{}
+	var m any
 	m = map[string]string{
 		"a": "a",
 		"z": "z",
